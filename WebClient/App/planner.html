@@ -25,6 +25,7 @@
 	<script type="text/javascript" src="js/application.js"></script>
 	<script type="text/javascript" src="js/client_native_communication.js"></script>
 	<script type="text/javascript" src="js/planner_year_view.js"></script>
+	<script type="text/javascript" src="js/plannerInlineJs.js"></script>
 	
 	<!--[if gte IE 9]>
 	  <style type="text/css">
@@ -92,123 +93,7 @@
 </div>
 
 
-<script type="text/javascript">
-	$(document).ready(function () {
-		/*addNativeBridge();*/
-		var scheduleCheck = function() {
-			if(objPlannerJsonData != null) {
-				loadJS(objPlannerJsonData.jsPath, isLoaded);                        
-			} else {
-				setTimeout(scheduleCheck, 100);
-			}
-		};
 
-		var isLoaded = function() {
-			if (typeof objPlannerData != 'undefined' && objPlannerData != null) {
-				objPlannerJsonData['content']   =   objPlannerData;				
-				loadJS(objPlannerJsonData.tocJsPath, isTOCLoaded);				
-			} else {
-				setTimeout(isLoaded, 100);
-			}
-		};
-		
-		var isTOCLoaded = function() {			
-			if (typeof objGradeItemsData  != 'undefined' && objGradeItemsData  != null) {
-				/*GetAppInfo();
-				setTimeout(appInfoCheck, 500);*/
-				GetMessageList();
-				setTimeout(messageListCheck, 2000);
-			} else {
-				setTimeout(isTOCLoaded, 100);
-			}
-		};
-        		
-		/*var appInfoCheck = function() {			
-			if (typeof objAppVersionInfo  != 'undefined' && objAppVersionInfo  != null) {
-				//GetMessageList();
-				//setTimeout(messageListCheck, 2000);
-			} else {
-				setTimeout(appInfoCheck, 100);
-			}
-		};*/
-				
-		var messageListCheck = function() {
-			if(objMessageJsonData != null) {
-				try{
-					if(objMessageJsonData.Status == 200 || objMessageJsonData.Status == "200"){
-						onPageLoadComplete(GENERAL.c_s_PAGE_TYPE_PLANNER);
-						$("#loaderContainer").hide();
-						$('body').css({'background-color': '#E0E1E1'});
-						$('.wrapper').show();												
-						
-						Application.init(VIEWTYPE.c_s_PLANNER_YEAR);
-						$('.wrapper').animate({'opacity' : '1'}, 800);
-					}else{
-						throw (objMessageJsonData.Error);
-					}
-				}catch(err){
-					if (err.ErrorCode != "U1065") {
-						PlannerYearView._alert({
-							divId:		'dialog-message',
-							title:		'Alert!',
-							message:	err.ErrorUserDescription
-						});
-					}
-				}
-			} else {
-				setTimeout(messageListCheck, 100);
-			}
-		};
-		
-		
-		//scheduleCheck();
-		// Loader Image
-		var loaderImg = '<div style=" font-size: 13px;"><img src="media/loader.gif" style="margin-bottom: 15px;"><br />LOADING</div>';
-		$('body').css({'background-color': '#FFF'});
-		$('.wrapper').hide();
-		$("#loaderContainer").css({'background-color': '#FFF', 'text-align':'center', 'top' : '45%', 'left': '50%', 'position' : 'absolute'}).html(loaderImg);
-                
-		if(oPlatform.isIOS()) {
-			loadJS('js/NativeBridge.js', GetPlannerInfo);
-		}
-		else {
-			GetPlannerInfo();
-		}
-		setTimeout(scheduleCheck, 200);
-	});
-	
-	$(".wrapper").off("click tap").on("click tap", function(e){
-		
-		if($(".select").find(".dp_select_bg_option").is(':visible')) {
-			$(".select").find(".dp_select_bg_option").slideUp();
-		}
-		
-		var  elem = $("#plannerdropdown").parent();
-		if (elem.hasClass('active')) {
-			elem.removeClass("active");
-			$("#plannerdropdown").siblings(".lesson_tooltip").hide({
-				duration: 500,
-				easing: "easeOutBounce"
-			});
-		}
-		var  elemG = $("#btnGrade").parent();
-		if (elemG.hasClass('active')) {
-			elemG.removeClass("active");
-			$("#btnGrade").siblings(".lesson_tooltip").hide({
-				duration: 500,
-				easing: "easeOutBounce"
-			});
-		}
-	});
-	
-	$(window).resize(function () {
-		PlannerYearView.resize();
-	});
-
-	window.onorientationchange = function () {
-		PlannerYearView.resize();
-	};
-</script>
 </body>
 
 <script type="text/template" id="navButtonTemplate">
