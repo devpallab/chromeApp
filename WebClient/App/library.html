@@ -1,0 +1,841 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+        <meta name="viewport" content="width=device-width; initial-scale=1.0; maximum-scale=1.0;">
+        <title>iLiT</title>
+        <link href="css/library.css" media="all" rel="stylesheet"/>
+        <link href="css/library_dev.css" media="all" rel="stylesheet"/>
+        <link href="css/jquery-ui.css" media="all" rel="stylesheet"/>
+        <link href="css/fonts/fonts.css" media="all" rel="stylesheet"/>
+		<link rel="stylesheet" href="css/idangerous.swiper.css" />
+      <!--  <link rel="stylesheet" href="css/idangerous.swiper.3dflow.css" />-->
+        <link rel="stylesheet" href="css/library.3dflow.css" />
+        <link rel="stylesheet" href="css/ILITBookShelfRounder.css" />     
+	
+        <script type="text/javascript" src="js/jquery-1.10.2.js"></script>
+        <script type="text/javascript" src="js/jquery-ui.js"></script>
+        <script type="text/javascript" src="js/underscore-min.js"></script>
+        <script type="text/javascript" src="js/jquery.ui.touch-punch.min.js"></script>
+		<script type="text/javascript" src="js/idangerous.swiper-2.1.min.js"></script>
+       <!--   <script type="text/javascript" src="js/idangerous.swiper.3dflow-2.0.js"></script>-->
+        <script type="text/javascript" src="js/ilit_book_shelf_rounder.js"></script>
+        <script type="text/javascript" src="js/ilit_flatbook_shelf_rounder.js"></script>
+        <script type="text/javascript" src="js/jquery.lazyload.js"></script>
+
+        <script type="text/javascript" src="js/util.js"></script>
+        <script type="text/javascript" src="js/constants.js"></script>
+        <script type="text/javascript" src="js/message_handler.js"></script>
+        <script type="text/javascript" src="js/instructor.js"></script>
+        <script type="text/javascript" src="js/application.js"></script>                
+
+<!--        <script type="text/javascript" src="js/libraryjson.js"></script>   -->
+<script type="text/javascript" src="js/iSeriesBase.js"></script>
+ 
+        <script type="text/javascript" src="js/client_native_communication.js"></script>
+        <script type="text/javascript" src="js/libraryview.js"></script>
+        
+     
+	   
+        <script type="text/javascript">            
+            $(document).ready(function() {
+               
+                //addNativeBridge ();
+                
+                addLoader("#mainCarouselArea");
+                if(oPlatform.isIOS()) {
+                    loadJS('js/NativeBridge.js', GetLibraryInfo);                    
+                } else {                    
+                    GetLibraryInfo();                                        
+                }
+                setTimeout(scheduleCheck, 200);
+                
+                function scheduleCheck () {
+                    if (objLibraryJsonData != null) {                        
+                        loadJS(objLibraryJsonData.jsPath, loadGradeItem);
+                    } else {
+                        setTimeout(scheduleCheck, 100);
+                    }                    
+                }
+                
+                function loadGradeItem () {    
+					loadJS(objLibraryJsonData.gradeItemjsPath, isLoaded);
+				}
+				
+				// function getUserFeedbackForBooks () {
+                // 		GetUserFeedbackforAllBooks();
+                //           if(objLibraryJsonData.viewType == "student") {GetRecommendedBooks();}
+				// 	setTimeout(isLoaded, 100);
+				// }				
+                
+                function isLoaded() {
+                  //  var recommendateBooks =(objLibraryJsonData.viewType == "student")? objrecommendationListData != null : true;
+                   // console.log(recommendateBooks);
+                      //if (typeof objBookList != "undefined" && objBookList != null && recommendateBooks && objGetUserFeedbackforAllBooksData != null) {
+                           if (typeof objBookList != "undefined" && objBookList != null) {                             
+					   if(objLibraryJsonData.viewType == "student") {
+							if(typeof objLibraryJsonData.currentVersion != "undefined" && objLibraryJsonData.currentVersion != null) {								
+								GetIWTTotalWordCount();
+								setTimeout(checkTotalWCForStudent, 200);
+							} else {								
+								GetGradebookForStudent();
+								setTimeout(checkGetGradebookForStudent, 200);
+							}						
+					   } else {
+							removeLoader("#mainCarouselArea");					   
+						    $("body").addClass('noFlicking');
+						    Application.init(VIEWTYPE.c_s_CAROUSEL);      
+						    $("#mainCarouselArea").animate({'opacity' : '1'}, 800);
+					   }					   
+                    } else {
+                        setTimeout(isLoaded, 100);
+                    }
+                };				
+				
+				function checkTotalWCForStudent() {
+                    if (oIWTTotalWordCount != null && oIWTTotalWordCount != 0) {						
+                        if (oIWTTotalWordCount.Status == "200") {                            
+                            onPageLoadComplete(GENERAL.c_s_PAGE_TYPE_LIBRARY);			
+                            removeLoader("#mainCarouselArea");
+                            $("body").addClass('noFlicking');
+                            Application.init(VIEWTYPE.c_s_CAROUSEL);  
+                            $("#mainCarouselArea").animate({'opacity' : '1'}, 800);   
+                        }
+                    } else {
+                        setTimeout(checkTotalWCForStudent, 100);
+                    }
+                }
+				
+				function checkGetGradebookForStudent() {
+					if (objNoteBookData != null) {
+						if (objNoteBookData.Status == "200") {                            
+							onPageLoadComplete(GENERAL.c_s_PAGE_TYPE_LIBRARY);			
+							removeLoader("#mainCarouselArea");
+							$("body").addClass('noFlicking');
+							Application.init(VIEWTYPE.c_s_CAROUSEL);  
+							$("#mainCarouselArea").animate({'opacity' : '1'}, 800);   
+						} else {
+							if(objNoteBookData.ErrorCode != 'U1065') {
+								alert(objNoteBookData.Error.ErrorUserDescription);
+							}
+						}
+					} else {
+						setTimeout(checkGetGradebookForStudent, 100);
+					}
+				}
+                                	
+            });			
+        </script>               
+
+        <!--[if gte IE 9]>
+          <style type="text/css">
+            .gradient {
+               filter: none !important;
+            }
+          </style>
+        <![endif]-->
+    </head>
+    <body>
+        <header id="LibraryHeaderAreaContainer"></header>
+        <section>
+            <div id="mainCarouselArea"></div>
+            <div id="BookPopupAreaContainer"></div>
+            <div id="InventoryPopupContainer"></div>
+        </section>
+       <script type="text/template" id="LibraryHeaderAreaTemplate">
+            <nav class="top_navbar">
+            <!--<button class="toc_icn left sprite"></button>-->
+            <button type="button" class="list_view sprite left <%activeTab%>"  <% if(((activeTab == "recommended")||(activeTab == "reviewed")||(activeTab == "reserved"))){%>disabled<%}%>  id="changeView"></button>
+            <!--<button type="button" class="session sprite left">Session</button>-->
+
+            <!--<button type="button" class="slide_bullet sprite right"></button>-->
+
+            <button type="button" class="search sprite right"></button>			
+            <% if(viewType == 'student') { %>
+            <div class="right tabbing other_screen left-tabbing">
+            <button class="left button8 <% if(activeTab == "all") { %>active<% } %>" data-text="all" style="border-right:1px solid;"><%= LIBRARY.c_s_STATIC_TEXT.c_s_HEADER_TAB_1 %></button>            
+            <button class="left button8 <% if(activeTab == "myLevel") { %>active<% } %>" data-text="myLevel" style="border-right:1px solid;"><%= LIBRARY.c_s_STATIC_TEXT.c_s_HEADER_TAB_2 %></button>            
+            <button class="left button8 <% if(activeTab == "myRead") { %>active<% } %>" data-text="myRead"><%= LIBRARY.c_s_STATIC_TEXT.c_s_HEADER_TAB_3 %></button>            
+            </div> 
+			
+			<div class="tabbing other_screen right-tabbing">
+            <button class="left button8 <% if(activeTab == "recommended") { %>active<% } %> change" data-text="recommended" style="border-right:1px solid;"><%= LIBRARY.c_s_STATIC_TEXT.c_s_HEADER_TAB_4 %></button>            
+            <button class="left button8 <% if(activeTab == "reviewed") { %>active<% } %> change" data-text="reviewed" style="border-right:1px solid;"><%= LIBRARY.c_s_STATIC_TEXT.c_s_HEADER_TAB_5 %></button>            
+            <button class="left button8 <% if(activeTab == "reserved") { %>active<% } %> change" data-text="reserved"><%= LIBRARY.c_s_STATIC_TEXT.c_s_HEADER_TAB_6 %></button>            
+            </div>
+            <%}
+			else { %>
+            <div class="middle center" style="padding: 10px 0 0 0">Library</div> 
+            <% } %>
+
+
+            <div class="clear"></div>
+            </nav>
+
+            <div class="search_bar">
+                <div class="search_bar_inn">
+                <span class="srch_icon left sprite"></span>                
+                <span class="searchClose right sprite" id="searchClose"></span>
+                <span class="arrw right sprite" id="popDropDown"></span>
+                <span class="arr_srh sprite"></span>
+                <div class="middle"><input type="text" name="" id="searchBox" placeholder="Search by Title, Author or Genres" /></div>                        
+            </div>
+                <div class="middle category_suggestion">
+                <% $(arrCategory).each(function (iIndex, objCategory) { %>
+                    <div class="suggestion_drop" data-id="<%= objCategory.category_id %>" data-cat="<%= objCategory.category_name %>" data-cat-singular="<%= objCategory.category_name_singular %>" ><%= objCategory.category_name %></div>                
+                <% }) %>
+                </div>
+            </div>
+            
+            <div class="clear"></div>
+        </script>
+
+
+
+        <script type="text/template" id="CarouselLibraryAreaTemplate">
+            <%
+                var sFoldClass = '',
+					sProductCode = objLibraryJsonData.productCode ? objLibraryJsonData.productCode : GENERAL.c_s_SPECIAL_CHARACTERS_BLANK;
+					
+                if(objLibraryJsonData.viewType == 'teacher' && !sProductCode.match(GENERAL.c_s_ILIT_20)) {
+                    sFoldClass = 'iconbookpage sprite'
+                }
+            %>
+            <div class="sliderWrap">
+                <div class="sliderWrap_inn">
+                    <div class="sliderWrap_inn2">
+                        <div class="sliderWrap_inn3">
+                            <div class="sliderWrap_inn4">
+                                <div class="sliderWrap_inn5">
+                                    <div class="sliderWrap_inn6">
+                                        <div id="nextCarousel"></div>
+                                        <div class="curoselContainer">
+                                            <div class = "ILITBookShelfRounderWrapper"></div>
+                                        </div>
+                                        <div id="prevCarousel"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="sliderText">
+            <div class="slider_text_conta">
+            <%if(objLibraryJsonData.viewType == 'student' && (activeTab == "reviewed")) { %>
+            <ul>
+            <li class="<% if(reviewActiveTab == "myLevel") { %>active <% } else{%>inactive<% } %>" data-text="myLevel">My Level</li>
+            <li class="<% if(reviewActiveTab == "allStudent") { %>active <% } else{%>inactive<% } %>" data-text="allStudent">All Students</li>
+            <li class="<% if(reviewActiveTab == "myGrade") { %>active <% } else{%>inactive<% } %>" data-text="myGrade">My Grade</li>
+            </ul>
+      <%} else if((objLibraryJsonData.viewType == 'student' && (activeTab == "reserved"))||(objLibraryJsonData.viewType == 'student' && (activeTab == "recommended"))){%>
+            <%} else{%>
+            <div class="<%=sFoldClass%>"></div> <!-- active -->
+            <h4 id="bookName"></h4>
+            <p id="authorName">&nbsp;</p>
+            <%}%>
+            <div class="clear"></div>
+            </div>
+            </div>
+    
+            <!-------------------------------->
+            <div class="bookBoxWrap_out">
+                
+            </div>			
+            <!-------------------------------->
+            
+        </script>
+		
+	
+        
+        <script type="text/template" id="teacherInformationAreaTemplate">
+        <% 
+            var arrRataBooks = gradedRATABooks;//_.where(objBookList.bookset[0], {book_type: 'R', file_type : 'epub'});             
+            var iRataBooksLength   =   arrRataBooks.length;
+            
+            var obkLastReadBook	=	currentReading,
+				sProductCode = objLibraryJsonData.productCode ? objLibraryJsonData.productCode : GENERAL.c_s_SPECIAL_CHARACTERS_BLANK; 
+            
+            if(obkLastReadBook.length == 0) {
+                var currentReadBookImg = "";
+                var lastReadBookId = '';
+            }
+            else if(typeof obkLastReadBook[0].book_image == "undefined" || obkLastReadBook[0].book_image == "") {
+                var lastReadBookId = obkLastReadBook[0].book_id;
+                var currentReadBookImg = LIBRARY.c_s_NO_COVER_IMAGE;
+            } else {
+                var currentReadBookImg	= objLibraryJsonData.mediaPath + obkLastReadBook[0].book_image;
+                var lastReadBookId      =   obkLastReadBook[0].book_id;
+            }
+            
+        %>
+        <div class="bookBoxWrap gradient">
+        <div class="book_scroll_wrapper new_book_page_wrap">
+		<% if(!sProductCode.match(GENERAL.c_s_ILIT_20)) {%>
+        <div class="images_book_conta" id="rataSlider" data-numBooks="<%=iRataBooksLength%>">        <!-- active sMultipleRataClass -->       
+        <button class="book_leftarrow sprite" type="button"></button>		
+        <button class="book_rightarrow sprite" type="button"></button>	
+        
+        <div class="bookSliderBoxWrapper">
+        <div class="bookSliderBoxMovable"> 
+        <div class="bookSliderBox"> 
+        <% 
+            var sLassClass  =   '';
+            for(var cnt = 0; cnt < iRataBooksLength; cnt++) {
+                if(cnt == iRataBooksLength - 1) {
+                    sLassClass  =   'last';
+                }          
+                
+                var _sCoverImage     =  (arrRataBooks[cnt].book_image == "" ? LIBRARY.c_s_NO_COVER_IMAGE : objLibraryJsonData.mediaPath + arrRataBooks[cnt].book_image);                
+        %>                
+        <div class="bookBox <%=sLassClass%> ratabooks" data-id="<%=arrRataBooks[cnt].book_id%>" data-booktype="rata">
+        <div class="bookMainImg">
+        <img alt="Book" src="<%=_sCoverImage%>">
+        </div>
+        
+        <button type="button" class="bookTitle btn">
+            <span class="bookInfo">Unit <%= arrRataBooks[cnt].unitId %></span>
+            <span class="bookInfo">Read Aloud Think Aloud</span>            
+        </button>
+        </div>        
+        <%                
+            }
+        %>
+        <div class="clear"></div>
+        </div>
+        <div class="clear"></div>
+        </div>
+        <div class="clear"></div>
+        </div>
+
+        <div class="clear"></div>
+        </div>
+		<% } %>
+
+        <div class="images_book_conta_current <% if(sProductCode.match(GENERAL.c_s_ILIT_20)) {%>shift-left-current-read<%}%>">
+        <div class="bookBox" id="currentReadingWrapper" data-id="<%=lastReadBookId%>">
+        <div class="bookMainImg">    
+        <% if(currentReadBookImg != '') { %>
+        <img src="<%= currentReadBookImg %>" alt="Book" />   
+        <% } %>
+        </div>
+        <button type="button" class="bookTitle btn">My Current Reading</button>
+        </div>
+        <div class="clear"></div>
+        </div>
+        <div class="clear"></div>
+        </div>
+
+        <div class="clear"></div>
+        </div>
+        </script>
+        
+        <script type="text/template" id="studentInformationAreaTemplate">
+        <div class="bookBoxWrap gradient">
+            <%
+                var objStudentRataBook  =   StudentRataBook,
+					sProductCode = objLibraryJsonData.productCode ? objLibraryJsonData.productCode : GENERAL.c_s_SPECIAL_CHARACTERS_BLANK;
+					
+                if(objStudentRataBook.length == 0) {                    
+                    var studentRataBookImg = "";
+                    var studentRataBookId = '';
+                }
+                else if(typeof objStudentRataBook[0].book_image == "undefined" || objStudentRataBook[0].book_image == "") {                            
+                    var studentRataBookImg = LIBRARY.c_s_NO_COVER_IMAGE;
+                    var studentRataBookId = objStudentRataBook[0].book_id;
+                } else {
+                    var studentRataBookImg	= objLibraryJsonData.mediaPath + objStudentRataBook[0].book_image;
+                    var studentRataBookId      =   objStudentRataBook[0].book_id;
+                }  
+            %>
+            <div class="bookBoxContainer">
+			<%if(!sProductCode.match(GENERAL.c_s_ILIT_20)) { %>
+            <div class="bookBox left" data-id="<%=studentRataBookId%>" id="studentRataBook">
+                <div class="bookMainImg">
+                    <div style="width:160px; height:195px; overflow:hidden;" id="wrapperRATA">    
+                        <% if(studentRataBookImg != '') { %>
+                        <img src="<%= studentRataBookImg %>" alt="Book" />                        
+                        <% } %>
+                    </div>
+                </div>
+                <button class="bookTitle btn" type="button"><%= LIBRARY.c_s_STATIC_TEXT.c_s_DEMO_BOOK_BTN_TEXT %></button>
+            </div>
+            <%
+			}
+			else if (sProductCode.match(GENERAL.c_s_ILIT_20)) { %>
+                                     <% 						
+                                                var studentAnyBookImg = "";
+                                                    var recommendedbook ="";
+						var oAnyBook = objBookList.bookset[0] || {};
+                              if(objrecommendationListData && objrecommendationListData.Content && objrecommendationListData.Content.length >0){
+						        for (rK in objBookList.bookset[0]) {
+                                     if (objrecommendationListData.Content[0].CMSItemID == objBookList.bookset[0][rK]['book_id']) 
+                                     {
+                                            studentAnyBookImg = objLibraryJsonData.mediaPath + objBookList.bookset[0][rK]['book_image'];
+                                            recommendedbook = objBookList.bookset[0][rK]['book_id'];
+                                     }
+                                  }	
+                          }
+                          
+        			
+					%>
+			<div class="bookBox left" id="studentRataBook" data-id ="<%=recommendedbook%>">
+                <div class="bookMainImg">
+                    <div style="width:160px; height:195px; overflow:hidden;" id="wrapperRATA">    
+                       	<% if(studentAnyBookImg != '') { %>
+                        <img src="<%=studentAnyBookImg%>" alt="Book" />                        
+                        <% } %>
+                    </div>
+                </div>
+                <button class="bookTitle btn" type="button"><%= LIBRARY.c_s_STATIC_TEXT.c_s_TOP_RECOMMEND_BTN_TEXT %></button>
+            </div>
+			<% 
+			}
+                    var obkLastReadBook	=	currentReading;
+                    if(obkLastReadBook.length == 0) {
+                        var currentReadBookImg = "";
+                        var lastReadBookId = '';
+                    }
+                    else if(typeof obkLastReadBook[0].book_image == "undefined" || obkLastReadBook[0].book_image == "") {                        
+                        var lastReadBookId = obkLastReadBook[0].book_id;
+                        var currentReadBookImg = LIBRARY.c_s_NO_COVER_IMAGE;
+                    } else {
+                        var currentReadBookImg	= objLibraryJsonData.mediaPath + obkLastReadBook[0].book_image;
+                        var lastReadBookId      =   obkLastReadBook[0].book_id;
+                    }
+                %>
+            <div class="bookBox right" id="currentReadingWrapper" data-id="<%=lastReadBookId%>">
+                <div class="bookMainImg" id="activeItem">
+                    <div class="currentReadingWrapper" >    
+                        <% if(currentReadBookImg != '') { %>
+                        <img src="<%= currentReadBookImg %>" alt="Book" />     
+                        <% } %>
+                    </div>
+                </div>
+                <button class="bookTitle btn" type="button"><%= LIBRARY.c_s_STATIC_TEXT.c_s_DEMO_BOOK_BTN_TEXT2 %></button>
+            </div>				
+
+
+            <div class="middleBookInfoWrap">
+                <div class="middleBookInfoMain <% if(sProductCode.match(GENERAL.c_s_ILIT_20)) {%> book-info-main-aligned <%}%>" style="display:none;">
+                    <div class="bookInnerHead"><%= LIBRARY.c_s_STATIC_TEXT.c_s_MIDDLE_BOX_HEADER %></div>
+                    <div class="bookcontRow">
+                        <div class="bookcontLeft left">
+                            <%= LIBRARY.c_s_STATIC_TEXT.c_s_MIDDLE_BOX_TOTAL_WORDS %>
+                        </div>
+                        <div class="bookcontRight middle" id="totalWords">-</div>
+                    </div>
+                    <div class="bookcontRow">
+                        <div class="bookcontLeft left">
+                            <%= LIBRARY.c_s_STATIC_TEXT.c_s_MIDDLE_BOX_TOTAL_PAGES %>
+                        </div>
+                        <div class="bookcontRight middle" id="totalPages">-</div>
+                    </div>
+                    <div class="bookcontRow">
+                        <div class="bookcontLeft left">
+                            <%= LIBRARY.c_s_STATIC_TEXT.c_s_MIDDLE_BOX_TOTAL_BOOKS %>
+                        </div>
+                        <div class="bookcontRight middle" id="totalBooks">-</div>
+                    </div>
+                    <div class="bookcontRow">
+                        <div class="bookcontLeft left">
+                            <%= LIBRARY.c_s_STATIC_TEXT.c_s_MIDDLE_BOX_LEXILE_LEVEL %>
+                        </div>
+                        <div class="bookcontRight middle" id="lexileLevel">-</div>
+                    </div>
+
+                </div>
+            </div>
+
+            <div class="clear"></div>
+            </div>
+
+            <div class="clear"></div>
+        </div>
+        </script>    
+
+        <script type="text/template" id="ListLibraryAreaTemplate">
+            <div class="bookBoxWrap_out">
+            <div class="bookBoxWrap gradient noTopPadding">
+            <div class="slider_thums">
+            <%                       
+            $.each(bookset, function (iIndex, objRow) {       
+            if(typeof objRow[LIBRARY.c_s_BOOK_LIST_JSON_KEY.BOOK_IMAGE] != "undefined") {
+                var _iBookId         = objRow[LIBRARY.c_s_BOOK_LIST_JSON_KEY.BOOK_ID];                           
+                //var _sCoverImage     = LIBRARY.c_s_MEDIA_FOLDER_PATH + LIBRARY.c_s_MEDIA_THUMB_COVER_PREFIX + (objRow[LIBRARY.c_s_BOOK_LIST_JSON_KEY.BOOK_IMAGE] == "" ? LIBRARY.c_s_NO_COVER_IMAGE : objRow[LIBRARY.c_s_BOOK_LIST_JSON_KEY.BOOK_IMAGE]);
+                var _sCoverImage     =  (objRow[LIBRARY.c_s_BOOK_LIST_JSON_KEY.BOOK_IMAGE] == "" ? LIBRARY.c_s_NO_COVER_IMAGE : objLibraryJsonData.mediaPath + objRow[LIBRARY.c_s_BOOK_LIST_JSON_KEY.BOOK_IMAGE]);
+            %>
+                <div class="slider_thumb_img" data-id="<%= _iBookId %>">
+                    <img src="media/grey.gif" data-original="<%= _sCoverImage %>"  alt="" class="lazy">
+                </div>
+            <%
+            }
+            });
+            %>
+            </div>
+            <div class="clear"></div>
+            </div>
+            </div>
+        </script>
+
+
+        <script type="text/template" id="BookPopupAreaTemplate">
+            <%                          
+                var objResult   = data[0];				
+               //var sCoverImage = LIBRARY.c_s_MEDIA_FOLDER_PATH + LIBRARY.c_s_MEDIA_THUMB_COVER_PREFIX + (objResult[LIBRARY.c_s_BOOK_LIST_JSON_KEY.BOOK_IMAGE] == "" ? LIBRARY.c_s_NO_COVER_IMAGE : objResult[LIBRARY.c_s_BOOK_LIST_JSON_KEY.BOOK_IMAGE]);
+                var sCoverImage = (objResult[LIBRARY.c_s_BOOK_LIST_JSON_KEY.BOOK_IMAGE] == "" ? LIBRARY.c_s_NO_COVER_IMAGE : objLibraryJsonData.mediaPath + objResult[LIBRARY.c_s_BOOK_LIST_JSON_KEY.BOOK_IMAGE]);
+                var sBookTitle  = $.trim(objResult[LIBRARY.c_s_BOOK_LIST_JSON_KEY.BOOK_TITLE_CHOPPED]);
+                var sAuthorName = $.trim(objResult[LIBRARY.c_s_BOOK_LIST_JSON_KEY.AUTHOR_NAME]);
+                var sBookGenre  = $.trim(objResult[LIBRARY.c_s_BOOK_LIST_JSON_KEY.BOOK_GENRE]);
+                sBookGenre      = sBookGenre.replace(/,/g, ', ');
+                var sNumPages   = objResult[LIBRARY.c_s_BOOK_LIST_JSON_KEY.NUM_PAGE] == '' || objResult[LIBRARY.c_s_BOOK_LIST_JSON_KEY.NUM_PAGE] == null ? 0 : objResult[LIBRARY.c_s_BOOK_LIST_JSON_KEY.NUM_PAGE].format(0);
+                if(sNumPages == 0) {                    
+                    sNumPages   = objResult[LIBRARY.c_s_BOOK_LIST_JSON_KEY.WORD_COUNT] == '' || objResult[LIBRARY.c_s_BOOK_LIST_JSON_KEY.WORD_COUNT] == null ? 0 : (objResult[LIBRARY.c_s_BOOK_LIST_JSON_KEY.WORD_COUNT]/150).toFixed(0);
+                }
+                var sLexLevel   = objResult[LIBRARY.c_s_BOOK_LIST_JSON_KEY.LEX_LEVEL] == '' || objResult[LIBRARY.c_s_BOOK_LIST_JSON_KEY.LEX_LEVEL] == null ? 0 : objResult[LIBRARY.c_s_BOOK_LIST_JSON_KEY.LEX_LEVEL].format(0);                
+                var sBookDesc   = $.trim(objResult[LIBRARY.c_s_BOOK_LIST_JSON_KEY.BOOK_DESC]);
+				
+				var sProductCode = objLibraryJsonData.productCode ? objLibraryJsonData.productCode : GENERAL.c_s_SPECIAL_CHARACTERS_BLANK;
+                                var ratingValue = (data[2]!== undefined)?data[2]:0;
+                                
+               %>
+            <div class="md-modal md-effect-13 md-show bookReadPopup">
+            <div class="md-content">
+                <div class="img_boxeas right">
+                    <div class="img_boxeas_box"><img src="<%= sCoverImage %>"  alt=""></div>
+                    <button class="button7 btn" id="readBookBtn"><%= LIBRARY.c_s_STATIC_TEXT.c_s_POPUP_READ_BOOK %></button>
+                </div>
+
+                <div class="middle">                   
+                    <h3><%= sBookTitle %></h3>                                        
+                    <div class="title_bg">
+					<%= sAuthorName %>
+					</div>                    
+                
+                    <div class="book_desp">                        
+                        <p><strong><%= LIBRARY.c_s_STATIC_TEXT.c_s_POPUP_GENRE %></strong>: <%= sBookGenre %></p>                                                
+                        <p><strong><%= LIBRARY.c_s_STATIC_TEXT.c_s_POPUP_PAGES %></strong>: <%= sNumPages %></p>                                                
+                        <p><strong><%= LIBRARY.c_s_STATIC_TEXT.c_s_POPUP_LEX_LVL %></strong>: <%= sLexLevel %></p>              
+					   <p> <strong><%= LIBRARY.c_s_STATIC_TEXT.c_s_POPUP_RATINGS %></strong>:<div class="startRateContainer"><div class="offStar"></div><div class="onStar" style="width:<%= (ratingValue*24.2)%>px"></div><div class="ratingNumber">(<%=(ratingValue !== 0)?ratingValue.toFixed(1):ratingValue%>)</div></div> </p>
+
+				</p>		<p><strong><%= LIBRARY.c_s_STATIC_TEXT.c_s_POPUP_COMMENTS %></strong>:
+            <%if((data[3] !== undefined)&&(data[3].length > 0)){ for (var feed=0; feed < data[3].length; feed++) { %>
+							<%=data[3][feed]%>,
+                                                        
+							<% } } else{%>
+                                                    <span><strong>None.</strong></span>
+                                                    
+                                                    <%}%>
+                </p>					</p>	
+			        </div>
+                    <div  class="clear"></div>
+                </div>
+
+                <div  class="clear"></div>                
+                <% if($.trim(sBookDesc) != '') { %>                
+                <div class="about_book">
+                    <div class="about_book_title"><%= LIBRARY.c_s_STATIC_TEXT.c_s_POPUP_ABT_BOOK %>:</div>
+                    <div class="about_book_content"><%= sBookDesc %></div>
+                    <div class="clear"></div>
+                </div>                
+                <% } %>
+                
+                <div class="button_place <%=((objLibraryJsonData.viewType == 'student')) ?  "align-right" : "" %>">
+                    <button class="button7 btn" id="closeBookPopup"><%= LIBRARY.c_s_STATIC_TEXT.c_s_POPUP_BACK_LIBRARY %></button>
+					<% if ((objLibraryJsonData.viewType == 'student')) { %>
+					
+						<!-- BOOK RESERVE/UNRESERVE BUTTON -->
+                        <% if (data[1] !== "reserved") { 
+							if ($.inArray(objResult.book_id, objLibraryProgressSummary.Content.BookCompletedItemIDs) == -1) {
+						%>
+							<button class="button7 btn book_reserve_btn"><%= LIBRARY.c_s_STATIC_TEXT.c_s_POPUP_RESERVE %></button>
+						<%	}
+						} else {%>
+						<button class="button7 btn book_remove_btn"><%= LIBRARY.c_s_STATIC_TEXT.c_s_POPUP_REMOVE %></button>
+						<%} %>
+										
+						<!-- BOOK READ BUTTON -->
+						<% if (objLibraryJsonData.isAutoReadBook == 1 && $.inArray(objResult.book_id, objLibraryProgressSummary.Content.BookCompletedItemIDs) == -1) { %>
+						<button class="button7 btn book_read_btn" id="autoReadBook"><%= LIBRARY.c_s_STATIC_TEXT.c_s_POPUP_BOOK_READ %></button>
+						<% } %>
+					<% } %>
+                </div>
+            </div>                
+        </div>
+        <div class="md-overlay"></div>
+        </script>
+		
+		<!-- INTEREST INVENTORY FORM -->
+		<script type="text/template" id="InventoryTemplate">            
+        <div class="md-modal md-effect-13 md-show inventory-popup">
+			
+            <div class="md-content interestInventory">
+				<div class="modal-head">Reader Survey</div>  
+                <div class="inventory-wrapper middle">                   
+                                   
+                    <div class="" id="inventoryform">
+                    </div>
+                    <div  class="clear"></div>
+                </div>                
+            </div>                
+        </div>
+        <div class="md-overlay"></div>
+        </script>
+		
+		<!-- INTEREST INVENTORY SWIPER -->
+		<script type="text/template" id="InventorySwiper">
+			<div class="swiper-container" > 
+			<div class="swiper-wrapper">		
+			<!-- SLIDES -->
+			<% for (var i=0; i < 4; i++) { %>
+				<div class="swiper-slide swiper-no-swiping" id="slide<%= i %>">				
+					<div class="content_space" id="inventorySlide<%= i %>" >				
+					</div>
+				</div>
+			<% } %>
+			
+			</div>
+			</div>
+				<div class="clear"></div>
+				<div class='swiper-pagination'></div>
+				<div class="button_area">
+					<button id="backButton" style="display:none" class="btn-normal prevBtn left" data-back-to="">BACK</button> 
+					<button class="btn-normal" style="display:none" id="resetInventory">RESET</button>	
+					<button class="btn-normal nextBtn" id="nxtButton">NEXT</button>	
+					<button class="btn-normal" style="display:none" id="submitInventory">SUBMIT</button>						
+				</div>
+		</script>
+		
+		<!-- INTEREST SLIDE 1 -->
+		<script type="text/template" id="inventorySlideTemplate0">
+			<div class="pollview-form" style="display:none">
+				<!-- <div class="textbox_heading_content align-center">
+				<p class="welcome-text">Welcome to iLit - Reader Survey</p>			
+				<img src="media/ilit20-logo.png" alt="">
+				<p class="note"><span><%= LIBRARY.c_s_STATIC_TEXT.c_s_INVENTORY_INTRO %></span></p>
+				</div> -->
+			</div>
+			<!-- BUTTON -->
+			<div  class="clear"></div>                 
+		</script>
+		<!-- INTEREST SLIDE 2 -->
+		
+		
+		<script type="text/template" id="inventorySlideTemplate1">
+			<form class="interestInventoryForm" id="interestInventoryFormSlide1" data-form-slide-num='1'>
+			<div class="pollview-form">
+				<!-- Question 1 -->
+				<% if(gtype != "BOY"){ %>
+				<div class="question">
+					<% cnt++; %>
+					<div class="textbox_heading_content">
+					<span><%= cnt+1 %>. <%= data.Questions[cnt].Q %></span></div>
+					
+					<div class="input-box-cont">
+						<div class="input_box_area input_box_area_ct">					
+							<% for(var iI=0; iI<data.Questions[cnt].A.length; iI++){%>
+								<input type="radio" name="<%= data.Questions[cnt].FieldName %>" value="<%= data.Questions[cnt].A[iI].val %>"><span><%= data.Questions[cnt].A[iI].display %></span>
+							<% } %>
+						</div>
+					</div>
+				</div>
+				<% } %>
+				<!-- Question 2 -->
+				<div class="question">
+					<% cnt++; %>
+					<div class="textbox_heading_content">
+					<span><%= cnt+1 %>. <%= data.Questions[cnt].Q %></span></div>
+					
+					<div class="input-box-cont">
+					<div class="input_box_area input_box_area_ct">
+						<% for(var iI=0; iI<data.Questions[cnt].A.length; iI++){%>
+								<input type="radio" name="<%= data.Questions[cnt].FieldName %>" value="<%= data.Questions[cnt].A[iI].val %>"><span><%= data.Questions[cnt].A[iI].display %></span>
+						<% } %>
+						</div>
+					</div>
+				</div>
+				
+				<!-- Question 3 -->
+				<div class="question">
+					<% cnt++; %>
+					<div class="textbox_heading_content">
+					<span><%= cnt+1 %>. <%= data.Questions[cnt].Q %></span></div>
+					
+					<div class="input-box-cont">
+						<div class="input_box_area input_box_area_ct select_box">
+							<select name="<%= data.Questions[cnt].FieldName %>">
+								<option value="">--Please Choose--</option>
+								<% for(var iI=0; iI<data.Questions[cnt].A.length; iI++){%>
+									<option value="<%= data.Questions[cnt].A[iI].val %>"><%= data.Questions[cnt].A[iI].display %></option>
+								<% } %>
+							</select>
+						</div>
+					</div>
+				</div>
+				
+				<!-- Question 4 -->
+				<div class="question">
+					<% cnt++; %>
+					<div class="textbox_heading_content">
+					<span><%= cnt+1 %>. <%= data.Questions[cnt].Q %></span></div>
+					
+					<div class="input-box-cont">
+					<div class="input_box_area input_box_area_ct">
+						<% for(var iI=0; iI<data.Questions[cnt].A.length; iI++){%>
+								<input type="radio" name="<%= data.Questions[cnt].FieldName %>" value="<%= data.Questions[cnt].A[iI].val %>"><span><%= data.Questions[cnt].A[iI].display %></span>
+						<% } %>
+						</div>
+					</div>
+					
+				</div>
+				
+			</div>
+			<input id="qcounter" type="hidden" value="<%= cnt %>"/>
+			</form>
+			<!-- BUTTON -->
+			<div  class="clear"></div>                 
+			
+		</script>
+		
+		<!-- INTEREST SLIDE 3 -->
+		
+		<script type="text/template" id="inventorySlideTemplate2">
+		<form class="interestInventoryForm" id="interestInventoryFormSlide2" data-form-slide-num='2'> 
+			<div class="pollview-form">	
+				
+				<!-- Question 1 -->
+				<div class="question">
+					<% scnt++; %>
+					<div class="textbox_heading_content">
+					<span><%= scnt+1 %>. <%= data.Questions[scnt].Q %></span></div>
+					
+					<div class="input-box-cont">
+						<div class="input_box_area input_box_area_ct select_box">
+							<select name="<%= data.Questions[scnt].FieldName %>">
+								<option value="">--Please Choose--</option>
+								<% for(var iI=0; iI<data.Questions[scnt].A.length; iI++){%>
+									<option value="<%= data.Questions[scnt].A[iI].val %>"><%= data.Questions[scnt].A[iI].display %></option>
+								<% } %>
+							</select>
+						</div>
+					</div>
+				</div>
+				
+				<!-- Question 3 -->
+				<div class="question">
+					<% scnt++; %>
+					<div class="textbox_heading_content">
+					<span><%= scnt+1 %>. <%= data.Questions[scnt].Q %></span></div>
+					
+					<div class="input-box-cont">
+					<div class="input_box_area input_box_area_ct">
+						<% for(var iI=0; iI<data.Questions[scnt].A.length; iI++){%>
+								<input type="radio" name="<%= data.Questions[scnt].FieldName %>" value="<%= data.Questions[scnt].A[iI].val %>"><span><%= data.Questions[scnt].A[iI].display %></span>
+						<% } %>
+						</div>
+					</div>			
+				</div>
+				<!-- Question 5 -->
+				<div class="question">
+					<% scnt++; %>
+					<div class="textbox_heading_content">
+					<span><%= scnt+1 %>. <%= data.Questions[scnt].Q %></span></div>
+					
+					<div class="input-box-cont">
+					<div class="input_box_area input_box_area_ct">
+
+							<% for(var iI=0; iI<data.Questions[scnt].A.length; iI++){%>
+								<input id="chk_<%=data.Questions[scnt].FieldName+"_"+iI%>" type="checkbox" name="<%= data.Questions[scnt].FieldName %>" value="<%= data.Questions[scnt].A[iI].val %>" />
+								<label for="chk_<%=data.Questions[scnt].FieldName+"_"+iI%>"><span><%= data.Questions[scnt].A[iI].display %></span></label>
+							<% } %>
+						
+						</div>
+					</div>
+				</div>
+				<!-- Question 6 -->
+				<div class="question">
+					<% scnt++; %>
+					<div class="textbox_heading_content">
+					<span><%= scnt+1 %>. <%= data.Questions[scnt].Q %></span></div>
+					
+					<div class="input-box-cont">
+					<div class="input_box_area input_box_area_ct">
+						
+						<% for(var iI=0; iI<data.Questions[scnt].A.length; iI++){%>
+								<input id="chk_<%=data.Questions[scnt].FieldName+"_"+iI%>" type="checkbox" name="<%= data.Questions[scnt].FieldName %>" value="<%= data.Questions[scnt].A[iI].val %>" />
+								<label for="chk_<%=data.Questions[scnt].FieldName+"_"+iI%>"><span><%= data.Questions[scnt].A[iI].display %></span></label>
+						<% } %>
+						</div>
+					</div>
+				</div>			
+				
+			</div>
+			<input id="iqcounter" type="hidden" value="<%= scnt %>"/>
+			</form> 
+			<!-- BUTTON -->
+			<div  class="clear"></div>   
+
+		</script>
+	
+		<!-- INTEREST SLIDE 4 -->
+		
+		<script type="text/template" id="inventorySlideTemplate3">
+		<form class="interestInventoryForm" id="interestInventoryFormSlide3" data-form-slide-num='3'>
+			<div class="pollview-form">
+				<!-- Question 1 -->
+				<div class="textbox_heading_content">
+				<% iqcounter++; %>
+				<span><%= iqcounter+1 %>. Drag and drop your top 3 to 5 interest areas in order of priority.</span></div>
+					
+				<div class="input-box-cont">
+				<div class="input_box_area input_box_area_ct">
+					<div class="facet-container">						
+							<div id="facetList" class="facet-list left">
+							</div>						
+										
+							<div id="userFacets" class="cet-list drop-box-cont right">	
+							</div>
+						
+					</div>
+					</div>				
+					
+				</div>
+				
+			</div>
+			</form>
+			<!-- BUTTON -->
+			<div  class="clear"></div>  
+			
+		</script>
+		
+		<!-- interest areas -->
+		<script type="text/template" id="tplFacetList">
+			<% for(var iI=0; iI<LIBRARY.c_s_INTEREST_INVENTORY_DRAGABLE.ITEMS.length; iI++){ %>
+									<div class="facet dropbox draggable_box swiper-no-swiping" data-item-code=<%=LIBRARY.c_s_INTEREST_INVENTORY_DRAGABLE.ITEMS[iI].c_s_CODE %>><%= LIBRARY.c_s_INTEREST_INVENTORY_DRAGABLE.ITEMS[iI].c_s_NAME %></div>
+									
+			<% }  %>
+		</script>
+		
+		<!-- interest areas selected or dragged  -->
+		<script type="text/template" id="tplUserFacets">
+			<ul>
+				<% for (var i=0; i<5; i++) { %>
+				<li class="cet dropbox draggable_box swiper-no-swiping" data-item-code=""></li>
+				<% } %>
+			</ul>
+		</script>
+		
+		
+        <div id="dialog-message" title="Under Construction" class="Ilit_alert_box"></div>
+
+
+        <!--        <footer>
+                    <div class="footer_inner">
+                        <button type="button" class="Library active sprite"><span>Library</span></button>
+                        <button type="button" class="Notebooks sprite"><span>Notebooks</span></button>
+                        <button type="button" class="Assignments sprite"><span>Assignments</span></button>
+                    </div>
+                </footer>        -->
+    </body>   
+</html>

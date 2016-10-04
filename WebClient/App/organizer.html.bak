@@ -1,0 +1,543 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=0, minimum-scale=1.0, maximum-scale=1.0">
+        <title>iLiT</title>
+        
+        <link href="css/jquery-ui.css" media="all" rel="stylesheet"/>
+        <link href="css/fonts/fonts.css" media="all" rel="stylesheet"/>
+		<!-- <link href="css/idangerous.swiper.css" media="all" rel="stylesheet" /> -->
+		<link href="css/pop-up.css" media="all" rel="stylesheet" />
+        
+        <link href="css/organizer.css" type="text/css" rel="stylesheet"/>
+        <link href="css/organizer-dev.css" type="text/css" rel="stylesheet"/>
+        <!--[if gte IE 9]>
+        <style type="text/css">
+            .gradient {
+				filter: none !important;
+			}
+        </style>
+        <![endif]-->
+        <script type="text/javascript" src="js/jquery-1.10.2.js"></script>
+        <script type="text/javascript" src="js/jquery-ui.js"></script>
+        <script type="text/javascript" src="js/underscore-min.js"></script>
+        <script type="text/javascript" src="js/jquery.ui.touch-punch.min.js"></script>
+		<!-- <script type="text/javascript" src="js/idangerous.swiper-2.1.min.js"></script> -->
+		<script type="text/javascript" src="js/slick.min.js"></script>
+		
+		<script type="text/javascript" src="js/iSeriesBase.js"></script>
+        <script type="text/javascript" src="js/util.js"></script>
+		<script type="text/javascript" src="js/page_template.js"></script>
+		<script type="text/javascript" src="js/globals.js"></script>
+        <script type="text/javascript" src="js/constants.js"></script>
+		
+
+        <script type="text/javascript" src="js/client_native_communication.js"></script>
+        <script type="text/javascript" src="js/gr7_performance_info.js"></script>
+		 <script type="text/javascript" src="js/organizer.js"></script> 
+    </head>
+    <body>
+		<div class="wrapper">
+			<div class="organize-bg"></div>
+			<div class="main_wrapper">
+				<section class="container_spaceorganize">
+					<div id="main-container" class="organize-main-container"></div>
+				</section>
+			</div>
+			<div class="clear"></div>
+		</div>
+		<div class="clear"></div>
+		<div id="dialog"></div>
+		<div id="scorePopupArea"></div>
+    </body>
+	<script type="text/template" id="container-organizer">
+		<div class="view_organize_carausal">
+			<div class="max-width1024">
+				<div class="carausal-container" id="week-swiper-container">
+					<%= header %>
+				</div>
+				<div class="clear"></div>
+			</div>
+		</div>
+		<div class="dash_organize_container">
+			<div class="view_organize_container_part">
+				<div class="max-width1024">
+					<div id="leftPart" class="outside_organize_wrap"> <%= left %> </div>
+					<div id="middlePart" class="outside_organize_wrap"> <span class="next-arrow"></span> <%= content %> </div>
+					<div id="rightPart" class="outside_organize_wrap"> <span class="next-arrow"></span> <%= right %> </div>
+					<div class="clear"></div>
+				</div>
+				<div class="clear"></div>
+			</div>
+		</div>
+	</script>
+	<script type="text/template" id="organizer-header">
+		<% var iCurrentWeek = ($organizer.assignmentSendingMode == 0) ? (parseInt(data["GetCurrentWeekForClass"].WeekNo) || 1) : $organizer.currentWeek; %>
+		<% var iTotalWeeks = parseInt(($default["GetUnitDetails"] || {}).totalWeeks) || 0; %>
+		<% var oCalendarJson = ($organizer.weekSetting || {}).AcademicCalendarJSON ? JSON.parse(decodeURIComponent(($organizer.weekSetting || {}).AcademicCalendarJSON)) : {};%>
+		<% if (iTotalWeeks > 0) { %>
+		<button id="prevPagingBtn" class="left_arrow sprite btn"></button><!--  swiper-button-prev -->
+		<button id="nextPagingBtn" class="right_arrow sprite btn"></button><!--  swiper-button-next -->
+		<div class="swiper-container" style="backface-visibility: visible;">
+			<div class="swiper-wrapper">
+				<%	
+				var weekColor = [];
+				for (var i=0; i <= CONSTANTS.c_s_COLOR_TAB_LEN; i++) {
+						if (oCalendarJson[i]) {
+							for (var k=0; k < oCalendarJson[i].wr.length; k++) {
+								weekColor.push("color"+i);
+							}
+						}
+					}
+				%>
+				<div class="lesson_button_container swiper-slide swiper-no-swiping swiper-slide-visible swiper-slide-active" style="width: auto; height: auto;">
+				<% for (var iI = 1; iI <= iTotalWeeks; iI++) { %>
+					<div class="week-no <%=(typeof weekColor[iI-1]!= "undefined")? weekColor[iI-1] : "" %><%= (iCurrentWeek === iI? " weekselected": "") %>" id="week_no_<%= iI %>" data-weekid ="<%= iI %>">
+						<div class="week-name">Week</div>
+						<div class="weekend-no"><%= iI %></div>
+					</div>
+				<% } %>
+				</div>
+			</div>
+		</div>
+		<div class="clear"></div>
+		<% } %>
+	</script>
+	<script type="text/template" id="organizer-left">
+		<div class="outside_reading_wrapinn boxes_read organize_students_list students_list">
+			<div class="outside_organize_heading">
+				<ul class="tabs" id="students">
+					<li class="active"><a herf="#" data-tab-content="student_list_tab_content"><%= CONSTANTS.c_s_STUDENTS_LIST_TAB_LBL %></a></li>
+					<!-- ILIT-933 -->
+					<li><a class="students_group_tab_content"></a><!-- <a herf="#" data-tab-content="students_group_tab_content"><%= CONSTANTS.c_s_STUDENT_GROUPS_TAB_LBL %></a> --></li>
+				</ul>
+				<div class="clear"></div>
+			</div>
+			<div class="clear"></div>
+			<div class="outside_reading_cont tab_students">
+				<div class="outside_reading_cont_inner">
+					<div class="outside_organize_notes" id="student_list_tab_content">
+						<ul class="nonList">
+							<li class="label">&dash; Please choose &dash;</li>
+							<li id="select_all_students">ALL STUDENTS</li>
+						</ul>
+						<ul id="sList">
+<%=
+							$tpl.loadPart(
+								$("#student-html-list").html(),
+								{
+									"data": data,
+									"CONSTANTS": CONSTANTS,
+									"$tpl":	$tpl,
+									"$util": $util
+								}
+							)
+%>
+						</ul>
+					</div>
+					<div style="display:none" class="outside_reading__Notes outside_reading__Notes2" id="students_group_tab_content">
+						<p>Students Group tab content</p>
+					</div>
+				</div>
+				<div class="clear"></div>
+				<div class="text-center btn-wrrrp">
+					<button class="btn-normal margin-top10 text-uppercase" type="button" id="btn_students_list_reset" data-save-global="y">
+						<%= CONSTANTS.c_s_ORGANIZER_GLOBAL_RESET_BTN_LBL %>
+					</button> 
+				</div> 
+			</div>
+			<div class="clear"></div>
+		</div>
+	</script>
+	<script type="text/template" id="organizer-content">
+		<% /* var extraAssignmentsList = (data.$model.right.ExtraAssignments[0]) || {};  */ %>
+		<% var extraAssignmentsList = ($organizer.AssignmentList.ExtraAssignments) || {} ;%>
+		<div class="outside_reading_wrapinn boxes_read organize_students_list">
+			<div class="outside_organize_heading">
+				<ul class="tabs">
+					<li class="active" id="tab_smart_search"><a herf="#"><%= CONSTANTS.c_s_ASSIGNMENTS_SEARCH_TAB_LBL %></a></li>
+					<li id="tab_add_assignments"><a herf="#"><%= CONSTANTS.c_s_ADD_ASSIGNMENTS_TAB_LBL %></a></li>
+				</ul>
+				<div class="clear"></div>
+			</div>
+			<div class="outside_reading_cont tab_students">
+				<div id="assignments_smart_search_tab_content">
+					<div class="outside_organize_notes2" id="smartSearchBlock">
+						<div class="outside_organize_cont_inner" id="smartSearchBlock1">
+							<div class="outside_organize_notes">
+								<ul class="nonList">
+									<li class="label">&dash; Please choose &dash;</li>
+								</ul>
+							
+								<ul class="smart-search-list" id="parentSearchList" style="display:none;">
+								<% for (var iI in $default.skillInfo) { %>
+									<li class="skilllist" id="<%= $default.skillInfo[iI].ParentSkillID %>">
+										<div class="arrw_icon sprite right"></div> 
+										<div class="middle"><%= $default.skillInfo[iI].GroupTitle %></div>
+										<div class="clear"></div>
+									</li>
+									<ul class="subsmart-search-list smart-search-list" style="display:none;">
+<%
+										for (var iJ = 0; iJ < $default.skillInfo[iI].Skill.length; iJ++) {
+											var aSubSkillIDs = $default.skillInfo[iI].Skill[iJ].SubSkillID.trim(",").split(",");
+											
+%>
+										<li data-skill-id ="<%=$default.skillInfo[iI].ParentSkillID%>" data-subskill-id="['<%= aSubSkillIDs.join("','") %>']">
+											<div class="arrw_icon sprite right"></div> 
+											<div class="middle"><%= $default.skillInfo[iI].Skill[iJ].Title %></div>
+											<div class="clear"></div>
+										</li>
+										<% } %>	
+									</ul>
+								<% } %>
+								</ul>
+							</div>		
+						</div>
+					
+						<h3><label><%= CONSTANTS.c_s_ADD_ASSIGNMENTS_TAB_LBL %></label></h3>
+						<div class="outside_organize_cont_inner" id="smartSearchBlock2">
+							<div class="outside_organize_notes" id="extraAssignmentsSearchResult">
+							
+							</div>
+						</div>
+
+					</div>
+					
+					<div class="outside_organize_cont_inner" id="extraAssignmentBlock" style="display:none;">
+						<div class="outside_reading_cont_inner">
+							<div class="outside_organize_notes" id="smartSearchBlock3">
+							
+							</div>
+						</div>
+					</div>
+				</div>
+				<div class="clear"></div>
+				<div class="text-center btn-wrrrp">
+					<button class="btn-normal margin-top10 text-uppercase" id="btn_assignments_reset" disabled="disabled">
+						<%= CONSTANTS.c_s_ORGANIZER_GLOBAL_RESET_BTN_LBL %>
+					</button>
+				</div>
+			</div>
+			<div class="clear"></div>
+		</div>
+	</script>
+	<script type="text/template" id="organizer-right">
+<%   
+	var iCurrentWeek = data["currentWeek"].toString(),
+		oAssignmentMatrix = data["Assignments"][iCurrentWeek],
+		oExtraAssignmentMatrix = data["ExtraAssignments"],
+		oGRADEList = data["GRADE"];
+		
+%>
+		<div class="outside_reading_wrapinn boxes_read organize_students_list">
+			<div class="outside_organize_heading">
+				<ul class="tabs" id="assignments">
+					<li class="active" id="assignments_tab" data-section="Assignments">
+						<a href="#" data-tab-content="assignments_tab_content"><%= CONSTANTS.c_s_ASSIGNMENTS_ASSIGNED_TAB_LBL %></a>
+					</li>
+					<li id="grade_tab" data-section="GRADE">
+						<a href="#" data-tab-content="grade_tab_content"><%= CONSTANTS.c_s_ASSIGNMENTS_GRADE_TAB_LBL %></a>
+					</li>
+				</ul>
+				<div class="clear"></div>
+			</div>
+			<div class="outside_reading_cont tab_students">
+				<div class="clear"></div>
+				<div class="outside_reading_cont_inner">
+					<div class="outside_organize_notes" id="students_assigned">
+						<!-- <ul class="nonList">
+							<li> -->All Students Selected<!-- </li>
+						</ul> -->
+					</div>
+				</div>
+
+				<div class="outside_reading_cont tab_students">
+					<div class="outside_reading_cont_inner">
+						<div class="outside_tab_Notes">
+							<div class="outside_tabreading__Notes" id="assignments_tab_content">
+<%= 
+							$tpl.loadPart(
+								$("#assignment-category-list").html(),
+								{
+									"AssignmentMatrix": oAssignmentMatrix,
+									"ExtraAssignmentMatrix": oExtraAssignmentMatrix,
+									"CONSTANTS": CONSTANTS,
+									"$tpl":	$tpl,
+									"$util": $util,
+									"currentWeek" : iCurrentWeek
+								}
+							)
+%>
+							<!-- <div class ="droppable">
+							</div> -->
+							</div>
+							<div style="display:none;" class="outside_reading__Notes" id="grade_tab_content">
+								<ul id="grade-list">
+<%= 
+							$tpl.loadPart(
+								$("#tpl-grade-list").html(),
+								{
+									"GRADEList": oGRADEList,
+									"CONSTANTS": CONSTANTS,
+									"$tpl":	$tpl,
+									"$util": $util
+								}
+							)
+%>
+								</ul>
+								<ul class="grade_content_txt">
+									<li><%=CONSTANTS.c_s_SEND_GRADE_SECTION_CONTENT%></li>
+								<ul>
+							</div>
+						</div>
+					</div>
+				</div>
+				<div class="clear"></div>
+				<div class="text-center btn-wrrrp">
+					<% /* %>
+					<button class="btn-normal margin-top10 text-uppercase" id="btn_assignments_assigned_save">
+						<%= CONSTANTS.c_s_ORGANIZER_GLOBAL_SAVE_BTN_LBL %>
+					</button>
+					<% */ %>
+					<button class="btn-normal margin-top10 text-uppercase" id="btn_assignments_assigned_reset" disabled="disabled">
+						<%= CONSTANTS.c_s_ORGANIZER_GLOBAL_RESET_BTN_LBL %>
+					</button>
+					<button class="btn-normal margin-top10 text-uppercase" id="btn_assignments_assigned_send">
+						<%= CONSTANTS.c_s_ORGANIZER_GLOBAL_SEND_BTN_LBL %>
+					</button>
+					<div class="clear"></div>
+				</div>
+			</div>
+		</div>
+		<div class="clear"></div>
+	</script>
+	<script type="text/template" id="assignment-category-list">
+		<ul id="student-list">
+<%			
+			/** IPP-6411 - code for Assignment Order **/
+			var AssignmentMatrix1 =  _(AssignmentMatrix).sortBy(function(obj) {
+			return (obj[0].ORDERKEY);
+			});
+			AssignmentMatrix1 = $.extend({}, AssignmentMatrix1);
+			
+			AssignmentMatrix1 = _.groupBy(AssignmentMatrix1, function(obj,i){
+				if(typeof obj[0]!== "undefined"){
+					return obj[0].CATEGORY_NAME;
+				}
+			});
+			/** IPP-6411 - code for Assignment Order**/
+			var sStatus = "",
+				isVisible = "";
+			for (var sCategory in AssignmentMatrix1) { 
+			if(sCategory !== "undefined"){
+				sStatus = "";
+				for (var iI = 0; iI < AssignmentMatrix1[sCategory][0].length; iI++) {
+					if (AssignmentMatrix1[sCategory][0][iI]["STATUS"] != "") {
+						if($organizer.assignmentSendingMode == 0 ){
+							sStatus = (AssignmentMatrix1[sCategory][0][iI]["STATUS"] == CONSTANTS.c_s_STATUS_WAIT) ?  
+							CONSTANTS.c_s_STATUS_WAIT : CONSTANTS.c_s_STATUS_SENT;
+							break;
+						}else{
+							if( AssignmentMatrix1[sCategory][0][iI]["STATUS"] ==  (CONSTANTS.c_s_STATUS_AUTO && CONSTANTS.c_s_STATUS_SENT)){
+								
+								sStatus = ((AssignmentMatrix1[sCategory][0][iI]["ISSINGLE"] == "Y") ? CONSTANTS.c_s_STATUS_SENT : CONSTANTS.c_s_STATUS_AUTO);
+								break;
+							}else{ 
+								sStatus = CONSTANTS.c_s_STATUS_AUTO;
+							}
+						}
+						/*if(AssignmentMatrix[sCategory][iI]["STATUS"] == ($organizer.assignmentSendingMode == 0) ? CONSTANTS.c_s_STATUS_SENT : (CONSTANTS.c_s_STATUS_AUTO || CONSTANTS.c_s_STATUS_SENT)){
+							sStatus = ($organizer.assignmentSendingMode == 0) ? CONSTANTS.c_s_STATUS_SENT :  (AssignmentMatrix[sCategory][iI]["ISSINGLE"] == "Y") ? CONSTANTS.c_s_STATUS_SENT : CONSTANTS.c_s_STATUS_AUTO;
+							break;
+						}else{ 
+							sStatus = ($organizer.assignmentSendingMode == 0) ? CONSTANTS.c_s_STATUS_WAIT : CONSTANTS.c_s_STATUS_BLANK;
+						}*/
+					}
+					isVisible = (isVisible == "n") ? AssignmentMatrix1[sCategory][0][iI]["ISVISIBLE"] : "y" ;
+					
+				}
+				//if(isVisible == "y") {
+				
+%>
+			<li>
+				<%= sCategory %>
+				<% if (sStatus != "") { %>
+					<button class="btn-normal btn-normal2 right"><%= sStatus %></button>
+				<% } %>
+			</li>
+		<% //}
+		} 
+		} %> 
+		<% 
+			var nStudent = $("#student_list_tab_content #sList").find("li.selected").length,
+				isSent = (nStudent == 1) ? 1: 0;
+			
+		if(isSent == 1 || $organizer.isExAssignmentsent  == 1){
+			var extraAssignmentStatus = "",
+			    weekNo = "";
+			for(exAssignmentId in ExtraAssignmentMatrix){
+				if( (nStudent > 1) ? (_.indexOf($organizer.currentExAssignments, exAssignmentId) != -1) :  true ){
+				extraAssignmentStatus = "";
+				for(var iI=0; iI < ExtraAssignmentMatrix[exAssignmentId].STUDENTS.length; iI++){ 
+							if(ExtraAssignmentMatrix[exAssignmentId].STUDENTS[iI].STATUS == CONSTANTS.c_s_STATUS_SENT){
+								extraAssignmentStatus = CONSTANTS.c_s_STATUS_SENT;
+								weekNo = ExtraAssignmentMatrix[exAssignmentId].STUDENTS[iI].WEEK;
+							}
+				}
+				
+				if(extraAssignmentStatus !="" && currentWeek == weekNo){
+		%>
+			<li class="drag-extra-assignment" data-itemId = "<%=exAssignmentId%>">
+				<%= ($.trim(ExtraAssignmentMatrix[exAssignmentId].TITLE.length) < 22) ? $.trim(ExtraAssignmentMatrix[exAssignmentId].TITLE ): $.trim(ExtraAssignmentMatrix[exAssignmentId].TITLE.substring(0, 22))+ ".." %>
+				<% if (extraAssignmentStatus != "") { %>
+					<button class="btn-normal btn-normal2 right"><%= extraAssignmentStatus %></button>
+				<% } %>
+			</li>
+		<% 		}
+			}		
+		} 
+		$organizer.isExAssignmentsent = 0;
+		$organizer.currentExAssignments.length = 0;
+		
+		} %>
+		
+		</ul>
+	</script>
+	<script type="text/template" id="tpl-grade-list">
+<%
+	var aAlreadyDisplayed = [],
+		oGRADEInfo = {},
+		sItemID = "", sItemName = "", sGRADEType = "";
+		
+	for (var iI = 0; iI < GRADEList.length; iI++) {
+		oGRADEInfo = GRADEList[iI];
+		sItemID = oGRADEInfo.IID;
+		sGRADEType = oGRADEInfo.TYPE;
+		if (aAlreadyDisplayed.indexOf(sItemID) !== -1) {
+			continue;
+		}
+			sItemName = oGRADEInfo.TITLE;
+			aAlreadyDisplayed.push(sItemID);
+%>
+			<li
+				data-item-id="<%= sItemID %>"
+				data-grade-type="<%= sGRADEType %>"
+			<% /*if (iI === 0 || oGRADEInfo.STATUS !== "") { %> class="active<%= ((oGRADEInfo.STATUS !== "")? " disabled": "") %>"<% } */ %>
+			<% //IPP-5722 
+			if (iI === 0 || oGRADEInfo.STATUS !== "") { %> class="<%= ((oGRADEInfo.STATUS !== "")? " disabled": "") %>"<% }  %>
+			>
+				<%= sItemName %>
+				<span <%=((oGRADEInfo.STATUS !== "")? " class=\"grade_sent_btn\"":"") %>></span>
+				
+			</li>
+	<% } %>
+	</script>
+	<script type="text/template" id="student-html-list">
+		<% for (var iI = 0; iI < data.length; iI++) {  %>
+			<li
+				data-student-id="<%= data[iI].UserID %>"
+				data-student-name="<%= data[iI].UserDisplayName %>"
+				data-reading-level="<%= data[iI].UserCurrentReadingLevel %>"
+				data-learner-level="<%= data[iI].UserLearnerLevel %>"	
+				class="selected"
+			>
+				<div class="uicheck_icon  sprite right"></div> 
+				<div class="middle"><%= data[iI].DisplayName %></div>
+				<div class="clear"></div>
+			</li>
+		<% } %>
+	</script>
+	<script type="text/template" id="error-pop-up">
+		<div id="send-grade-error">
+			<h4 class="sprite"><%= title %> <button class="close sprite" id="btnClosePopUp"></button></h4>
+			<p class="content"> <%= content %> </p>
+			<div class="button-container">
+				<button id="btnCancelPopUp"><%= btnCancel %></button>
+				<button id="btnContinuePopUp"><%= btnContinue %></button>
+			</div>
+		</div>
+	</script>
+	<script type="text/template" id="extraAssignmentList">
+		
+			<ul class="smart-search-list draggable-list" id="extra-assignment-deails-list">
+			
+			<% var assignmentTitle = "",
+					isSubtype ="";
+			for (iId in extraAssignmentsList) { 
+			if(	typeof extraAssignmentsList[iId] != "function" 
+				){
+				
+				for(iiId  in iId){
+					if(typeof extraAssignmentsList[iId][iiId] != "undefined"){
+						assignmentTitle = extraAssignmentsList[iId][iiId].TITLE;
+						isSubtype = extraAssignmentsList[iId][iiId].ISUBTYPE;
+						break;
+					}
+				}
+			%>	
+				<li class="draggable" data-itemId ="<%=iId%>" data-subskill-id ="<%= subSkillIds %>" data-issubtype="<%=isSubtype%>">
+					<div class="information-icon sprite right"></div> 
+					<div class="middle"><%=assignmentTitle%></div>
+					<div class="clear"></div>
+				</li>
+			<% }
+			} %>	
+				
+			</ul>
+		
+	</script>
+	
+	<script type="text/template" id="information-pop-up">
+		<div id="ipopup">
+			<h4 ><%=title%> <button class="close sprite" id="btnIClosePopUp"></button></h4>
+			<!-- <p class="content"> <%//= content %> </p> -->
+			<ul class="content">
+			<% if(Object.keys(content).length > 0) { %>
+					<% if(content.category_description != "") { %>
+						<li><strong>Category: </strong><%=content.category_description%></li>
+					<% } %>
+					<% if(content.skills != "") { %>
+						<li><strong>Skills: </strong><%=content.skills%></li>
+					<% } %>
+					<% if(content.description != "") { %>
+						<li><strong>Description: </strong><%=content.description%></li>
+					<% } %>
+					<% if(content.vocabulary_words != "") { %>
+						<li><strong>Vocabulary Words: </strong><%=content.vocabulary_words%></li>
+					<% } %>
+					<% if(content.prompt_text != "") { %>
+						<li><strong>Prompt: </strong><%=content.prompt_text%></li>
+					<% } %>
+					<% if(content.assign_with != "") { %>
+						<li><strong>Assign with: </strong><%=content.assign_with%></li>
+					<% } %>
+					<% if(content.appropriate_for != "") { %>
+						<li><strong>Appropriate for: </strong><%=content.appropriate_for%><li>
+					<% } %>
+					<% if(content.lexile != "") { %>
+						<li><strong>Lexile: </strong><%=content.lexile%></li>
+					<% } %>
+				<% } %>
+			</ul>
+			
+			<div class="button-container">
+			<% if(itemSubtype == "studyplan") { %>
+				<button class="btnPreviewPopUp"  data-item="<%=itemId%>" data-isubtype="<%=itemSubtype%>" data-title="<%=title%>" data-section="Pre">Pre</button>
+				<button  class="btnPreviewPopUp"  data-item="<%=itemId%>" data-isubtype="<%=itemSubtype%>" data-title="<%=title%>" data-section="Practice">Practice</button>
+				<button class="btnPreviewPopUp"  data-item="<%=itemId%>" data-isubtype="<%=itemSubtype%>" data-title="<%=title%>" data-section="Post">Post</button>
+			<% } else { %>
+				<button  class="btnPreviewPopUp"  data-item="<%=itemId%>" data-isubtype="<%=itemSubtype%>" data-title="<%=title%>"><%= btnPreview %></button>
+            <% } %>			
+			</div>
+		</div>
+	</script>
+	
+	<!-- ASSIGNMENT VIEW IFRAME -->
+	<script type="text/template" id="viewAssignment">
+		<iframe src="" id="viewAssignmentFrame" frameborder="0" width="100%" height="100%" allowfullscreen="true" webkitallowfullscreen="true" mozallowfullscreen="true">
+			<p>Your browser does not support iframes.</p>
+		</iframe>
+	</script>
+	
+</html>

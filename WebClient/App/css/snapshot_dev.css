@@ -1,0 +1,18 @@
+.snap-rating{
+	min-width: 30px;
+    min-height: 25px;
+}
+.snap-block-img {
+	cursor : pointer;
+}
+
+.snap-modal {
+	transform: translate(0, 50%) !important;
+	-ms-transform: translate(0, 50%) !important; /* IE 9 */
+	-webkit-transform: translate(0, 25%) !important; /* Safari and Chrome */
+}
+/* .highcharts-container {
+	width:100% !important; height:100% !important;
+} */
+
+

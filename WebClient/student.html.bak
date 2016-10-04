@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en" class=" js no-touch">
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+	<meta name="viewport" content="width=device-width; initial-scale=1.0; maximum-scale=1.0;">
+	<meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">
+	<meta http-equiv="Cache-control" content="no-cache">
+	<title>BTS2016 - Student</title>
+	<link href="css/style.css" media="all" rel="stylesheet" />
+	<link href="css/jquery-ui.css" media="all" rel="stylesheet" />
+	<link href="css/buzz-popup.css" media="all" rel="stylesheet" />
+	<link rel="shortcut icon" type="image/ico" href="media/favicon_stud.png" />
+	<script src="js/modernizr.custom.34982.js"></script>
+    <script src="js/jquery-1.11.1.min.js"></script>
+    <script type="text/javascript" src="js/jquery-ui.js"></script>
+	<script src="js/underscore-min.js"></script>
+	<script src="js/recorderjs/recorder.js"></script>
+	<script type="text/javascript">
+		//var randomNum = Math.random();
+		var randomNum = 1;
+		document.write('<script type="text/javascript" src="js/recording.js?'+ randomNum + '"></scr' + 'ipt>');
+		document.write('<script type="text/javascript" src="js/common.js?'+ randomNum + '"></scr' + 'ipt>');
+		document.write('<script type="text/javascript" src="js/student_login.js?'+ randomNum + '"></scr' + 'ipt>');
+		document.write('<script type="text/javascript" src="js/student.js?'+ randomNum + '"></scr' + 'ipt>');
+	</script>
+		<!--[if gte IE 9]>
+		<style type="text/css">
+		.gradient {
+		   filter: none !important;
+		}
+		</style>
+		<![endif]-->
+
+	<!-- Google Analytics -->
+	<script>
+		(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+		(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+		m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+		})(window,document,'script','js/analytics.js','ga');
+
+		createGoogleTrackerObject(GTRACKID); // id is account specific, second parameter is optional; based on the tracking code account provides
+
+	</script>
+	<!-- End Google Analytics -->
+
+</head>
+
+<body>
+	<div class="wrapper">
+		<article class="loginWrapper">
+			<header class="login_bg_top student">
+				<section class="header_inner student"></section>
+				<section class="login_heading student"></section>
+			</header>
+			<section class="login_wrapper student">
+				
+				<div class="login_box">
+					
+					<div class="login_box_middle_bg">
+						 <form id="frm_ValidateLogin" action="" method="post">
+							<div class="login_box_cont">
+								<div id="districtList" class="ui-widget">
+										<div class="loader districtList"></div>
+								</div>	
+								<div class="help tooltip"><img src="media/help.png" alt="">
+								  <span class="tooltiptext">Each user belongs to a class that is associated with a district or organization. Select your district or organization by starting to type the name using the search functionality or scroll to find.</span>
+								</div>
+							</div>	
+							<div class="clear"></div>	
+							<div class="login_box_cont">
+								<div class="main_login">
+										<input type="text" onBlur="if(this.value==&#39;&#39;){this.value=&#39;Username&#39;};" onFocus="if(this.value==&#39;Username&#39;){this.value=&#39;&#39;};" value="Username" class="login_field" name="txt_UserName" id="txt_UserName"> 
+										<input type="password" onBlur="if(this.value==&#39;&#39;){this.value=&#39;Password&#39;};" onFocus="this.type=&#39;password&#39;;if(this.value==&#39;Password&#39;){this.value=&#39;&#39;};" value="Password" class="login_field" name="txt_Password" id="txt_Password">
+								 </div>
+							</div>
+						</div>
+						<div class="continue_button startTagButton student">
+							<input type="submit" style="opacity: 0;" class="continue_buttonhover" value="">
+							<div class="loader login" style="display: none;"></div>
+						</div>
+						</form>
+						<div class="clear"></div>
+					</div>
+					<div class="login_box_bottom_bg"></div>
+			  </div>
+			
+			
+		  </section>
+		  <div class="clear"></div>
+		  <footer class="footer_container">
+				<div class="pearson_logo"></div>
+				<div class="copyright">Copyright © 2014 Pearson Education, Inc. or its affiliate(s). All rights reserved.</div>
+				<div class="verNo">ver 3.1.4</div>
+		  </footer>
+		  <div class="clear"></div>
+		</article>
+		<article class="afterLoginWrapper">
+			<section>
+				<div class="iframeWrap">
+					<iframe id="wrapperFrame" name="wrapperFrame" src=""> iFrame to load tab related respective html</iframe>
+				</div>
+				<div class="clear"></div>
+			</section>
+			<footer>
+				<div class="footer_inner">
+					<div id="infoToolTip" class="lesson_tooltip btm_tooltip logout_setting_tooltip">
+						<div class="page_arrow sprite"></div>
+						
+						<div class="Tooltip_menu_wrap">
+						<div class="Tooltip_menu_wrap_inn">
+							<div class="logout_deatils">
+								<div class="middle">
+									<p class="logout_title"><strong>Version:</strong> <span id="appVerNum">1.0</span>[<span id="deployServer">D</span>] [<span id="appZipVersionNum">1.0</span>]</p>
+									<!-- <p><strong>ProductCode:</strong> <span class="productCode"></span></p> -->
+									<p><strong>Class:</strong> <span class="className"></span></p></p>
+									<p><strong>Configuration:</strong> <span class="connectedState">A - A</span></p>
+									<p class="userName"></p>
+								</div>
+							</div>
+							<div class="footer_button_area">
+								<button id="btnLogout" onClick="checkLogout();" class="button7 logout btn">Logout</button>
+							</div>
+						</div>
+						</div>
+						<div class="clear"></div>
+					</div>
+					<button class="logout_setting sprite right footerTab" type="button"></button>
+					<div class="loader stud"></div>
+					<div class="footer_in" id="footer-btn-cont">						
+					</div>
+				</div>
+			</footer>
+			<div class="clear"></div>
+		</article>
+	</div>
+	<!------ survey overlay starts -------------------------->
+	<div class="surveyOverlay">
+		<div class="surveyInner">
+			<div class="surveyHeader">Survey</div>
+			<div class="clear"></div>
+			<div class="surveyTitle">Question</div>
+			<div class="clear"></div>
+			<div class="natural_box_space margin_top">
+				<div class="question_box_space">
+					<div class="new_assignment_title">what you are reading better</div>
+						<div class="new_assignment_irr">
+							<ul class="question_part">
+								<li>
+									<div class="check_box_view sprite left"></div>
+									<div class="answer_key left">A</div>
+									<div class="middle">to understand what you are reading better</div>
+									<div class="clear"></div>
+								</li>
+								<li>
+									<div class="answer_key left">B</div>
+									<div class="check_box_view active sprite left"></div>
+									<div class="middle">to understand what you are reading better</div>
+									<div class="clear"></div>
+								</li>
+								<li>
+									<div class="answer_key left">C</div>
+									<div class="check_box_view sprite left"></div>
+									<div class="middle">to understand what you are reading better</div>
+									<div class="clear"></div>
+								</li>
+								<li>
+									<div class="answer_key left">D</div>
+									<div class="check_box_view sprite active left"></div>
+									<div class="middle">to understand what you are reading better</div>
+									<div class="clear"></div>
+								</li>
+							</ul>
+							<div class="clear"></div>
+							<div class="area_btn">
+								<div class="left "></div>
+								<button class="right button7 btn" id="btnSurveySubmit">Submit</button>
+								<div class="clear"> </div>
+							</div>
+							<div class="clear"></div>
+							<div class="submitSurveyMsg">Submitted Successfully</div>
+						</div>						
+					<div class="clear"> </div>
+				</div>
+			</div>
+		</div>
+	</div>
+	<!------ survey overlay ends -------------------------->
+	<!------ broadcast overlay starts -------------------------->
+	<div class="broadcastOverlay">
+		<div class="topBar">
+			<button id="broadcastBackBtn" class="btnBack sprite left" type="button"></button>
+			<div class="middle"><div></div></div>
+		</div>
+		<div class="broadcastWrapper">
+			<iframe id="broadcastFrame" name="broadcastFrame" src=""></iframe>
+		</div>
+	</div>
+	<!------ broadcast overlay ends -------------------------->
+	<!------ pdf reader overlay starts -------------------------->
+	<div class="pdfReaderOverlay">
+		<div class="topBar">
+			<button id="pdfReaderBackBtn" class="btnBack sprite left" type="button"></button>
+			<div class="middle"></div>
+		</div>
+		<div class="pdfReaderWrapper">
+			<iframe id="pdfReaderFrame" name="pdfReaderFrame" src=""></iframe>
+		</div>
+	</div>
+	<!------ pdf reader overlay ends -------------------------->
+	
+	<!-- for book review -->
+	<div class="bookReviewWrapper" style="display:none">
+		<div class="loader"></div>
+		<iframe id="bookReviewFrame" name="bookReviewFrame" src=""></iframe>
+	</div>
+	
+</body>
+<script type="text/template" id="footer-buttons-student">
+	<div class="footer_in_overlay"></div>
+	<% 	if (strStartsWith(productCode, ILIT20PREFIX, true) == true) { %>
+	<button class="Review sprite footerTab" type="button"><span>Review</span></button> 
+	<% } %>
+	<button class="Library sprite footerTab" type="button"><span>Library</span></button>
+	<% 	if (strStartsWith(productCode, ILIT20PREFIX, true) == true) { %>
+	<button class="Dashboard sprite footerTab" type="button"><span>Dashboard </span></button>
+	<% } %>
+	<button class="Notebooks sprite footerTab" type="button"><span>Notebooks</span></button>
+	<button class="Assignments sprite footerTab" type="button"><span>Assignments</span></button>
+	<button class="Connect sprite footerTab" type="button"><span>Connect</span></button>
+</script>
+
+<!-- start for district dropdown -->
+<script type="text/template" id="districtListTpl">
+	<select id="districtDDL">
+		<option value="">Select Organization</option>
+		<%
+		for(var iI=0; iI<districtList.length; iI++){
+			%>
+			<option value="<%= districtList[iI].DistrictID %>" data-distSuffix="<%= districtList[iI].DistSuffix %>">
+				<%= districtList[iI].DistName %>
+			</option> 
+			<%
+		}
+		%>
+	</select>
+</script>
+<!-- end for district dropdown -->
+</html>

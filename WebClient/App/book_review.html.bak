@@ -1,0 +1,258 @@
+<!doctype html>
+<html lang="en">
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=0, minimum-scale=1.0, maximum-scale=1.0" />
+	<title>iLiT</title>
+	
+	<link href="css/jquery-ui.css" media="all" rel="stylesheet" />
+	<link href="css/idangerous.swiper.css" media="all" rel="stylesheet" />
+	<link href="css/jquery.raty.css" media="all" rel="stylesheet" />
+	<link href="css/book_review.css" type="text/css" rel="stylesheet" />
+	<link href="css/book_review-dev.css" type="text/css" rel="stylesheet" />
+ 
+	<script type="text/javascript" src="js/jquery-1.10.2.js"></script>
+	<script type="text/javascript" src="js/jquery-ui.js"></script>
+	<script type="text/javascript" src="js/underscore-min.js"></script>
+	<script type="text/javascript" src="js/jquery.ui.touch-punch.min.js"></script>
+	<script type="text/javascript" src="js/idangerous.swiper-2.1.min.js"></script>
+	<script type="text/javascript" src="js/jquery.raty.js"></script>
+	
+	<script type="text/javascript" src="js/iSeriesBase.js"></script>
+	<script type="text/javascript" src="js/util.js"></script>
+	<script type="text/javascript" src="js/globals.js"></script>
+	<script type="text/javascript" src="js/constants.js"></script>
+	
+	<script type="text/javascript" src="js/client_native_communication.js"></script>
+	<script type="text/javascript" src="js/book_review.js"></script> 
+</head>
+<body class="Library-wrapper">
+	<div class="Library-wrapper-modal vertical-alignment-helper">
+		<div class="modal-wrapper  vertical-align-center">
+			<div class="modal-content-main">
+			
+			<div class="modal-content-main-width" id="mainContainer"></div>
+			</div>
+		</div>
+	</div>
+	<div id="dialog-message" title="Alert!" class="Ilit_alert_box"></div>
+</body>
+<script type="text/template" id="templateNoRecord">
+	<div class="modal-head">Book Review</div>
+	<div class="modal-container">
+		<div class="modal-block">
+			<h1 class="txt_center">No books available for review.</h1>
+		</div>
+		<div class="clearfix"></div>
+	</div>
+	<div class="modal-foot"></div>
+</script>
+<script type="text/template" id="templateLandingPage">
+	<div class="modal-head">Book Review</div>
+	<div class="modal-container">
+		<div class="book-Library-slider">
+			<button id="prevPagingBtn" class="lib-animation lib-next sprite" type="button"></button>
+			<button id="nextPagingBtn"  class="lib-animation lib-prev sprite" type="button"></button>
+			<div class="book-Library-wrapper swiper-container">
+				<div class="book-Library-content swiper-wrapper" ><!-- style="width:5000px; float:left;" -->
+					<%
+					var iCnt = 0;
+					$.each(Data.reviewData, function(Idx, Val){
+						var activeClass = "";
+						if (iCnt == RecordIndex){
+							activeClass = "active";
+						}
+						if (iCnt == 0){
+					%>
+					<div class="swiper-slide swiper-no-swiping">
+					<%
+						}
+					%>
+						<div data-recordIndex="<%= Idx %>" class="book-cover-slide <%= activeClass %> bookItem">
+							<img src="<%= Val.book_image %>" alt="<%= Val.book_title %>" /> 
+						</div>
+					<%
+						iCnt++;
+						if (iCnt == 5) {
+					%>
+					</div>
+					<%
+							iCnt = 0;
+						}
+					});
+					
+					if(iCnt != 0) {
+					%>
+					</div>
+					<% }%>
+				</div>
+			</div>
+			<div class="clearfix"></div>
+		</div>
+		<div id="formContainer" class="modal-block"></div>
+	</div>
+	<div id="buttonContainer" class="modal-foot"></div>
+</script>
+
+<script type="text/template" id="templateFormContent">
+	<div class="modal-block-div">
+		<h2><span class="font-weightnormal">Title :</span> <strong><%= Data.reviewData[RecordIndex].book_title %></strong></h2>
+		<h3>
+			<span class="font-weightnormal">Authors :</span> 
+			<strong><%= Data.reviewData[RecordIndex].author_name %></strong>
+		</h3>
+	</div>
+	<div class="modal-block-left left" style="width:150px">
+		<img src="<%= Data.reviewData[RecordIndex].book_image %>" alt="<%= Data.reviewData[RecordIndex].book_title %>" />
+	</div>
+	<div class="modal-block-right middle">
+		<p class="vertical-middle">
+			<div id="score-callback" data-score="<%=Data.reviewData[RecordIndex]["rating"]%>" class="left"></div>
+		<% if(Data.reviewData[RecordIndex].is_reviewed == "Y"){ %>
+			<span class="ratting-comt left"><%= Data.starRatings[Data.reviewData[RecordIndex].rating] %></span>
+		<% } else{ %>
+			<span id="starRatingTxt" class="ratting-comt left"><%=Data.starRatings[Data.reviewData[RecordIndex].rating]%></span>
+		<% }%>
+		</p>
+		<div class="clearfix"></div>
+		<div class="multi-Library">
+			<div class="multi-Library-title"> - Please Choose - </div>
+			<ul id="listFeedback" class="multi-Library-content">
+				<%				
+				for(var iCnt = 0; iCnt < Data.predefinedComments.length; iCnt++){					
+					if(Data.reviewData[RecordIndex].csv_feedback_tags && Data.reviewData[RecordIndex].csv_feedback_tags.length > 0){
+						var aFeedback = Data.reviewData[RecordIndex].csv_feedback_tags.split(","),
+							activeClass = (aFeedback.indexOf(iCnt.toString()) != -1) ? "active" : "";
+					}
+				%>
+				<li data-idFeedback="<%= iCnt %>" data-isReviewed="<%= Data.reviewData[RecordIndex].is_reviewed %>" class="<%= activeClass %>">
+					<%= Data.predefinedComments[iCnt] %>
+					<span class="lib-mark sprite"></span>
+				</li>
+				<%
+				}
+				%>
+			</ul>
+		</div>
+	</div>
+	<div class="clearfix"></div>
+</script>
+
+<script type="text/template" id="templateButtonContent">
+	<%
+		var inactiveClass = (Data.reviewData[RecordIndex].is_reviewed == "Y") ? "inactive" : "",
+			disabledStatus = (Data.reviewData[RecordIndex].is_reviewed == "Y") ? "disabled" : "";
+	%>
+	<% if(Data.reviewData[RecordIndex].is_reviewed == "N"){ %>
+	<button 
+		id="addComment" 
+		data-recordIndex="<%= RecordIndex %>" 
+		data-bookId="<%= Data.reviewData[RecordIndex].book_id %>" 
+		class="btn-normal <%= inactiveClass %>" 
+		<%= disabledStatus %>
+		type="button"
+	>Add Comments</button>
+	<% } %>
+	<button 
+		id="btnDetail" 
+		data-recordIndex="<%= RecordIndex %>" 
+		data-bookId="<%= Data.reviewData[RecordIndex].book_id %>" 
+		class="btn-normal margin-left5" 
+		type="button"
+	>Next</button>
+	<div class="clearfix"></div>
+</script>
+
+<script type="text/template" id="templateAddComment">
+
+	<div class="modal-head">Book Review</div>
+	<div class="modal-container">
+		<div class="modal-block">
+			<div class="modal-block-left left" style="width: 150px;">
+				<img src="<%= Data.reviewData[RecordIndex].book_image %>" alt="<%= Data.reviewData[RecordIndex].book_title %>" /> 
+			</div>
+			<div class="modal-block-right middle">
+				<h2><span class="font-weightnormal">Title :</span> <strong><%= Data.reviewData[RecordIndex].book_title %></strong></h2> 
+				<h3><span class="font-weightnormal">Authors :</span> <strong><%= Data.reviewData[RecordIndex].author_name %></strong></h3> 
+				<div class="clearfix"></div>
+				<textarea id="fldComment" cols="5" name="" class="book-lib-textarea"></textarea>
+				<label class="char-limit-label">Write you review here (150 characters).</label>
+			</div>
+			<div class="clearfix"></div>
+		</div>
+	</div>
+	<div class="modal-foot">
+		<button id="btnSave" data-recordIndex="<%= RecordIndex %>" data-bookId="<%= Data.reviewData[RecordIndex].book_id %>" class="btn-normal margin-top10" type="button">Save</button>
+		<button id="btnCancel" data-recordIndex="<%= RecordIndex %>" data-bookId="<%= Data.reviewData[RecordIndex].book_id %>" class="btn-normal margin-top10 btn-float-left" type="button">Cancel</button>
+		<div class="clearfix"></div>
+	</div>
+</script>
+<script type="text/template" id="templatePreviewReview">
+	<div class="modal-head">Book Review</div>
+	<div class="modal-container">
+		<div class="modal-block">
+			<div class="modal-block-left left" style="width:150px">
+				<img src="<%= Data.reviewData[RecordIndex].book_image %>" alt="<%= Data.reviewData[RecordIndex].book_title %>" /> 
+			</div>
+			<div class="modal-block-right middle">
+				<h2><span class="font-weightnormal">Title :</span> <strong><%= Data.reviewData[RecordIndex].book_title %></strong></h2> 
+				<h3><span class="font-weightnormal">Authors :</span> <strong><%= Data.reviewData[RecordIndex].author_name %></strong></h3> 
+				<p class="vertical-middle">
+					<% 	var rating = 0,
+							ratingImg = "",
+							totalRating = 5;
+						if(Data.reviewData[RecordIndex].rating.length == 0){
+							rating = 5;
+							ratingImg = "star-off.png";
+						}else{
+							rating = Data.reviewData[RecordIndex].rating;
+							ratingImg = "star-on.png";
+						}	
+							for(var iI=0; iI<rating; iI++) {
+					  %>
+							<img src="media/<%=ratingImg%>" alt="" class="left"/> 
+					  <% }
+							if(	Data.reviewData[RecordIndex].rating.length != 0 && 
+								totalRating > rating
+								){
+								ratingImg = "star-off.png";
+								for(var iI=0; iI< (totalRating - rating) ; iI++) {
+					   %>
+								<img src="media/<%=ratingImg%>" alt="" class="left"/> 
+					   <% }
+					   } %>
+					<% 	if(Data.reviewData[RecordIndex].rating.length != 0){
+					%>
+						<span class="ratting-comt left"><%= Data.starRatings[Data.reviewData[RecordIndex].rating] %></span>
+					<% } %>
+				</p>
+				<div class="clearfix"></div>
+				<ul>
+					<%
+					var aFeedback = Data.reviewData[RecordIndex].csv_feedback_tags.split(",");
+					for(var iCnt = 0; iCnt < aFeedback.length; iCnt++){
+						
+					%>
+					<li><%= Data.predefinedComments[parseInt(aFeedback[iCnt])] %></li>
+					<%
+					}
+					%>
+				</ul>
+				<h3 class="margin-bootom0">My Comments</h3>
+				<%
+				var sComments = (Data.reviewData[RecordIndex].comments != "") ? Data.reviewData[RecordIndex].comments : "No comments available.";
+				%>
+				<p><%= sComments %></p>
+			</div>
+			<div class="clearfix"></div>
+		</div>
+	</div>
+	<div class="modal-foot">
+		<% if(Data.reviewData[RecordIndex].is_reviewed == "N"){ %>
+		<button id="btnSubmit" data-recordIndex="<%= RecordIndex %>" data-bookId="<%= Data.reviewData[RecordIndex].book_id %>" class="btn-normal margin-top10" type="button">Submit</button>
+		<% }%>
+		<button id="btnCancel" data-recordIndex="<%= RecordIndex %>" data-bookId="<%= Data.reviewData[RecordIndex].book_id %>" class="btn-normal margin-top10 btn-float-left" type="button">Cancel</button>
+		<div class="clearfix"></div>
+	</div>
+</script>
+</html>

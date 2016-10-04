@@ -1,0 +1,58 @@
+.pagination {
+  position: absolute;
+  left: 0;
+  text-align: center;
+  bottom:20px;
+  width: 100%;
+  z-index:1;
+}
+.swiper-pagination-switch {
+  display: inline-block;
+  width: 11px;
+  height: 11px;
+  border-radius: 10px;
+  background: none repeat scroll 0 0 rgba(0, 0, 0, 0);
+  /*box-shadow: 0px 1px 2px #555 inset;*/
+  margin: 0 3px;
+  cursor: pointer;
+  border: 1px solid #fff;
+}
+.swiper-active-switch {
+  background: #fff; border: 1px solid #fff; width: 10px;
+height: 10px;
+}
+.swiper-container, .swiper-wrapper {
+  width: 100%;
+  height: 100%;
+  min-height: 400px;
+
+}
+
+/* ILIT-936 */
+.swiper-wrapper_45CC{
+	background:linear-gradient(to bottom, #6cbaf8 0%,#3a8ae1 100%);
+}
+
+.swiper-slide {
+/*    overflow-y: auto;*/
+    float: left;
+    position: relative;
+	overflow:hidden;
+}
+
+
+
+.popup-swiper-pagination-switch {
+  display: inline-block;
+  width: 11px;
+  height: 11px;
+ background: #fff; border: 1px solid #999; width: 10px;
+  background: #fff;
+  /*box-shadow: 0px 1px 2px #555 inset;*/
+  margin: 0 3px;
+  cursor: pointer;
+  border-radius: 10px;
+}
+.popupHighlightClass {
+  background-color: gray;  
+}

@@ -1,0 +1,3810 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=0, minimum-scale=1.0, maximum-scale=1.0">
+        <title>iLiT</title>
+		<link href="css/jquery.mCustomScrollbar.css" rel="stylesheet" />
+        <link href="css/assignments.css" media="all" rel="stylesheet" />
+        <link href="css/jquery-ui.css" media="all" rel="stylesheet" />
+        <link href="css/assignment.swiper.css" media="all" rel="stylesheet" />
+        <link href="css/fonts/fonts.css" media="all" rel="stylesheet" />
+		<link href="css/assignments_dev.css" media="all" rel="stylesheet" />
+        <link href="css/video-js.css" type="text/css" rel="stylesheet" />
+		<link href="css/idangerous.swiper.scrollbar.css" rel="stylesheet" />
+        <!--[if gte IE 9]>
+        <style type="text/css">
+            .gradient {
+				filter: none !important;
+			}
+        </style>
+        <![endif]-->
+
+        <script type="text/javascript" src="js/jquery-1.10.2.js"></script>
+        <script type="text/javascript" src="js/jquery-ui.js"></script>
+		
+        <script type="text/javascript" src="js/underscore-min.js"></script>
+        <script type="text/javascript" src="js/jquery.ui.touch-punch.min.js"></script>
+		<script type="text/javascript" src="js/swiper.min.js"></script>
+		<script type="text/javascript" src="js/jquery.cookie.js"></script>
+		<script type="text/javascript" src="js/jquery.mCustomScrollbar.concat.min.js"></script>
+        
+        <script type="text/javascript" src="js/util.js"></script>
+        <script type="text/javascript" src="js/constants.js"></script>
+        <script type="text/javascript" src="js/message_handler.js"></script>
+        <script type="text/javascript" src="js/application.js"></script>
+		<script type="text/javascript" src="js/iSeriesBase.js"></script>
+		<script type="text/javascript" src="js/video.js"></script>
+		<script type="text/javascript" src="js/globals.js"></script>
+		<script type="text/javascript" src="js/assignment-helper.js"></script>
+        <script type="text/javascript" src="js/assignments.js"></script>
+        <script type="text/javascript" src="js/assignments-frs.js"></script>
+        <script type="text/javascript" src="js/idangerous.swiper-2.1.min.js"></script>
+		<script type="text/javascript" src="js/swipe.js"></script>
+		<script type="text/javascript" src="js/iscroll.js"></script>
+        <script type="text/javascript" src="js/client_native_communication.js"></script>
+
+        <script type="text/javascript">
+			var onPageLoadCompleteStatus = false;
+			$(document).ready(function () {
+				if (sAssignmentId = $_GET(POPUP_VIEW.c_s_QUERY_PARAM_ASSIGNMENT_ID)) {
+					showLoader();
+					if (oPlatform.isIOS()) {
+						loadJS('js/NativeBridge.js', function () {
+							loadAssignment();
+						});
+					}
+					else {
+						loadAssignment();
+					}
+				}
+				else {
+					if (oPlatform.isIOS()) {
+						loadJS('js/NativeBridge.js', function () {
+							AssignmentsView.loadAssignmentList();
+						});
+					}
+					else {
+						setTimeout(function () {
+							AssignmentsView.loadAssignmentList();
+						}, 400);	
+					}
+				}
+            });
+			
+            $(window).resize(function () {
+				if (
+					AssigmentSlides.assignmentType == ASSIGNMENTS.c_s_ASSIGNMENT_IWTS && 
+					oPlatform.isAndroid() && 
+					!AssignmentsView.isUserOnTOC
+				) {
+					return false;
+				}
+				AssignmentsView.resize();
+            });
+
+            window.onorientationchange = function () {
+				if (
+					AssigmentSlides.assignmentType == ASSIGNMENTS.c_s_ASSIGNMENT_IWTS &&
+					oPlatform.isAndroid() &&
+					!AssignmentsView.isUserOnTOC
+				) {
+					return false;
+				}
+				AssignmentsView.resize();
+            };
+        </script>
+    </head>
+    <body style="-ms-touch-action: none;">
+		<div id="loaderContainer"></div>
+        <div class="wrapper">
+            <header>
+                <div class="header_inner">
+                    <div class="header_innerin gradient no_select_please">
+                        <button class="sld_lft left sprite" type="button" id="assignmentPrev"> <span class="sprite"></span> </button>
+                        <button class="sld_rgt sprite right" type="button" id="assignmentNext"></button>
+                        
+						<button id="btn-show-audio" class="sprite right" type="button"></button>
+						<div class="toc_toolls_2 right toc_panel_icons bookicon-container">
+						<button type="button" class="tocicons sprite right" id="bookicon" style="display:none;"></button>
+						<div style="display:none;" class="book-tooltip-container" id="currentBookTooltip"></div>
+						</div>
+                        <button id="view_all_answers" class="button9 right" type="button" style="display:none;">View Answers</button>
+                        <button id="view_all_skills" class="button9 right" type="button" style="display:none;">View Skills</button>
+                        <div class="middle" id="headerTitle"></div>
+                        <div class="clear"></div>
+                    </div>
+                    <div class="clear"></div>
+                </div>
+                <div class="clear"></div>
+            </header>
+            <div id="toc_container">
+                <div class="backgound_images bg13"></div>
+                <div id="toc_inner_container" class="main_wrapper"></div>
+                <div class="clear"></div>
+            </div>
+            <div id="slide_container" class="assignment_slider_wrapper"></div>
+        </div>
+        <!-- DIALOG BOX --->
+        <div id="dialog-message" title="Alert!" class="Ilit_alert_box"></div>
+		<div style="display:none;">
+			<audio id="audioPlayer" controls="false" autoplay="false" preload="true"></audio>
+		</div>
+    </body>
+    <!-- Templates Definition -->
+	
+	<!-- Current Book Tooltip -->
+	<script type="text/template" id="BookTooltipTemplate">
+<%  
+		if (objCurrentBook.Content != null) {
+			var currentReadingBookId = "",
+				rataBookId = "",
+				selectedCurrentReadingBook = {},
+				selectedRataBook = {};
+			 
+			if (
+				(objCurrentBook.Content.mycurrent_book_item_Id != "") &&
+				(objCurrentBook.Content.mycurrent_book_item_Id != null)
+			) {				
+				currentReadingBookId = objCurrentBook.Content.mycurrent_book_item_Id;				
+			}
+			 
+			if (
+				(objCurrentBook.Content.Ratabook_ItemID != null) &&
+				(objCurrentBook.Content.Ratabook_ItemID != "" )
+			) { 
+				rataBookId =  objCurrentBook.Content.Ratabook_ItemID;				
+			}						
+			selectedCurrentReadingBook = _.where(
+				objBookList.bookset[0], {
+					book_id: currentReadingBookId
+				}
+			);
+			selectedRataBook = _.where(
+				objBookList.bookset[0], {
+					book_id: rataBookId
+				}
+			);
+		}
+		if (
+			typeof selectedCurrentReadingBook != 'undefined' &&  
+			(
+				(selectedCurrentReadingBook.length > 0) ||
+				(selectedRataBook.length > 0)
+			)
+		) {
+%>	
+		<div style="display:block;" class="currentbook_tooltip">
+			<div class="currentbookpage_arrow sprite"></div>
+			<div class="Tooltip_title_wrap">
+				<div class="notes_icn_cont">
+					<ul class="oragnic_tooltip">
+<%
+					if(selectedCurrentReadingBook.length > 0) {
+						var currentBookTitle = selectedCurrentReadingBook[0].book_title,
+							_BookType = (selectedCurrentReadingBook[0]["book_type"] == "R") ? "rata" : "time_to_read",
+							_wordCount = (
+								(
+									selectedCurrentReadingBook[0]["word_count"] == null ||
+									typeof selectedCurrentReadingBook[0]["word_count"] == "undefined"
+								)?
+								0:
+								selectedCurrentReadingBook[0]["word_count"]
+							),
+							_fileType = selectedCurrentReadingBook[0]["file_type"],
+							_BookNumPage = (
+								(
+									selectedCurrentReadingBook[0][LIBRARY.c_s_BOOK_LIST_JSON_KEY.NUM_PAGE] == '' || selectedCurrentReadingBook[0][LIBRARY.c_s_BOOK_LIST_JSON_KEY.NUM_PAGE] == null ||
+									typeof selectedCurrentReadingBook[0][LIBRARY.c_s_BOOK_LIST_JSON_KEY.NUM_PAGE] == "undefined"
+								)?
+								0:
+								selectedCurrentReadingBook[0][LIBRARY.c_s_BOOK_LIST_JSON_KEY.NUM_PAGE]
+							);
+%>
+						<li class="cause" id="<%=ASSIGNMENTS.c_s_ASSIGNMENT_VIEW_CURRENTREADING%>_1" book_id="<%=currentReadingBookId%>" book_type="<%=_BookType%>" bookNumPage="<%= _BookNumPage %>" word_count="<%=_wordCount%>" book_title="<%=currentBookTitle%>" file_type="<%=_fileType%>">
+							<a href="#">
+								<span class="middle"> <%=ASSIGNMENTS.c_s_ASSIGNMENT_CURRENT_BOOK_LABEL%> </span>
+								<div class="clear"></div>
+							</a>
+						</li>
+<%
+					}
+					if (selectedRataBook.length > 0) {
+						var currentRataBookTitle = selectedRataBook[0].book_title,
+							_rataBookType = (
+								(selectedRataBook[0]["book_type"] == "R")?
+								"rata":
+								"time_to_read"
+							),
+							_ratawordCount = (
+								(
+									selectedRataBook[0]["word_count"] == null ||
+									typeof selectedRataBook[0]["word_count"] == "undefined"
+								)?
+								0:
+								selectedRataBook[0]["word_count"]
+							),
+							_ratafileType = selectedRataBook[0]["file_type"];
+							_rataBookNumPage = (
+								(
+									selectedRataBook[0][LIBRARY.c_s_BOOK_LIST_JSON_KEY.NUM_PAGE] == '' || selectedRataBook[0][LIBRARY.c_s_BOOK_LIST_JSON_KEY.NUM_PAGE] == null ||
+									typeof selectedRataBook[0][LIBRARY.c_s_BOOK_LIST_JSON_KEY.NUM_PAGE] == "undefined"
+								)?
+								0:
+								selectedRataBook[0][LIBRARY.c_s_BOOK_LIST_JSON_KEY.NUM_PAGE]
+							);
+%>
+						<li class="cause" id="<%=ASSIGNMENTS.c_s_ASSIGNMENT_VIEW_CURRENTREADING%>_2" book_id="<%=rataBookId%>" book_type="<%=_rataBookType%>" bookNumPage="<%= _rataBookNumPage %>" word_count="<%=_ratawordCount%>" book_title="<%=currentRataBookTitle%>" file_type="<%=_ratafileType%>">
+							<a href="#">
+								<span class="middle" ><%=ASSIGNMENTS.c_s_ASSIGNMENT_CURRENT_RATA_LABEL%></span>
+								<div class="clear"></div>
+							</a>
+						</li>
+<%
+					}
+%>						
+						<li class="clear"></li>
+					</ul>
+					<div class="clear"></div>
+				</div>
+				<div class="clear"></div>
+			</div>			
+		</div>
+<%
+		}
+%>
+	</script>
+	<!-- Current Book Tooltip Ends -->	
+	
+    <!-- Assignment TOC -->
+    <script type="text/template" id="assignTOCTemplate">
+        <div class="assignments_wrapper">
+            <div class="assignments_wrapper_inner">
+                <div class="assignment_title">Assignments</div>
+                <div class="assignments_container" style="overflow:auto;">
+                    <%=data%>
+                </div>
+            </div>
+        </div>
+    </script>
+    <!-- fillableworksheet Template -->
+    <script type="text/template" id="old_fillableworksheet">
+<%
+		var backgroundStyle = "";
+		if (data.background_image != "" && typeof data.background_image != "undefined") {
+			backgroundStyle = 'style="background-image: url(\''+mediaPath  + data.background_image +'\'); background-size:cover; background-repeat:repeat; height:100%"';
+		}
+%>
+		<div class="swiper-slide backgound_images bg15" reference-key="<%= referenceKey %>" id="<%= referenceKey %>" <%= backgroundStyle %> data-slide-type="<%= slideType %>">
+			<!-- <div class="" ></div> -->
+            <div class="main_wrapper">
+                <div class="bookBoxWrap gradient">
+                    <div class="slider_swiper_inner without_sliding_top">
+                        <section class="container_space addclass_for_padd"> 
+                            <div class="box_outer_space">
+								<div class="continent_box_space left">
+									<div class="continent_box_inner">
+										<!--
+										<div class="direction_title">
+											<strong>Direction:</strong> Read the folowing entences from Saint Louis Armstrong Beach. Think about the two words in bold type. Then answer to question 1 with number 1 and your answer to question 2 with number 2.
+										</div>
+										-->
+										<div class="scroll_padding">
+											<div class="continent_content_inner">  
+												<%=data%> 
+												<div class="clear"></div>
+											</div>
+										</div>
+										<div class="edit_box_title">
+											<button class="slideCommonSubmitButton button7 btn <%=ASSIGNMENTS.c_s_ASSIGN_READ_CHKPNT_BTN_SELECTOR%>" id="btnInput">
+												<%=$.trim(ASSIGNMENTS.c_s_INPUT_ANSWER_BTTN)%>
+											</button>
+											<div class="clear"></div>
+										</div>
+										<div class="clear"></div>
+									</div>
+								</div>
+								<div class="continent_edit_box hidden left" id="<%= ASSIGNMENTS.c_s_TYPEIN_ANSWER_SUBMIT_CONTAINER_SELECTOR %>" style="display:block;">
+									<div class="middle">
+										<div class="continent_wrap_box addwrap_box_padding">
+											<div class="continent_conts">
+												<div class="text_content"><%=$.trim(ASSIGNMENTS.c_s_HEADER_RESPONSE_TXT)%></div>
+												<div class="text_box_area">
+													<textarea autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" name="" id="textTypeArea"></textarea>
+												</div>
+												<div class="clear"></div>
+											</div>
+										</div>
+										<div class="edit_box_title">
+											<button class="right button7 btn btndisabled" id="btnSubmit"><%=$.trim(ASSIGNMENTS.c_s_SUBMIT_ANSWER_BTTN)%></button>
+											<button class="right button7 btn" id="btnPrint" style="display:none;"><%=$.trim(ASSIGNMENTS.c_s_PRINT_BTTN)%></button>
+											<div class="clear"></div>
+										</div>
+									</div>
+								</div>
+							</div>
+                        </section>
+                    </div>
+                </div>
+            </div>
+            <div class="clear"></div>
+        </div>
+    </script>
+    
+	<script type="text/template" id="iwt_video_intro_slide">
+		<% 
+		var _sVideo = mediaPath + data
+		/*var _sVideo = "http://vjs.zencdn.net/v/oceans.mp4";;*/
+		%>
+		<div class="videocontent">
+			<video id="video___0" class="video-js vjs-default-skin" width="100%" height="100%" controls=false data-setup='{"controls":false, "preload": auto, "autoplay": true,"techOrder": ["html5","flash"]}' >
+				<source type="video/mp4;" src="<%= _sVideo %>" />
+			</video>              
+		</div>
+	</script>
+    <!-- IWTS Summary Slide Starts -->
+    <script type="text/template" id="iwtsummaryslide">
+<%
+			var backgroundStyle = "";
+			if (
+				data.background_image != "" &&
+				typeof data.background_image != "undefined"
+			) {
+				backgroundStyle = 'style="background-image: url(\''+mediaPath  + data.background_image +'\'); background-size:cover;background-repeat:repeat;height:100%"';
+			}
+			var slideId = IwtsSummaryView.slideIdx;
+			var summaryTxt = "";
+			if (studentAttemptData) {
+				var summaryObj = _.where(studentAttemptData.itemSlides, {"slideID": slideId});
+				if (summaryObj.length) {
+					summaryTxt = (summaryObj[0].slideInputData.summary) ? decodeURIComponent(summaryObj[0].slideInputData.summary) : '';
+				}
+			}
+%>
+		<div class="swiper-slide backgound_images bg15" reference-key="<%=referenceKey%>" id="<%=referenceKey%>" data-slide-type="<%= slideType %>" <%= backgroundStyle%>>
+            <div class="main_wrapper">
+                <div class="slider_swiper_inner parallexIwt summary_div_conts feedback_summary_div_conts">
+                    <section class="container_space addclass_for_padd">
+                        <div class="box_outer_space">
+                            <div class="continent_box_space left_conts_place new_tab_space left">
+                                <div class="continent_box_inner">
+                                    <div class="scroll_padding">
+										<div class="continent_content_inner">  
+											<div class="text_container"> <%= $.trim(data.question) %> </div>
+											<div class="clear"></div>
+											<br/>
+											<div class="text_box_area">
+												<textarea autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" name="" id="txtSummary" disabled><%= $.trim(summaryTxt) %></textarea>
+
+											</div>
+											<div class="feedbackBttn">
+												<button class="button7 btn get_feedback<%= ($.trim(summaryTxt).length != 0)? '': ' btndisabled disabled' %> right" id="getFeedback">
+													Get Feedback
+												</button>
+											</div>
+											<div class="clear"></div>
+										</div>
+                                    </div>
+
+                                    <div class="edit_box_title paddright">
+                                        <button class="slideCommonSubmitButton button7 btn right<% if (!enableSubmit) { %> btndisabled disabled<% } %>" id="btnsubmit_summary">
+											<%=$.trim(ASSIGNMENTS.c_s_SUBMIT_SUMMARY_BTTN)%>
+										</button>
+                                        <button class="button7 btn right" id="btnemail_summary" style="display:none;">
+											<%= $.trim(ASSIGNMENTS.c_s_EMAIL_BTTN) %>
+										</button>
+                                        <button class="button7 btn right" id="btnprint_summary" style="display:none;">
+											<%= $.trim(ASSIGNMENTS.c_s_PRINT_BTTN) %>
+										</button>
+                                        <div class="clear"></div>
+                                    </div>
+                                    <div class="clear"></div>
+                                </div>
+                            </div>
+                            <div class="continent_edit_box new_tab_space left_conts_place left summary_right_box">
+                                <div class="middle">
+                                    <div class="continent_wrap_box">
+                                        <div class="continent_conts right_conts_element">
+
+                                            <div class="new_tab_space_title no_select_please"> 
+                                                <div class="right tabbing">
+                                                    <div class="button8 left active" id="instruction_tab"><%=$.trim(ASSIGNMENTS.c_s_INSTRUCTION_TAB_TITLE)%></div>
+                                                    <div class="button8 left" id="feedback_tab" ><%=$.trim(ASSIGNMENTS.c_s_FEEDBACK_TAB_TITLE)%></div>
+                                                    <div class="clear"></div>
+                                                </div>
+                                                <div class="clear"></div>
+                                            </div>
+                                            <div class="new_tab_space_title_tab no_select_please"> 
+                                                    <div class="back_bttn sprite backtoinst" style="display:none;"></div>
+													<div class="back_bttn sprite backtofeedbck" style="display:none;"></div>
+													<div class="back_bttn sprite backtodrill" style="display:none;"></div>
+                                                    <h3 class=""><%=$.trim(ASSIGNMENTS.c_s_INSTRUCTION_TAB_TITLE)%></h3>
+                                                <div class="clear"></div>
+                                            </div>
+                                            <div id="feedback_content" class="no_select_please">
+                                                <div class="new_tab_space_inner"> 
+                                                    <div class="scroller_panel" id="instructionText"><p><%= $.trim(data.text.text) %></p></div>
+                                                </div>
+                                            </div>
+                                            <div class="clear"></div>
+                                        </div>
+                                    </div>
+                                </div>
+								<div class="summaryLoader">
+									<img src="media/loader.gif"/>
+								</div>
+                            </div>
+                            <div class="clear"></div>
+                        </div>
+                        <div class="clear"></div>
+                    </section>
+                    <div class="clear"></div>
+                </div>
+                <div class="clear"></div>
+            </div>
+            <div class="clear"></div>
+        </div>
+    </script>
+    <!-- IWTS Summary Slide Ends --->
+    
+    <!-- IWTS Summary Slide Instruction Starts -->
+    <script type="text/template" id="iwtsummaryinstruction">
+    <div class="new_tab_space_inner"> 
+        <div class="scroller_panel" id="instructionText"><p><%= $.trim(data) %></p></div>                                              
+    </div>
+    </script>
+    <!-- IWTS Summary Slide Instruction Ends -->
+    
+    <!-- IWTS Summary Slide Feedback Starts -->
+    <script type="text/template" id="iwtsummaryfeedback">
+		<div id="score_container">
+        <div class="sub_title_space">Overall</div>
+        <div class="feedboxes_spaces">
+			<div class="feedboxes_spaces_rate">
+				<%
+					var score = data.summaryScore.overallScore;					
+					
+					for(var i=1; i<=4; i++)
+					{	
+				%>
+					<div class="scrore<%=i%>"><%=i%></div>
+				<%  
+					}
+				%>                               
+				<div class="clear"></div>
+			</div>
+			<div class="row_boxes_space">
+				<% 
+					for(var b=1; b <= 13; b++)
+					{
+						if(score == 1 && b == 1)
+						{
+							var active = 'active';
+						}
+						else if(score == 2 && b <= 5)
+						{
+							var active = 'active';
+						}
+						else if(score == 3 && b <= 9)
+						{
+							var active = 'active';
+						}
+						else if(score == 4 && b <= 13)
+						{
+							var active = 'active';
+						}
+						else
+						{
+							var active = '';
+						}
+						
+						if(b == 13)
+						{
+							var last = 'last';
+						}
+						else
+						{
+							var last = '';
+						}
+					%>
+						<div class="box_over color_<%= b %> <%= active %> <%= last %>"></div>
+					<%
+					}
+					%>
+				<div class="clear"></div>
+			</div> 
+			<div class="clear"></div>
+		</div>
+		<% if(_.size(data.summaryScore.sections) > 0) {%>
+		<div class="sub_title_space2">
+			<div class="right">Excellent</div>
+			<div class="right catagory_tilt">Fair</div>
+			<div class="right catagory_tilt">Poor</div>
+			<div class="clear"></div>
+		</div>
+		
+		<div class="catagory_section">
+		<% _.each(data.summaryScore.sections, function(section, k){
+			var cnt = k+1;
+			var last = (cnt == _.size(data.summaryScore.sections))?'last':'';			
+		%>
+			<div class="catagory_row <%= last %>">
+				<div class="cat_section left">                                	
+						<%= $.trim(ASSIGNMENTS.c_s_FEEDBACK_SECTION_TXT)+' '+cnt %>
+					<div class="clear"></div>
+				</div>
+				<div class="cat_sound section_<%= k %>">
+					<div class="right"><img src="media/paly_btn.png" class="section_drill img_link" data-val="<%= k %>" data-title="<%= ASSIGNMENTS.c_s_FEEDBACK_SECTION_TXT+' '+cnt %>" width="23" height="23" alt=""></div>
+					<div class="row_boxes_space left">
+						<%
+						for(var b=1; b <= 13; b++)
+						{
+							if(section.score == 1 && b == 1)
+							{
+								var active = 'active';
+							}
+							else if((section.score == 2 || section.score == 3) && b <= 7)
+							{
+								var active = 'active';
+							}
+							else if((section.score == 4 || section.score > 4) && b <= 13)
+							{
+								var active = 'active';
+							}									
+							else
+							{
+								var active = '';
+							}
+							
+							if(b == 13)
+							{
+								var last = 'last';
+							}
+							else
+							{
+								var last = '';
+							}
+						%>
+							<div class="box_over color_<%= b %> <%= active %> <%= last %>"></div>
+						<%
+						}
+						%>					
+						
+						<div class="clear"></div>
+					</div>
+					
+				</div>
+				<div class="clear"></div>
+			</div>
+			
+		<% }); %>
+		<div class="clear"></div>
+		</div>
+		<% } %>
+		<div class="catagory_section">
+			<%
+			var summary = checkData.summary;
+			var sentence = checkData.sentences;
+			
+			if(_.size(checkData.redundancyFeedback) > 0 || IwtsSummaryView.savedDataLoaded == true)
+			{	
+			%>
+			<div class="catagory_row <%= (IwtsSummaryView.savedDataLoaded == true)?'disable-controls':'' %>">
+				<div class="cat_section left"><%=$.trim(ASSIGNMENTS.c_s_REPEATED_IDEAS_TXT)%><div class="clear"></div></div>
+				<div class="cat_sound">
+					<div class="right"><img src="media/paly_btn.png" class="redundancy_drill img_link" width="23" height="23" alt=""></div>
+					<div class="row_boxes_space check left"><%= (IwtsSummaryView.savedDataLoaded == true)?'':ASSIGNMENTS.c_s_CHECK_WORK_TXT %><div class="clear"></div></div>					
+			  </div>
+				<div class="clear"></div>
+			</div>
+			<% }
+			
+			if(_.size(checkData.irrelevancyFeedback) > 0 || IwtsSummaryView.savedDataLoaded == true)
+			{				
+			%>
+			<div class="catagory_row <%= (IwtsSummaryView.savedDataLoaded == true)?'disable-controls':'' %>">
+				<div class="cat_section left"><%=$.trim(ASSIGNMENTS.c_s_UNRELATED_IDEAS_TXT)%><div class="clear"></div></div>
+				<div class="cat_sound">					
+					<div class="right"><img src="media/paly_btn.png" class="irrelevant_drill img_link" width="23" height="23" alt=""></div>
+					<div class="row_boxes_space check left"><%= (IwtsSummaryView.savedDataLoaded == true)?'':ASSIGNMENTS.c_s_CHECK_WORK_TXT %><div class="clear"></div></div>
+				</div>
+				<div class="clear"></div>
+			</div>
+			<% } 
+			
+			if(_.size(checkData.copyingFeedback) > 0 || IwtsSummaryView.savedDataLoaded == true)
+			{	
+			%>
+			
+			<div class="catagory_row <%= (IwtsSummaryView.savedDataLoaded == true)?'disable-controls':'' %>">
+				<div class="cat_section left"><%=$.trim(ASSIGNMENTS.c_s_COPYING_TXT)%><div class="clear"></div></div>
+				<div class="cat_sound">					
+					<div class="right"><img src="media/paly_btn.png" class="copying_drill img_link"  width="23" height="23" alt=""></div>
+					<div class="row_boxes_space check left"><%= (IwtsSummaryView.savedDataLoaded == true)?'':ASSIGNMENTS.c_s_CHECK_WORK_TXT %><div class="clear"></div></div>
+				</div>
+				<div class="clear"></div>
+			</div>
+			<% } 
+			
+			if(_.size(checkData.spellingFeedback) > 0 || IwtsSummaryView.savedDataLoaded == true)
+			{				
+			%>			
+			<div class="catagory_row last <%= (IwtsSummaryView.savedDataLoaded == true)?'disable-controls':'' %>">
+				<div class="cat_section left"><%=$.trim(ASSIGNMENTS.c_s_SPELLING_TXT)%><div class="clear"></div></div>
+				<div class="cat_sound">					
+					<div class="right"><img src="media/paly_btn.png" class="spell_drill img_link" width="23" height="23" alt=""></div>
+					<div class="row_boxes_space check left"><%= (IwtsSummaryView.savedDataLoaded == true)?'':ASSIGNMENTS.c_s_CHECK_WORK_TXT %><div class="clear"></div></div>
+				</div>
+				<div class="clear"></div>
+			</div>
+			<% } %>
+			<div class="clear"></div>
+		</div>
+		<div class="clear"></div>
+		</div>
+		
+		<% _.each(data.summaryScore.sections, function(section, k){ %>
+		<div class="drill_container" id="drill_container<%=k%>" style="display:none;"> 
+			<div class="hint_tab_space_inner">
+				<div id="drill_hint_txt" class="hint_text_div">
+				<% _.each(section.hints, function(hint, hint_cnt){ 
+					%>
+					<%= hint %><br>
+					<%
+				});
+				%>				
+				<%= (typeof section.hints == 'undefined' || section.hints.length == 0) ? ASSIGNMENTS.c_s_GOOD_JOB_MSG : '' %>				
+				
+				</div>
+			</div>
+			<div class="new_tab_space_inner">
+			<div class="scroller_panel" id="drill_text<%=k%>"><p>&nbsp;</p></div>  
+			</div>
+		</div>
+		<% }); %>
+		
+		<div class="drill_container check_work_drill_container" style="display:none;"> 
+			<div class="hint_tab_space_inner">
+				<div id="chckwrk_drill_hint_txt" class="hint_text_div"></div>
+			</div>
+			<div class="new_tab_space_inner">
+			<div class="scroller_panel" id="chckwrk_drill_text"><p></p></div>
+			<div class="scroller_panel" id="link_text" style="display:none;"><p></p></div>
+			</div>
+		</div>
+    </script>
+    <!-- IWTS Summary Slide Feedback Ends -->
+	
+	<!-- Paragraph Slide Starts -->
+    <script type="text/template" id="paragraphslide">        
+		<%
+		var backgroundStyle = "";
+		if(data.background_image != "" && typeof data.background_image != "undefined"  ){
+			backgroundStyle = 'style="background-image: url(\''+mediaPath  + data.background_image +'\'); background-size:cover;background-repeat:repeat;height:100%"';
+		}
+		
+		var para = "";
+		if(studentAttemptData){			
+			para = (studentAttemptData.itemSlides[0].slideInputData.para) ? decodeURIComponent(studentAttemptData.itemSlides[0].slideInputData.para) : ''; 
+			
+		}
+		%>
+		<div class="swiper-slide backgound_images bg15" reference-key="<%=referenceKey%>" id="<%=referenceKey%>" <%= backgroundStyle%> data-slide-type="<%= slideType %>">
+            <div class="main_wrapper">
+                <div class="slider_swiper_inner summary_div_conts feedback_summary_div_conts without_sliding_top">
+                    <section class="container_space addclass_for_padd">
+                        <div class="box_outer_space">
+                            <div class="continent_box_space left_conts_place new_tab_space left">
+                                <div class="continent_box_inner  paragraph_prompt_slide">
+                                    <div class="scroll_padding">
+                                    <div class="continent_content_inner">
+										<div class="prompt_container">
+											<div class="prompt_text_heading">
+												<div class="cnt_sld left"><%= $.trim(ASSIGNMENTS.c_s_PARAGRAPH_PROMPT_HEADING) %></div>
+												<div class="arrow_pd left"></div>
+												<div class="clear"></div>
+											</div>
+											<div class="clear"></div>
+											<div class="prompt_text_container"><%= $.trim(data.prompt) %></div>
+										</div>
+                                        <div class="clear"></div>
+                                        <div class="text_box_area accordin_slide_open"><textarea autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" name="" id="txtParagraph"><%= $.trim(para) %></textarea></div>
+                                        <div class="feedbackBttn"><button class="button7 btn get_feedback 
+										<%= ($.trim(para) == '')?'btndisabled disabled':'' %> right" id="getFeedback">Get Feedback</button></div>
+                                        <div class="clear"></div>
+                                    </div>
+                                    </div>
+                                    <div class="edit_box_title paddright">
+                                        <button class="slideCommonSubmitButton button7 btn right btndisabled disabled" id="btnsubmit_paragraph"><%=$.trim(ASSIGNMENTS.c_s_SUBMIT_GRADING_BTTN)%></button>
+                                        <button class="button7 btn right" id="btnemail_paragraph" style="display:none;"><%=$.trim(ASSIGNMENTS.c_s_EMAIL_PARAGRAPH_BTTN)%></button>
+                                        <button class="button7 btn right" id="btnprint_paragraph" style="display:none;"><%=$.trim(ASSIGNMENTS.c_s_PRINT_ASSIGNMENT_BTTN)%></button>
+                                        <div class="clear"></div>
+                                    </div>
+                                    <div class="clear"></div>
+                                </div>
+                            </div>
+                            <div class="continent_edit_box new_tab_space left_conts_place left summary_right_box">
+                                <div class="middle">
+                                    <div class="continent_wrap_box">
+                                        <div class="continent_conts right_conts_element">
+                                            <div class="new_tab_space_title"> 
+                                                <div class="right tabbing">
+                                                    <div class="button8 left active" id="instruction_tab"><%=$.trim(ASSIGNMENTS.c_s_INSTRUCTION_TAB_TITLE)%></div>
+                                                    <div class="button8 left" id="feedback_tab" ><%=$.trim(ASSIGNMENTS.c_s_FEEDBACK_TAB_TITLE)%></div>
+                                                    <div class="clear"></div>
+                                                </div>
+                                                <div class="clear"></div>
+                                            </div>
+                                            <div class="new_tab_space_title_tab"> 
+												<div class="back_bttn sprite backtoinst" style="display:none;"></div>
+												<div class="back_bttn sprite backtofeedbck" style="display:none;"></div>
+												<div class="back_bttn sprite backtodrill" style="display:none;"></div>
+												<h3 class=""><%=$.trim(ASSIGNMENTS.c_s_INSTRUCTION_TAB_TITLE)%></h3>
+                                                <div class="clear"></div>
+                                            </div>
+                                            <div id="feedback_content">
+                                                <div class="new_tab_space_inner"> 
+                                                    <div class="scroller_panel" id="instructionText"><p><%= $.trim(data.text) %></p></div>
+                                                </div>
+                                            </div>
+                                            <div class="clear"></div>
+                                        </div>
+                                    </div>
+                                </div>
+								<div class="summaryLoader">
+									<img src="media/loader.gif"/>
+								</div>
+                            </div>
+                            <div class="clear"></div>
+                        </div>
+                        <div class="clear"></div>
+                    </section>
+                    <div class="clear"></div>
+                </div>
+                <div class="clear"></div>
+            </div>
+            <div class="clear"></div>
+        </div>
+    </script>
+    <!-- Paragraph Slide Ends --->
+    
+    <!-- Paragraph Slide Instruction Starts -->
+    <script type="text/template" id="paragraphinstruction">
+    <div class="new_tab_space_inner"> 
+        <div class="scroller_panel paragraph_instructionText" id="instructionText"><p><%= $.trim(data) %></p></div>
+
+    </div>
+    </script>
+    <!-- Paragraph Slide Instruction Ends -->
+    
+    <!-- Paragraph Slide Feedback Starts -->
+    <script type="text/template" id="paragraphfeedback">
+        
+		<div id="score_container">
+			<!--- Overall Starts---->
+			<div class="sub_title_space">Overall</div>
+			<div class="feedboxes_spaces">
+				<div class="feedboxes_spaces_rate">
+<%
+				var score = data.paragraphFeedback.score;
+				for (var i = 1; i <= 4; i++) {	
+%>
+					<div class="scrore<%= i %>"><%= i %></div>
+				<% } %>
+					<div class="clear"></div>
+				</div>
+				<div class="row_boxes_space">
+<% 
+				for (var b = 1; b <= 13; b++) {
+					var last = '',
+						active = '';
+					if (score == 1 && b == 1) {
+						active = 'active';
+					}
+					else if (score == 2 && b <= 5) {
+						active = 'active';
+					}
+					else if (score == 3 && b <= 9) {
+						active = 'active';
+					}
+					else if (score == 4 && b <= 13) {
+						active = 'active';
+					}
+					
+					if (b == 13) {
+						last = 'last';
+					}
+%>
+					<div class="box_over color_<%= b %> <%= active %> <%= last %>"></div>
+				<% } %>
+					<div class="clear"></div>
+				</div>
+				<div class="clear"></div>
+			</div>
+			<!--- Overall Ends ---->
+			
+			<div id="paragraph-score-container">
+				<div class="sub_title_space"><%= ASSIGNMENTS.c_s_PARAGRAPH_TXT %></div>
+				<div class="catagory_section">
+					<!--- Topic Focus ---->
+					<div id="topic_focus"></div>
+					
+					<!--- Topic Development ---->
+					<div id="topic_development"></div>
+					
+					<!--- Organization ---->
+					<div id="organization"></div>	
+				</div>
+				<div class="sub_title_space"><%= ASSIGNMENTS.c_s_SENTENCE_VARIETY_TXT %></div>
+				<div class="catagory_section">
+					<!--- Length ---->
+					<div id="length_div"></div>
+					
+					<!--- Beginnings ---->
+					<div id="beginnings"></div>
+					
+					<!--- Structure ---->
+					<div id="structure"></div>
+				</div>
+				<div class="sub_title_space"><%= ASSIGNMENTS.c_s_WORD_CHOICE_TXT %></div>
+				<div class="catagory_section">
+					<!--- Vague Adjectives ---->
+					<div id="vague_adj"></div>
+					
+					<!--- Repeated Words ---->
+					<div id="repeated_words"></div>
+					
+					<!--- Pronounce ---->
+					<div id="pronounce"></div>
+				</div>
+				<div class="sub_title_space"><%= ASSIGNMENTS.c_s_EDITING_TOOL_TXT %></div>
+				<div class="catagory_section">
+					<!--- Spelling ---->
+					<div id="spelling"></div>
+					
+					<!--- Grammar ---->
+					<div id="grammar"></div>
+					
+					<!--- Repeated Ideas ---->
+					<div id="repeated_ideas"></div>
+				</div>
+			</div>
+			<div class="clear"></div>
+		</div>
+		<div class="drill_container" style="display:none;"> 
+			<div class="hint_tab_space_inner">
+				<div id="drill_hint_txt" class="hint_text_div">
+				</div>
+			</div>
+			<div class="new_tab_space_inner">
+				<div class="scroller_panel" id="drill_text"><p></p></div>
+				<div class="scroller_panel" id="link_text" style="display:none;"><p></p></div>
+			</div>
+		</div>
+			
+    </script>
+    <!-- Paragraph Slide Feedback Ends -->
+	
+	<!--- Paragraph Feedback Check Work Template -->
+	<script type="text/template" id="paragraphfeedbackCheck">
+		<% if(_.size(data) > 0){ %>
+		<div class="catagory_row <%= last %>">
+			<div class="cat_section left">
+				<%=$.trim(title)%>
+				<div class="clear"></div>
+			</div>
+			<div class="cat_sound">
+				<div class="right"><img class="<%= drill_class %> img_link" src="media/paly_btn.png" width="23" height="23" alt=""></div>
+				<div class="row_boxes_space check left">
+					<%= msg %>
+				<div class="clear"></div>
+			</div>
+				
+		  </div>
+			<div class="clear"></div>
+		</div>
+		<% } %>
+	</script>
+	
+	<!--- Paragraph Feedback Sub Score Template---->
+	<script type="text/template" id="paragraphfeedbackScore">
+	
+		<% if(_.size(data) > 0){
+			
+			if(rating == ASSIGNMENTS.c_s_FEEDBACK_GOOD || rating == ASSIGNMENTS.c_s_FEEDBACK_RIGHT_IDEAS)
+			{
+				var topic_score = 3;
+			}
+			else if(rating == ASSIGNMENTS.c_s_FEEDBACK_FAIR || rating == ASSIGNMENTS.c_s_FEEDBACK_MANY_IDEAS 
+			|| rating == ASSIGNMENTS.c_s_FEEDBACK_GOOD_VARIETY)
+			{
+				var topic_score = 2;
+			}
+			else if(rating == ASSIGNMENTS.c_s_FEEDBACK_POOR || rating == ASSIGNMENTS.c_s_FEEDBACK_FEW_IDEAS 
+			|| rating == ASSIGNMENTS.c_s_FEEDBACK_POOR_VARIETY)
+			{
+				var topic_score = 1;
+			}
+			
+		%>
+			<div class="catagory_row <%= (rating != "tooFewSentences")?'new_features_numbers':'' %> <%= last %>">
+				<div class="cat_section left">                                	
+						<%= $.trim(title) %>
+					<div class="clear"></div>
+				</div>
+				<div class="cat_sound">
+					<% if(rating != "tooFewSentences")
+					{%>
+					<div class="feedboxes_spaces_rate" style="display: block;">				
+							<div class="scrore1 active">1</div>	
+							<% if(limit == 3) {%>
+							<div class="score_mid active">2</div>						
+							<div class="scrore4 active">3</div>
+							<% }
+							else if(limit == 2)
+							{ %>
+							<div class="scrore4 active">2</div>
+							<%}%>
+						<div class="clear"></div>
+					</div>
+					<% } %>
+					<div class="right"><img src="media/paly_btn.png" class="<%= drill_class %> img_link" width="23" height="23" alt=""></div>
+					<div class="row_boxes_space <%= (rating == "tooFewSentences")?'check':'' %> left">
+					
+						<% 
+							if(rating != "tooFewSentences")
+							{
+								for(var b=1; b <= 13; b++)
+								{
+									if(topic_score == 1 && b == 1)
+									{
+										var active = 'active';
+									}
+									else if(topic_score == 2 && b <= 7 && limit == 3)
+									{
+										var active = 'active';
+									}
+									else if(topic_score == limit && b <= 13)
+									{
+										var active = 'active';
+									}									
+									else
+									{
+										var active = '';
+									}
+									
+									if(b == 13)
+									{
+										var last = 'last';
+									}
+									else
+									{
+										var last = '';
+									}
+								%>
+									<div class="box_over color_<%= b %> <%= active %> <%= last %>"></div>
+								<%
+								}
+							}
+							else
+							{
+							%>
+								<span class="span_red"><%= ASSIGNMENTS.c_s_FEEDBACK_FEW_SENTENCES %></span>
+							<% } %>							
+					
+						<div class="clear"></div>
+					</div>
+					
+				</div>
+				<div class="clear"></div>
+			</div>
+			
+		<% } %>
+		<div class="clear"></div>						
+	</script>
+	
+    <!-- iwthighlightslide Template -->
+	<script type="text/template" id="iwthighlightslide">
+<%
+			var backgroundStyle = "";
+			if(data.background_image != "" && typeof data.background_image != "undefined"  ){
+				backgroundStyle = 'style="background-image: url(\''+mediaPath  + data.background_image +'\'); background-size:cover;background-repeat:no-repeat;height:100%"';
+			}
+			var hightlightHTMLContent = null;
+			if (data.single_word_highlight == true) {
+				hightlightHTMLContent = returnWordSelectionTxt(data.interactive_text);
+			}
+			else {
+				hightlightHTMLContent = returnSentenceSelectionTxt(data.interactive_text);
+			}
+			
+%>
+			<div class="swiper-slide backgound_images bg15" reference-key="<%= referenceKey %>" data-slide-type="<%= slideType %>" id="<%= referenceKey %>" <%= backgroundStyle %>>
+            <div class="main_wrapper no_select_please">
+                <div class="slider_swiper_inner parallexIwt slide_with_bg_image">
+                    <section class="container_space addclass_for_padd">
+                        <div class="box_outer_space">
+                            <div class="continent_box_space left  swiper-no-swiping">
+                                <div class="continent_box_inner">
+                                    <div class="scroll_padding">
+										<div class="continent_content_inner rangySelection">
+											<%= hightlightHTMLContent%>
+											<div class="clear"></div>
+										</div>
+                                    </div>
+									<div class="clear"></div>
+                                    <div class="edit_box_title">
+                                        <button class="button7 btn <%=ASSIGNMENTS.c_s_ASSIGN_READ_CHKPNT_BTN_SELECTOR%>" id="<%= readingCheckPointButtonId %>"><%=$.trim(ASSIGNMENTS.c_s_READ_CHECKPOINT_BTN_TXT)%></button>
+                                        <div class="clear"></div>
+                                    </div>
+                                    <div class="clear"></div>
+                                </div>
+                            </div>
+                            <div class="continent_edit_box hidden left">
+                                <div class="middle">
+                                    <div class="continent_wrap_box">
+                                        <div class="continent_conts no_select_please">
+                                            <div class="highlight_fail_again_text"><%=data.fail_again_text%></div>
+                                            <div class="highlight_fail_text"><%=data.fail_text%></div>
+                                            <div class="highlight_pass_text"><%=data.pass_text%></div>
+                                            <div class="highlight_instrction"><%=data.question%></div>
+                                            
+                                            <div class="clear"></div>
+                                        </div>
+                                    </div>
+                                    <div class="edit_box_title">
+                                        
+                                        <button class="slideCommonSubmitButton right button7 btn right <%= ASSIGNMENTS.c_s_HIGHLIGHT_SUBMIT_BTN_SELECTOR %>" ><%=ASSIGNMENTS.c_s_SUBMIT_ANSWER_BTTN%></button>
+                                        <div class="edit_icon_space right">
+                                            <%
+											
+											$.each(data.highlights, function(idx, val){
+												
+												if(val.color.toLowerCase() == 'y'){
+													var colorBtn = ASSIGNMENTS.c_s_RANGY_YELLOW_COLOR;
+													var colorMarker = ASSIGNMENTS.c_s_RANGY_YELLOW_MARKER;
+													correctIndex = val.color.toLowerCase()+"-"+val.index+"-"+val.length;
+												}else{
+													var colorBtn = ASSIGNMENTS.c_s_RANGY_RED_COLOR;
+													var colorMarker = ASSIGNMENTS.c_s_RANGY_RED_MARKER;
+													correctIndex = val.color.toLowerCase()+"-"+val.index+"-"+val.length;
+												}
+												/*
+												var correctAnswer = getParticularString(stripHtmlTagsFromString(data.interactive_text), val.index, (parseInt(val.index)+parseInt(val.length)));*/
+												
+												
+												
+											%>
+											<button correct-answer="<%=correctIndex%>" class="icon_edit left <%=colorBtn + " " + colorMarker%> sprite2 btn"></button>
+											<%
+											
+											});
+											%>
+                                            <!-- <button class="icon_edit left yellow yellowMarkar sprite2 btn"></button> -->
+                                            <button class="icon_edit left eraser markarEraser sprite2 btn"></button>
+                                        </div>
+                                        <div class="clear"></div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="clear"></div>
+                        </div>
+                        <div class="clear"></div>
+                    </section>
+                    <div class="clear"></div>
+                </div>
+                <div class="clear"></div>
+            </div>
+            <div class="clear"></div>
+        </div>
+    </script>
+    <!-- End of iwthighlightslide Template -->
+
+    <!-- iwttextanswerslide Template -->
+    <script type="text/template" id="iwttextanswerslide">
+            <%
+			var backgroundStyle = "";
+			if(data.background_image != "" && typeof data.background_image != "undefined"  ){
+				backgroundStyle = 'style="background-image: url(\''+mediaPath  + data.background_image +'\'); background-size:cover;background-repeat:no-repeat;height:100%"';
+			}
+			%>
+            <div class="swiper-slide backgound_images bg14" data-slide-type="<%= slideType %>" reference-key="<%=referenceKey%>" id="<%=referenceKey%>" <%=backgroundStyle%>>
+			<div class="main_wrapper">
+                <div class="slider_swiper_inner parallexIwt <%= (data.static_text != "")?'slide_with_bg_image':'' %>">
+                    <section class="container_space addclass_for_padd">
+                        <div class="box_outer_space">
+                            <div class="continent_box_space left">
+                                
+                                <div class="continent_box_inner">
+                                    <div class="scroll_padding">
+										<% if(stripHtmlTagsFromString(data.static_text) != ""){ %>
+										<div class="continent_content_inner">
+											<%= data.static_text %>
+											<div class="clear"></div>
+										</div>
+										<% }else if(stripHtmlTagsFromString(data.interactive_text) != ""){ %>
+										<div class="continent_content_inner">
+											<%= data.interactive_text %>
+											<div class="clear"></div>
+										</div>
+										<% }else{ %>
+										<div class="continent_content_inner input_type_text_slide_left_container">
+											<div class="question_area_div"><%= data.question %></div>
+											<div class="text_box_area"><textarea autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" name="" class="input_type_text_slide_left_txtarea" disabled></textarea></div>
+											<div class="clear"></div>
+										</div>
+										<div class="edit_box_title">
+											<button class="button7 btn <%=ASSIGNMENTS.c_s_ASSIGN_IWT_TXT_ANSWER_SUBMIT_BTN_SELECTOR%>"><%=ASSIGNMENTS.c_s_SUBMIT_ANSWER_BTTN%></button>
+											<div class="clear"></div>
+										</div>
+										<% }%>
+                                    </div>
+                                    <div class="clear"></div>
+                               </div>
+                            </div>
+                            <% if(data.static_text == ""){ %>
+                            <div class="continent_edit_box hidden left">
+                                <div class="middle">
+                                    <div class="continent_wrap_box">
+                                        <div class="continent_conts">
+                                            <p>
+<%
+												if (
+													typeof data.pass_text == 'undefined' ||
+													data.pass_text == null ||
+													data.pass_text.trim().length == 0
+												) {
+%>
+												<%= ASSIGNMENTS.c_s_SUBMIT_SUCCESS_MSG %>
+<%													
+												}
+												else {
+%>
+												<%= data.pass_text %>
+<%												
+												}
+%>
+											</p>
+                                            <div class="clear"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <% }%>
+                            <div class="clear"></div>
+                        </div>
+                        <div class="clear"></div>
+                    </section>
+                    <div class="clear"></div>
+                </div>
+                <div class="clear"></div>
+            </div>
+            <div class="clear"></div>
+        </div>
+    </script>
+    <!-- End of iwttextanswerslide Template -->
+	
+	
+	
+	<!-- iwtdndslide Template -->
+    <script type="text/template" id="iwtdndslide">        
+<%
+			var backgroundStyle = "";
+			if(data.background_image != "" && typeof data.background_image != "undefined"  ){
+				backgroundStyle = 'style="background-image: url(\''+mediaPath  + data.background_image +'\'); background-size:cover;background-repeat:no-repeat;height:100%"';
+			}
+%>
+		<div class="swiper-slide backgound_images bg14" data-slide-type="<%= slideType %>" reference-key="<%=referenceKey%>" id="<%=referenceKey%>" <%=backgroundStyle%>>
+			<div class="main_wrapper no_select_please">
+                <div class="slider_swiper_inner parallexIwt slide_with_bg_image"><!--  style="width:752px;left:43%" -->
+                    <section class="container_space addclass_for_padd">
+                        <div class="box_outer_space">
+                            <div class="continent_box_space left swiper-no-swiping"><!--  style="width:400px;" -->
+								<div class="continent_box_inner">
+									<div class="continent_content_inner draggable_area">
+										<%= data.interactive_text %>
+										<div class="clear"></div>
+									</div>
+									<div class="edit_box_title">
+										<button class="button7 btn <%=ASSIGNMENTS.c_s_ASSIGN_READ_CHKPNT_BTN_SELECTOR%>"><%=$.trim(ASSIGNMENTS.c_s_READ_CHECKPOINT_BTN_TXT)%></button>
+										<div class="clear"></div>
+									</div>
+								</div>                
+								<div class="clear"></div>
+							</div>
+							<div class="continent_edit_box hidden left"><!--  style="width:355px;" -->
+								<div class="middle">
+									<div class="continent_wrap_box">
+										<div class="continent_conts no_select_please">
+											<div class="drag_text_area_container">
+												<div class="overflow-auto">
+													<div class="dropbox_fail_again_text no_select_please"><%= data.fail_again_text %></div>
+													<div class="dropbox_fail_text no_select_please"><%= data.fail_text %></div>
+													<div class="dropbox_pass_text no_select_please"><%= data.pass_text %></div>
+													<div class="dropbox_instrction no_select_please">
+<%
+														if (
+															typeof data.questions == 'object' &&
+															data.questions instanceof Array &&
+															data.questions.length > 0
+														) {
+%>														
+															<%= data.questions[0].question %>
+														<% } %>
+													</div>
+												</div>
+												<div class="dropbox"><%= ASSIGNMENTS.c_s_DND_DROPPABLE_DEFAULT_TEXT %></div>
+											</div>                    
+											<div class="clear"></div>
+										</div>
+									</div>
+									<div class="edit_box_title">
+<%
+										var iIndex = 0, iLength = 0;
+										if (
+											typeof data.questions == 'object' &&
+											data.questions instanceof Array &&
+											data.questions.length > 0
+										) {
+											iIndex = data.questions[0].index;
+											iLength = data.questions[0].length;
+										}
+%>									
+										<button class="slideCommonSubmitButton button7 btn dndSubmitButton" <%= ASSIGNMENTS.c_s_SLIDE_SUBMIT_BTN_CORRECT_ANS_IDX%>="<%= iIndex + "|" + iLength %>" <%= ASSIGNMENTS.c_s_SLIDE_SUBMIT_BTN_CNT_CHK_ATTR%>="<%= ASSIGNMENTS.c_s_DND_SUBMIT_COUNTER_CHECK%>"><%=$.trim(ASSIGNMENTS.c_s_SUBMIT_ANSWER_BTTN)%></button>
+                                        <div class="clear"></div>
+                                    </div>
+								</div>
+							</div>
+							<div class="clear"></div>
+                        </div>
+                        <div class="clear"></div>
+                    </section>
+					<div class="clear"></div>
+                </div>
+                <div class="clear"></div>
+            </div>
+            <div class="clear"></div>
+        </div>
+    </script>
+    <!-- End of iwtdndslide Template -->
+	
+	<!-- multiplechoiceslide Template -->
+    <script type="text/template" id="multiplechoiceslide">
+		<div class="swiper-slide backgound_images assignment_slider_wrapper" reference-key="<%= referenceKey %>" id="<%= referenceKey %>">
+            <div class="main_wrapper">
+                <div class="gradient new_assignment_view multiple_choice_questions">
+                    <div class="slider_swiper_inner">
+                        <section class="container_space addclass_for_padd">
+							<div class="study_plain_title">Part <%= partIdx %>: <%= data.page_title %></div>
+								<div class="multiplechoiceslide media_content" >
+								<!-- display new content audio and text -->
+								<% if(data.instructional_audio){ %>
+								<div class="audioPlayer outer">
+									 <audio id="player_<%= partIdx %>" class="player" controls="false" >
+									  Your browser does not support the <code>audio</code> element.
+									  <source src="<%= mediaPath+data.instructional_audio %>" type="audio/mp3">
+									 </audio>
+									 <span data-slide-idx="<%= partIdx %>" class="playPauseButton sprite2"></span>
+								 </div>
+								 <% } %>
+								 
+								 <% if(data.instructional_text){ %>
+								<p><%=data.instructional_text%></p>
+								<% } %>
+								</div>
+								<!-- end display new content audio and text -->
+							
+							<div class="qurstion_group multiple_choice_questions_container">
+								<div class="swiper-scrollbar">
+<%
+									$.each(data.questions, function(quesIdx, quesVal) {
+										var iAnswerIndex = -1,
+											sQuestionId = quesVal.question_id;
+										if (typeof savedData[sQuestionId] != "undefined") {
+											iAnswerIndex = savedData[sQuestionId]["answerIndex"];
+										}
+%>								
+									<div class="natural_box_space margin_top">
+										<div class="question_box_space">
+											<div class="new_assignment_title">
+												<div class="correct sprite" style="display:none;"></div>
+												<div class="incorrect sprite" style="display:none;"></div>
+<%
+												var sQuestionText = $.trim($("<div/>").html(quesVal.content).text());
+												if (sQuestionText.match(/^[0-9]+\./)) {
+%>
+													<%= quesVal.content %>
+													
+													<!-- display new content audio and image -->
+													<div class="multiplechoiceslide media_content inner" >
+													<% 
+													function displayData(exclusiveToIlit20){
+														if(exclusiveToIlit20){
+															if(isIlit20){
+																return true;
+															}		
+															return false;
+														}	
+														return true;	
+													}
+													
+													if(displayData((typeof quesVal.instructional_audio_exclusive_to_ilit20 != 'undefined') ? quesVal.instructional_audio_exclusive_to_ilit20 : false)){
+														if(quesVal.instructional_audio){ 
+														
+														%>
+														<div class="audioPlayer">
+															 <audio id="player_<%= partIdx %>" class="player" controls="false" >
+															  Your browser does not support the <code>audio</code> element.
+															  <source src="<%= mediaPath+quesVal.instructional_audio %>" type="audio/mp3">
+															 </audio>
+															 <span data-slide-idx="<%= partIdx %>" class="playPauseButton sprite2"></span>
+														 </div>
+														 <% 
+														 } 
+													 }
+													 %>
+													 
+													 <% 
+													 if(displayData((typeof quesVal.image_exclusive_to_ilit20 != 'undefined') ? quesVal.image_exclusive_to_ilit20 : false)){
+														if(quesVal.image){ 
+														%>
+														<img src="<%= mediaPath+quesVal.image %>" />
+														<% 
+														} 
+													}
+													%>
+													</div>
+													<!-- end display new content audio and image -->
+												<%
+												}
+												else {
+													quesVal.content = chopEmptyElements(quesVal.content);
+													var s1stTag = get1stHTMLTag(quesVal.content),
+														sHtml = quesVal.content.replace(s1stTag, s1stTag + quesIdx + ". ");
+	%>
+													<%= sHtml %>
+	<%
+												}
+	%>
+											</div>
+											<div class="new_assignment_irr">
+												<ul class="question_part multiple_choice_ul" data-question-id="<%= sQuestionId %>">
+													<% $.each(quesVal.answers, function(ansIdx, ansVal) { %>
+													<li data-is-correct="<%= ansVal.is_correct %>"<% if (ansIdx == iAnswerIndex) { %> class="active"<% } %> id="<%= sQuestionId %>-<%= ansIdx %>">
+														<div style="display:none;" class="correct sprite"></div>
+														<div style="display:none;" class="incorrect sprite"></div>
+														<div class="answer_key left"><%= GENERAL.c_s_ALPHABET_ORDER[ansIdx] %></div>
+														<div class="middle"><%= ansVal.answer_text_html%></div>
+														<div class="clear"></div>
+													</li>
+													<% }); %>
+												</ul>
+												<div class="clear"> </div>
+											</div>
+											<div class="assignment_report_box" style="display:none;"><%= quesVal.subskill %></div>
+											<div class="clear"> </div>
+										</div>
+									</div>								
+									<div class="clear"> </div>
+									<% });%>
+								</div>
+							</div>
+                        </section>
+                    </div>
+                </div>
+            </div>
+            <div class="clear"></div>
+        </div>
+    </script>
+	<!-- End of multiplechoiceslide Template -->
+	
+	
+	<!-- Start of multichoicepassageslide slide -->
+	<script type="text/template" id="multichoicepassageslide">
+		<div class="swiper-slide backgound_images assignment_slider_wrapper" reference-key="<%=referenceKey%>" id="<%=referenceKey%>">
+            <div class="main_wrapper">
+                <div class="gradient multiple_choice_questions new_assignment_view">
+                    <div class="slider_swiper_inner">
+                        <section class="container_space addclass_for_padd">
+                            <div class="study_plain_title"><%= data.page_title%></div>
+								<div class="multichoicepassageslide media_content" >
+									<% if(instructional_audio){ %>
+										<div class="audioPlayer">
+										 <audio id="player_<%= partIdx %>" class="player" controls="false" >
+										  Your browser does not support the <code>audio</code> element.
+										  <source src="<%= mediaPath+instructional_audio %>" type="audio/mp3">
+										 </audio>
+										 <span data-slide-idx="<%= partIdx %>" class="playPauseButton sprite2"></span>
+										</div>
+									<% } %>
+								</div>
+							<!-- <div class="view_place_scd">what you are reading better to understand what you are reading better</div> -->
+							<div class="assignment_guide_unit passage_slide_padding">
+								<div class="vocabillery_view_page">
+									<div class="vocabillery_view_page_content assessment_multi_passage">
+										<div class="theme_content assessment_multi_passage study_plan_practice_ques_container">
+											<%= data.passage %>
+										</div>
+									</div>
+									<div class="clear"></div>	
+								</div>
+								<div class="natural_box_space natural_box_space_right_group assessment_multi_passage">
+									<div class="swiper-scrollbar">
+<%
+										$.each(data.multi_slide.questions , function(quesIdx, quesVal) {
+											var iAnswerIndex = -1,
+												sQuestionId = quesVal.question_id;
+											if (typeof savedData[sQuestionId] != "undefined") {
+												iAnswerIndex = savedData[sQuestionId]["answerIndex"];
+											}
+%>
+										<div class="question_box_space">
+											<div class="new_assignment_title">
+												<div class="right" style="width:30px; height:100%">
+													<div class="correct sprite" style="display:none;"></div>
+													<div class="incorrect sprite" style="display:none;"></div>
+												</div>
+												<div class="middle">
+<%
+												if ($.trim($("<div/>").html(quesVal.content).text()).match(/^[0-9]+\./)) {
+%>
+													<%= quesVal.content %>
+													
+													<!-- display new content audio and image -->
+													<!-- <div class="multichoicepassageslide media_content inner" >
+													<% 
+													function displayData(exclusiveToIlit20){
+														if(exclusiveToIlit20){
+															if(isIlit20){
+																return true;
+															}		
+															return false;
+														}	
+														return true;	
+													}
+
+													if(displayData((typeof quesVal.instructional_audio_exclusive_to_ilit20 != 'undefined') ? quesVal.instructional_audio_exclusive_to_ilit20 : false))
+													{
+														if(quesVal.instructional_audio != '')
+														{ 
+														
+														%>
+														<div class="audioPlayer">
+															 <audio id="player_<%= partIdx %>" class="player" controls="false" >
+															  Your browser does not support the <code>audio</code> element.
+															  <source src="<%= mediaPath+quesVal.instructional_audio %>" type="audio/mp3">
+															 </audio>
+															 <span data-slide-idx="<%= partIdx %>" class="playPauseButton sprite2"></span>
+														 </div>
+														 <% 
+														 } 
+													 }
+													 %>
+													 
+													 <% 
+													 if(displayData((typeof quesVal.image_exclusive_to_ilit20 != 'undefined') ? quesVal.image_exclusive_to_ilit20 : false))
+													 {
+														if(quesVal.image != '')
+														{ 
+														%>
+														<img src="<%= mediaPath+quesVal.image %>" />
+														<% 
+														} 
+													}
+													%> 
+													</div> -->
+													<!-- end display new content audio and image -->
+													
+													
+<%
+												}
+												else {
+													quesVal.content = chopEmptyElements(quesVal.content);
+													var s1stTag = get1stHTMLTag(quesVal.content),
+														sHtml = quesVal.content.replace(s1stTag, s1stTag + quesIdx + '. ');
+%>
+													<%= sHtml %>
+<%
+												}
+%>
+												</div>
+											</div>
+											<div class="new_assignment_irr">
+												<ul class="question_part multiple_choice_ul" data-question-id="<%= sQuestionId %>">
+													<% $.each(quesVal.answers, function(ansIdx, ansVal) { %>
+													<li data-is-correct="<%= ansVal.is_correct %>"<% if (ansIdx == iAnswerIndex) { %> class="active"<% } %> id="<%= sQuestionId %>-<%= ansIdx %>">
+														<div style="display:none;" class="correct sprite"></div>
+														<div style="display:none;" class="incorrect sprite"></div>
+														<div class="answer_key left"><%= GENERAL.c_s_ALPHABET_ORDER[ansIdx] %></div>
+														<div class="middle"><%= ansVal.answer_text_html%></div>
+														<div class="clear"></div>
+													</li>
+													<% }); %>
+												</ul>
+												<div class="clear"> </div>
+											</div>
+											<div class="assignment_report_box" style="display:none;">This is skill name</div>
+											<div class="clear"> </div>
+										</div>
+									<% }); %>
+									</div>
+								</div>
+								<div class="clear"> </div>
+							</div>
+                        </section>
+                    </div>
+                </div>
+            </div>
+            <div class="clear"></div>
+        </div>
+    </script>
+	<!-- End of multichoicepassageslide slide -->
+	
+
+	<!-- Study Plan Pre/Post Test Template -->
+	<script type="text/template" id="study_plan_pre_post_template">
+	<%
+		/*var backgroundStyle = "";
+		if (data.background_image != "" && typeof data.background_image != "undefined") {
+			backgroundStyle = 'style="background-image: url(\''+mediaPath  + data.background_image +'\'); background-size:cover;background-repeat:no-repeat;height:100%"';
+		}*/
+	%>
+		<div class="swiper-slide backgound_images" reference-key="<%= referenceKey %>" id="<%= referenceKey %>" data-slide-type="<%= slideType %>">
+			<!-- <div class="" ></div> -->
+            <div class="main_wrapper">
+				<div class="slider_swiper_inner slider_study_plain">
+					<div class="study_plain_container assignment_slider_wrapper">
+<%
+						$.each(data, function(idx, val) {
+							var iPartId = (
+									(aMatches = val.page_title.match(/^(Skill|skill)\s*(\d+):.*/)) != null?
+									aMatches.fetch(2) || idx:
+									idx
+								);
+%>
+						<div class="study_plain_title" data-skill-id="<%= val.subskill %>" data-part-id="<%= iPartId %>">
+							Part <%= idx %>: <%= val.page_title %>
+						</div>
+						<div class="natural_box_space">
+							<div class="view_place_scd"><%= val.instructional_text %></div>
+<%
+							$.each(val.questions, function(quesIdx, quesVal) {
+%>
+							<div class="question_box_space" data-question-id="<%= quesVal.question_id %>" data-skill-id="<%= val.subskill %>" data-part-id="<%= iPartId %>">
+								<div class="study_question_title"><%= quesVal.content %></div>
+								<div class="new_assignment_irr">
+									<ul class="question_part" data-skill-id="<%= val.subskill %>">
+<%
+									$.each(quesVal.answers, function(ansIdx, ansVal) {
+										var sActiveClass = '';
+										
+										/*
+										if (val.subskill in oStudentAttemptData) {
+											if (quesVal.question_id in oStudentAttemptData[val.subskill]) {
+												if (oStudentAttemptData[val.subskill][quesVal.question_id]['answerIndex'] == ansIdx) {
+													sActiveClass = ' class="active"';
+												}
+											}
+										}
+										*/
+										
+										for (var sSkillId in oStudentAttemptData) {
+											if (['completed', 'finished'].indexOf(sSkillId.toLowerCase()) != -1) {
+												continue;
+											}
+											
+											for (sQuestionId in oStudentAttemptData[sSkillId]) {
+												if (['totalscore', 'score', 'done'].indexOf(sQuestionId.toLowerCase()) != -1) {
+													continue;
+												}
+												if (quesVal.question_id == sQuestionId) {
+													if (oStudentAttemptData[sSkillId][sQuestionId].answerIndex == ansIdx) {
+														sActiveClass = ' class="active"';
+														break;
+													}
+												}
+											}
+											
+											if (sActiveClass.length > 0) {
+												break;
+											}
+										}
+%>
+										<li data-correct="<%= ansVal.is_correct %>"<%= sActiveClass %>>
+											<div class="sprite"></div>
+											<div class="answer_key left"><%= GENERAL.c_s_ALPHABET_ORDER[ansIdx] %></div>
+											<div class="middle"><%= ansVal.answer_text_html%></div>
+											<div class="clear"></div>
+										</li>
+									<% }); %>
+									</ul>
+									<div class="clear"> </div>
+								</div>
+								<div class="clear"> </div>
+							</div>
+							<% }); %>
+							<div class="clear"></div>
+						</div>
+						<div class="clear"></div>
+						<% }); %>
+					</div>
+					<div class="studyplan_footer assessment_pagination">
+						<div class="pagination_footer pagination_footer_part assign_teacherview" id="<%= ASSIGNMENTS.c_s_DIV_STUDY_PLAN_SHOW_SCORE_ID %>">
+							<button class="button7 btn right" id="<%= ASSIGNMENTS.c_s_BTN_STUDY_PLAN_SUBMIT_ANSWER_ID %>"><%= ASSIGNMENTS.c_s_SUBMIT_ANSWERS_BTTN %></button>
+							<div class="clear"></div>
+						</div>
+					</div>
+					<% /* %>
+					<div class="pagination_footer pagination_footer_part pre_post_tpl_submit_btn" style="position:fixed; bottom:0px; width:100%; background: #FFFFFF;">
+						<button class="button7 btn right" style="margin-right:15px;"><%= ASSIGNMENTS.c_s_SUBMIT_ANSWERS_BTTN %></button>
+						<div class="footer_partmiddle middle">
+							<div class="footer_partmiddle_area">  </div>
+						</div>
+						<div class="clear"></div>
+					</div>
+					<% */ %>
+				</div>
+			</div>
+            <div class="clear"></div>
+        </div>
+    </script>
+	<!-- End of Study Plan Pre/Post Test Template -->
+	
+	
+	
+	<!-- Start of Study Plan Practice Template -->
+	
+	<!-- study plan practice popup template -->
+	<script type="text/template" id="studyPlan_practice_popup_tpl">
+		<div class="overley"></div>
+		<div class="slide_upload_light_box">
+			<span class="light_box_close sprite"></span>			
+			
+			<div class="light_box_content">			
+			<% 
+			var cnt = 0;
+			_.each(data, function(obj, key){
+				cnt++;
+				if(cnt > 1)
+				{
+					%>
+					<br><div class="borderline"></div><br>
+					<%
+				}
+			%>			
+				<h3><%= obj.page_title %></h3>
+				
+				<% _.each(obj.questions, function(qobj, qkey){ %>				
+				
+				<%= qobj.content %>
+				
+				<div class="question_box_space">
+					<div class="new_assignment_irr">
+						<ul class="question_part" id="ques_part_<%= key %>_<%= qkey %>">
+							<%
+							var num = 64;
+							var cnta = 0;
+							_.each(qobj.answers, function(ans, akey) {
+								num++;
+								cnta++;
+								var magin_none = (cnta == _.size(qobj.answers))?'class="margin_none"':'';
+							%>
+							<li <%= magin_none %> data-correct="<%= (ans.is_correct === true)?'true':'false' %>">
+								<div class="correct sprite" style="display:none;"></div>
+								<div class="incorrect sprite" style="display:none;"></div>
+								<div class="answer_key left"><%= String.fromCharCode(num) %></div>
+								<div class="middle"><%= ans.answer_text_html %></div>
+								<div class="clear"></div>
+							</li>
+							<% }); %>							
+						</ul>
+						<div class="clear"> </div>
+						<div class="additional_txt" id="additional_txt_<%= key %>_<%= qkey %>" style="display:none;">
+						<%
+						var ans_content = _.where(qobj.answers, {'is_correct' : true});						
+						%>						
+						<%= ans_content[0].additional_information_html %>
+						</div>
+					</div>
+					<div class="clear"> </div>
+				</div>
+				<div class="clear"></div>
+				<%
+					});
+				}); 
+				%>
+				<div class="clear"></div>
+			</div>
+			
+			<div class="clear"></div>
+		</div>
+	
+	</script>
+	
+	<!-- study plan practice header --->
+	<script type="text/template" id="studyPlan_practice_header_tpl">
+<%
+	for (var iIndex = 0; iIndex < aHeaderContent.length; iIndex++) {
+		var oHeaderContent = aHeaderContent[iIndex],
+			tabClass = "",
+			sSkillId = oHeaderContent.skillId,
+			iPartId = oHeaderContent.partId,
+			iOrigPartId = oHeaderContent.origPartId,
+			sNumberClass = (
+				(oHeaderContent.completed || false)?
+				' done':
+				''
+			);
+			
+		if (iIndex == 0) {
+			tabClass = ' first';
+		}
+		if (iIndex == (aHeaderContent.length - 1)) {
+			tabClass = ' last';
+		}
+
+%>
+
+		<div data-skill-id="<%= sSkillId %>" id="<%= sSkillId %>___<%= iPartId %>" class="tabs_number<%= tabClass %>" data-part-id="<%= iOrigPartId %>">
+			<span class="no_text sprite3<%= sNumberClass %>"> <%= (iIndex + 1).toString() %> </span>
+			<span class="page_arrow_s"></span>
+		</div>
+<%
+	}
+%>
+	</script>
+	
+	<!-- Study plan practice MCQ question -->
+	<script type="text/template" id="studyPlan_practice_mcq_question_tpl">
+		<div class="question_box_space swiper-slide" data-skill-id="<%= skillId %>" page-title="<%= pageTitle %>" context-clue-ref="<%= contextClueRef %>" data-question-id="<%= question.question_id %>" data-part-id="<%= partId %>">
+			<div class="studyPlan_practice_mcq_wrapper <%= ASSIGNMENTS.c_s_CSS_NOT_COMPLETED %>">
+				<div class="study_question_title"><%= question.content %></div>
+				<div class="study_question_mcq_content"><%= instructionalText %></div>
+				<div class="new_assignment_irr new_assignment_irr_sp_mcq">
+					<ul class="question_part">
+<%
+						$.each(question.answers, function(ansIdx, ansVal) {
+							if ((ansIdx + 1) == question.answers.length) {
+								lastClassName = "margin_none";
+							}
+%>
+						<li data-correct="<%= ansVal.is_correct %>">
+							<div class="correct sprite" style="display:none;"></div>
+							<div class="incorrect sprite" style="display:none;"></div>
+							<div class="answer_key left"><%= GENERAL.c_s_ALPHABET_ORDER[ansIdx] %></div>
+							<div class="middle"><%= ansVal.answer_text_html %></div>
+							<div class="clear"></div>
+						</li>
+<%
+						});
+%>
+					</ul>
+					<div class="clear"> </div>
+<%
+						sDisabledStr = ' disabled="disabled"';
+						sButtonClass = ' disabled btndisabled';
+						if (includeSubmitButton) {
+							if (enableSubmitButton) {
+								sDisabledStr = '';
+								sButtonClass = '';
+							}
+%>
+					
+					<div class="pagination_footer pagination_footer_part assign_teacherview" id="<%= ASSIGNMENTS.c_s_DIV_STUDY_PLAN_SHOW_SCORE_ID %>">
+						<button class="button7 btn right<%= sButtonClass %> practice_done_bttn" id="<%= ASSIGNMENTS.c_s_BTN_STUDY_PLAN_SUBMIT_ANSWER_ID %>"<%= sDisabledStr %>>
+							<%= ASSIGNMENTS.c_s_TYPE_TPL_STUDY_PLAN_PRACTICE_DONE_TXT %>
+						</button>
+					</div>
+<%
+						}
+%>					
+				</div>
+				<div class="clear"> </div>
+			</div>
+			<div class="clear"></div>
+		</div>
+	</script>
+	
+	<!-- Study Plan Practice Video -->
+	<script type="text/template" id="studyPlan_practice_video_tpl">
+<%
+			var _sVideo = "http://vjs.zencdn.net/v/oceans.mp4";
+			if (video != null && video != "null") {
+				_sVideo = mediaPath + video;
+			}
+%>
+		<div class="question_box_space swiper-slide" data-skill-id="<%= skillId %>" page-title="<%= header %>" context-clue-ref="<%= contextClueRef %>"><% //= data[0].slide_title%>
+			<div class="studyPlan_practice_video_wrapper">
+				
+				<div class="new_assignment_irr new_assignment_irr_sp_video">
+					<div class="video_container page_container_video">
+						<video id="video___<%= skillId %>__<%= partId %>" class="video-js vjs-default-skin" width="100%" height="100%" controls data-setup='{"controls":true, "preload": false, "autoplay": false,"techOrder": ["html5","flash"]}' >
+							<source type="video/mp4;" src="<%= _sVideo %>" />
+						</video>
+						<div class="clear"></div>
+					</div>
+					<div class="clear"> </div>
+				</div>
+				<div class="clear"></div>
+			</div>
+			<div class="clear"></div>
+		</div>
+	</script>
+	
+	<!-- Study Plan Practice Master Template -->
+	<script type="text/template" id="studyPlan_practice_master_tpl">
+		<div class="study_plain_container assignment_slider_wrapper">
+			<div class="study_plain_container_slide">
+				<div class="ui_slide_tabs">
+					<div id="studyPlan_practice_header_container" class="ui_slide_tabs_cont">
+						
+					</div>
+					<div class="clear"></div>
+				</div>
+				<div class="study_plain_container_contents">
+					<div class="study_plain_heading">
+						<div class="study_title_heading">
+							<div class="help_notification right sprite"></div>
+							<div id="practice_assessment_page_title" class="middle"><%= pageTitle %></div>
+						</div>
+						<div class="clear"></div>
+					</div>
+					
+					<div class="slider_pager_content_outer">
+						<button id="prevPagingBtn" class="slider_pager_left sprite" type="button"></button>
+						<button id="nextPagingBtn" class="slider_pager_right sprite" type="button"></button>
+						<div class="slider_pager_content" style="width:auto;">
+							
+							<div class="swiper-container" style="height:100%; overflow:hidden;">
+								<div id="slide_inner_container" class="swiper-wrapper slider_pager_sl">
+									<!-- Container for Video & question slides --> 
+									<!-- <div class="clear"></div> -->
+								</div>
+							</div>
+							<div class="pagination"></div>
+							
+						</div>
+						<div class="clear"></div>
+					</div>
+					
+					<div class="clear"></div>
+				</div>
+				<div class="clear"></div>
+			</div>
+						
+			<div class="clear"></div>
+		</div>
+		<div class="clear"></div>
+	</script>
+
+	<!-- End of Study Plan Practice Template -->
+	
+	<!-- Essay Slide Starts -->
+    <script type="text/template" id="essayslide">        
+<%
+		var backgroundStyle = "";
+		if (data.background_image != "" && typeof data.background_image != "undefined") {
+			backgroundStyle = 'style="background-image: url(\''+mediaPath  + data.background_image +'\'); background-size:cover;background-repeat:repeat;height:100%"';
+		}
+		var conclusion, intro, body = "";
+		if (studentAttemptData) {
+			conclusion = (studentAttemptData.itemSlides[0].slideInputData.conclusion) ? decodeURIComponent(studentAttemptData.itemSlides[0].slideInputData.conclusion) : ''; 
+			intro = (studentAttemptData.itemSlides[0].slideInputData.intro) ? decodeURIComponent(studentAttemptData.itemSlides[0].slideInputData.intro) : '';
+			body = (studentAttemptData.itemSlides[0].slideInputData.body) ? decodeURIComponent(studentAttemptData.itemSlides[0].slideInputData.body) : '';
+		}
+%>
+		<div class="swiper-slide backgound_images bg15" reference-key="<%= referenceKey %>" id="<%= referenceKey %>" <%= backgroundStyle %> data-slide-type="<%= slideType %>">
+            <div class="main_wrapper">
+                <div class="slider_swiper_inner summary_div_conts feedback_summary_div_conts without_sliding_top">
+                    <section class="container_space addclass_for_padd">
+                        <div class="box_outer_space">
+                            <div class="continent_box_space left_conts_place new_tab_space left">
+                                <div class="continent_box_inner  paragraph_prompt_slide">
+                                    <div class="scroll_padding">
+                                    <div class="continent_content_inner">
+										<div class="prompt_container">
+											<div class="prompt_text_heading">
+												<div class="cnt_sld left"><%= $.trim(ASSIGNMENTS.c_s_PARAGRAPH_PROMPT_HEADING) %></div>
+												<div class="arrow_pd left"></div>
+												<div class="clear"></div>
+											</div>
+											<div class="clear"></div>
+											<div class="prompt_text_container"><%= $.trim(data.prompt) %></div>
+										</div>
+                                        <div class="clear"></div>
+										
+										<!--- TABS STARTS ---->
+										<div id="essay_tabs">
+											<ul>
+												<li><a href="#tabs-1"><%= ASSIGNMENTS.c_s_TAB_INTRO_LABEL %></a></li>
+												<li><a href="#tabs-2"><%= ASSIGNMENTS.c_s_TAB_BODY_LABEL %></a></li>
+												<li><a href="#tabs-3"><%= ASSIGNMENTS.c_s_TAB_CONCLUSION_LABEL %></a></li>
+												<li><a href="#tabs-4"><%= ASSIGNMENTS.c_s_TAB_WHOLE_LABEL %></a></li>
+											</ul>
+											<div id="tabs-4">
+												<div class="text_box_area accordin_slide_open"><div name="" class="txtarea" id="txtEssayWhole" ></div><!--<div id="txtEssayWhole" ></div>--></div>
+												<div class="feedbackBttn"><button class="button7 btn get_feedback right active" id="getFeedbackWhole">Get Feedback</button></div>
+												<div class="clear"></div>
+											</div>
+											<div id="tabs-3">
+												<div class="text_box_area accordin_slide_open"><textarea autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" name="" id="txtEssayConclusion"><%= $.trim(conclusion) %></textarea></div>
+												<div class="feedbackBttn"><button class="button7 btn get_feedback 
+												<%= ($.trim(conclusion) == '')?'btndisabled disabled':'' %> right" id="getFeedbackConclusion">Get Feedback</button></div>
+												<div class="clear"></div>
+											</div>
+											<div id="tabs-2">
+												<div class="text_box_area accordin_slide_open"><textarea autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" name="" id="txtEssayBody"><%= $.trim(body) %></textarea></div>
+												<div class="feedbackBttn"><button class="button7 btn get_feedback 
+												<%= ($.trim(body) == '')?'btndisabled disabled':'' %> right" id="getFeedbackBody">Get Feedback</button></div>
+												<div class="clear"></div>
+											</div>
+											<div id="tabs-1">
+												<div class="text_box_area accordin_slide_open"><textarea autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" name="" id="txtEssayIntro"><%= $.trim(intro) %></textarea></div>
+												<div class="feedbackBttn"><button class="button7 btn get_feedback 
+												<%= ($.trim(intro) == '')?'btndisabled disabled':'' %> right" id="getFeedbackIntro">Get Feedback</button></div>
+												<div class="clear"></div>
+											</div>
+										</div>
+										<!--- TABS ENDS ---->
+										
+                                    </div>
+                                    </div>
+                                    <div class="edit_box_title paddright">
+                                        <button class="slideCommonSubmitButton button7 btn right btndisabled disabled" id="btnsubmit_essay"><%=$.trim(ASSIGNMENTS.c_s_SUBMIT_GRADING_BTTN)%></button>
+                                        <button class="button7 btn right" id="btnemail_essay" style="display:none;"><%=$.trim(ASSIGNMENTS.c_s_EMAIL_PARAGRAPH_BTTN)%></button>
+                                        <button class="button7 btn right" id="btnprint_essay" style="display:none;"><%=$.trim(ASSIGNMENTS.c_s_PRINT_ASSIGNMENT_BTTN)%></button>
+                                        <div class="clear"></div>
+                                    </div>
+                                    <div class="clear"></div>
+                                </div>
+                            </div>
+                            <div class="continent_edit_box new_tab_space left_conts_place left summary_right_box">
+                                <div class="middle">
+                                    <div class="continent_wrap_box">
+                                        <div class="continent_conts right_conts_element">
+                                            <div class="new_tab_space_title"> 
+                                                <div class="right tabbing">
+                                                    <div class="button8 left active" id="instruction_tab"><%=$.trim(ASSIGNMENTS.c_s_INSTRUCTION_TAB_TITLE)%></div>
+                                                    <div class="button8 left" id="feedback_tab" ><%=$.trim(ASSIGNMENTS.c_s_FEEDBACK_TAB_TITLE)%></div>
+                                                    <div class="clear"></div>
+                                                </div>
+                                                <div class="clear"></div>
+                                            </div>
+                                            <div class="new_tab_space_title_tab"> 
+												<div class="back_bttn sprite backtoinst" style="display:none;"></div>
+												<div class="back_bttn sprite backtodetail" style="display:none;"></div>
+												<div class="back_bttn sprite backtofeedbck" style="display:none;"></div>
+												<div class="back_bttn sprite backtodrill" style="display:none;"></div>
+												<h3 class=""><%=$.trim(ASSIGNMENTS.c_s_INSTRUCTION_TAB_TITLE)%></h3>
+                                                <div class="clear"></div>
+                                            </div>
+                                            <div id="feedback_content">                                               
+                                            </div>
+                                            <div class="clear"></div>
+                                        </div>
+                                    </div>
+                                </div>
+								<div class="summaryLoader">
+									<img src="media/loader.gif"/>
+								</div>
+                            </div>
+                            <div class="clear"></div>
+                        </div>
+                        <div class="clear"></div>
+                    </section>
+                    <div class="clear"></div>
+                </div>
+                <div class="clear"></div>
+            </div>
+            <div class="clear"></div>
+        </div>
+    </script>
+    <!-- Essay Slide Ends --->
+	
+	<!-- Essay Slide Instruction Starts -->
+    <script type="text/template" id="essayinstruction">
+    <div class="new_tab_space_inner"> 
+        <div class="scroller_panel paragraph_instructionText assignments_container" id="instructionList">		
+			<ul>
+			<% 			
+			_.each(data, function(stages,idx){
+			%>
+				<li data-text="<%= escape(stages.text) %>" data-label="<%= stages.label %>"><span class="ar_rt right sprite"></span><div class="middle instrlist" ><%= stages.label %></div><div class="clear"></div></li>				
+			<%
+			})
+			%>
+			</ul>
+		
+		</div>
+		<div class="scroller_panel paragraph_instructionText" style="display:none;" id="instructionText"></div>
+		<div class="scroller_panel paragraph_instructionText" style="display:none;" id="instructionDetail"></div>		
+
+    </div>
+    </script>
+    <!-- Essay Slide Instruction Ends -->
+	
+	<!-- Essay Slide Feedback Starts -->
+    <script type="text/template" id="essayfeedback">
+        
+		<div id="score_container" class="essay_score_container">
+            <% if(EssayView.viewType == "wholeEssay") 
+			{ %>
+			<!--- Overall Starts---->
+			<div class="sub_title_space">Overall</div>
+			<div class="feedboxes_spaces">
+					<div class="feedboxes_spaces_rate essay_scores">
+						<%
+							var score = scoreData.essayScore.overallScore;					
+							
+							for(var i=1; i<=6; i++)
+							{	
+						%>
+							<div class="scrore<%=i%>"><%=i%></div>
+						<%  
+							}
+						%>                              
+						<div class="clear"></div>
+					</div>
+					<div class="row_boxes_space">
+						<% 
+						for(var b=1; b <= 13; b++)
+						{
+							if(score == 1 && b == 1)
+							{
+								var active = 'active';
+							}
+							else if(score == 2 && b <= 3)
+							{
+								var active = 'active';
+							}
+							else if(score == 3 && b <= 6)
+							{
+								var active = 'active';
+							}
+							else if(score == 4 && b <= 8)
+							{
+								var active = 'active';
+							}
+							else if(score == 5 && b <= 11)
+							{
+								var active = 'active';
+							}
+							else if(score == 6 && b <= 13)
+							{
+								var active = 'active';
+							}
+							else
+							{
+								var active = '';
+							}
+							
+							if(b == 13)
+							{
+								var last = 'last';
+							}
+							else
+							{
+								var last = '';
+							}
+						%>
+							<div class="box_over color_<%= b %> <%= active %> <%= last %>"></div>
+						<%
+						}
+						%>
+						<div class="clear"></div>
+					</div> 					
+					<div class="clear"></div>
+			   </div>
+			   <!--- Overall Ends ---->
+			   
+			   <div class="sub_title_space"><%= ASSIGNMENTS.c_s_TRAITS_TXT %></div>
+			   <div class="catagory_section">
+				<% 
+				_.each(scoreData.essayScore.traits, function(trait,key){
+					var last = (key == _.size(scoreData.essayScore.traits) - 1)?'last':'';				
+					var objName = _.where(ASSIGNMENT_ESSAY_TRAITS, {"c_s_CODE": trait.name});					
+				%>
+				   <div class="catagory_row new_features_numbers <%= last %>">
+					<div class="cat_section left six_scores">                                	
+							<%= objName[0].c_s_NAME %>
+						<div class="clear"></div>
+					</div>
+					<div class="cat_sound">						
+						<div class="feedboxes_spaces_rate essay_scores" style="display: block;">	
+							<%
+								for(var i=1; i<=6; i++)
+								{	
+							%>
+								<div class="scrore<%=i%>"><%=i%></div>
+							<%  
+								}
+							%>    
+							<div class="clear"></div>
+						</div>
+						<div class="right"><img data-score="<%= trait.score %>" data-code="<%= trait.name %>" data-heading="<%= objName[0].c_s_NAME %>" class="trait_drill img_link" src="media/paly_btn.png" width="23" height="23" alt=""></div>
+						<div class="row_boxes_space left">
+						
+						<% 								
+							for(var b=1; b <= 13; b++)
+							{
+								if(trait.score == 1 && b == 1)
+								{
+									var active = 'active';
+								}
+								else if(trait.score == 2 && b <= 3)
+								{
+									var active = 'active';
+								}
+								else if(trait.score == 3 && b <= 6)
+								{
+									var active = 'active';
+								}
+								else if(trait.score == 4 && b <= 8)
+								{
+									var active = 'active';
+								}
+								else if(trait.score == 5 && b <= 11)
+								{
+									var active = 'active';
+								}
+								else if(trait.score == 6 && b <= 13)
+								{
+									var active = 'active';
+								}
+								else
+								{
+									var active = '';
+								}
+								
+								if(b == 13)
+								{
+									var last = 'last';
+								}
+								else
+								{
+									var last = '';
+								}
+							%>
+								<div class="box_over color_<%= b %> <%= active %> <%= last %>"></div>
+							<%
+							}
+							%>							
+						
+							<div class="clear"></div>
+						</div>
+						
+					</div>
+					<div class="clear"></div>
+				</div>
+				<% }); %>
+				</div>				
+				
+		 <% } 
+			else 
+			{
+			%>
+			
+					   <div class="sub_title_space"><%= ASSIGNMENTS.c_s_PARAGRAPH_TXT %></div>
+					   <div class="catagory_section">
+						   <!--- Topic Focus ---->					
+							<div id="topic_focus"></div>
+							
+							<!--- Topic Development ---->
+							<div id="topic_development"></div>
+							
+							<!--- Organization ---->
+							<div id="organization"></div>	
+						
+						</div>
+						
+						<div class="sub_title_space"><%= ASSIGNMENTS.c_s_SENTENCE_VARIETY_TXT %></div>
+					   <div class="catagory_section">
+						   <!--- Length ---->					
+							<div id="length_div"></div>
+							
+							<!--- Beginnings ---->
+							<div id="beginnings"></div>
+							
+							<!--- Structure ---->
+							<div id="structure"></div>	
+						
+						</div>
+		<% } %>
+				<div class="sub_title_space"><%= ASSIGNMENTS.c_s_WORD_CHOICE_TXT %></div>
+			   <div class="catagory_section">
+				   <!--- Vague Adjectives ---->					
+					<div id="vague_adj"></div>
+					
+					<!--- Repeated Words ---->
+					<div id="repeated_words"></div>
+					
+					<!--- Pronounce ---->
+					<div id="pronounce"></div>	
+				
+				</div>
+				
+				<div class="sub_title_space"><%= ASSIGNMENTS.c_s_EDITING_TOOL_TXT %></div>
+			   <div class="catagory_section">
+				   <!--- Spelling ---->					
+					<div id="spelling"></div>
+					
+					<!--- Grammar ---->
+					<div id="grammar"></div>
+					
+					<!--- Repeated Ideas ---->
+					<div id="repeated_ideas"></div>	
+				
+				</div>
+				
+				
+				<div class="clear"></div>
+			</div>
+			
+			<div class="drill_container" style="display:none;"> 
+				<div class="hint_tab_space_inner">
+					<div id="drill_hint_txt" class="hint_text_div">
+					</div>
+				</div>
+				<div class="new_tab_space_inner">
+					<div class="scroller_panel" id="drill_text"><p></p></div> 
+					<div class="scroller_panel" id="link_text" style="display:none;"><p></p></div>
+				</div>
+			</div>
+    </script>
+    <!-- Essay Slide Feedback Ends -->
+	
+	<!--- Essay Feedback Check Work Template -->
+	<script type="text/template" id="essayfeedbackCheck">
+		<% if(_.size(data) > 0){ %>
+		<div class="catagory_row <%= last %>">
+			<div class="cat_section left">
+				<%=$.trim(title)%>
+				<div class="clear"></div>
+			</div>
+			<div class="cat_sound">
+				<div class="right"><img class="<%= drill_class %> img_link" src="media/paly_btn.png" width="23" height="23" alt=""></div>
+				<div class="row_boxes_space check left">
+					<%= msg %>
+					<div class="clear"></div>
+				</div>
+				
+		  </div>
+			<div class="clear"></div>
+		</div>
+		<% } %>
+	</script>
+	
+	<!--- Essay Feedback Sub Score Template---->
+	<script type="text/template" id="essayfeedbackScore">
+	
+		<% if(_.size(data) > 0){
+			
+			if(rating == ASSIGNMENTS.c_s_FEEDBACK_GOOD || rating == ASSIGNMENTS.c_s_FEEDBACK_RIGHT_IDEAS)
+			{
+				var topic_score = 3;
+			}
+			else if(rating == ASSIGNMENTS.c_s_FEEDBACK_FAIR || rating == ASSIGNMENTS.c_s_FEEDBACK_MANY_IDEAS 
+			|| rating == ASSIGNMENTS.c_s_FEEDBACK_GOOD_VARIETY)
+			{
+				var topic_score = 2;
+			}
+			else if(rating == ASSIGNMENTS.c_s_FEEDBACK_POOR || rating == ASSIGNMENTS.c_s_FEEDBACK_FEW_IDEAS 
+			|| rating == ASSIGNMENTS.c_s_FEEDBACK_POOR_VARIETY)
+			{
+				var topic_score = 1;
+			}
+			else if($.isNumeric(rating))
+			{
+				var topic_score = rating;
+			}
+			
+		%>
+			<div class="catagory_row <%= (rating != "tooFewSentences" && rating != "notApplicable")?'new_features_numbers':'' %> <%= last %>">
+				<div class="cat_section left">                                	
+						<%= $.trim(title) %>
+					<div class="clear"></div>
+				</div>
+				<div class="cat_sound">
+					<% if(rating != "tooFewSentences" && rating != "notApplicable")
+					{%>
+					<div class="feedboxes_spaces_rate" style="display: block;">				
+							<div class="scrore1 active">1</div>	
+							<% if(limit == 3) {%>
+							<div class="score_mid active">2</div>						
+							<div class="scrore4 active">3</div>
+							<% }
+							else if(limit == 2)
+							{ %>
+							<div class="scrore4 active">2</div>
+							<%}%>
+						<div class="clear"></div>
+					</div>
+					<% } %>
+					<div class="right"><img src="media/paly_btn.png" class="<%= drill_class %> img_link" width="23" height="23" alt=""></div>
+					<div class="row_boxes_space <%= (rating == "tooFewSentences" || rating == "notApplicable")?'check':'' %> left">
+					
+						<% 
+							if(rating != "tooFewSentences" && rating != "notApplicable")
+							{
+								for(var b=1; b <= 13; b++)
+								{
+									if(topic_score == 1 && b == 1)
+									{
+										var active = 'active';
+									}
+									else if(topic_score == 2 && b <= 7 && limit == 3)
+									{
+										var active = 'active';
+									}
+									else if(topic_score == limit && b <= 13)
+									{
+										var active = 'active';
+									}									
+									else
+									{
+										var active = '';
+									}
+									
+									if(b == 13)
+									{
+										var last = 'last';
+									}
+									else
+									{
+										var last = '';
+									}
+								%>
+									<div class="box_over color_<%= b %> <%= active %> <%= last %>"></div>
+								<%
+								}
+							}
+							else if(rating == "tooFewSentences")
+							{
+							%>
+								<span class="span_red"><%= ASSIGNMENTS.c_s_FEEDBACK_FEW_SENTENCES %></span>
+							<% 
+							} 
+							else if(rating == "notApplicable")
+							{
+							%>
+							<span class="span_red"><%= ASSIGNMENTS.c_s_CHECK_WORK_TXT %></span>
+							<% } %>							
+					
+						<div class="clear"></div>
+					</div>
+					
+				</div>
+				<div class="clear"></div>
+			</div>
+			
+		<% } %>
+		<div class="clear"></div>						
+	</script>
+	
+	<!-- Extended PhonicTextBasedView Template -->
+    <script type="text/template" id="extendedphonic">
+		<div class="swiper-slide main_swiper_slide backgound_images" data-slide-type="<%= slideType %>" reference-key="<%=referenceKey%>" id="<%=referenceKey%>" >
+			<div class="main_wrapper">
+                <div class="slider_swiper_inner slide_with_bg_image">
+                    <section class="container_space addclass_for_padd">
+                        <div class="box_outer_space">
+                            <div class="continent_box_space left">
+                                <div class="continent_box_inner">
+                                    <div class="scroll_padding">
+										<div class="continent_content_inner">
+											<%= ASSIGNMENTS.c_s_EXTENDED_PHONIC_BOOK_PAGE_TEXT %>
+											<br>
+											
+											<div class="book_image_cont" id="book_image_cont"></div>
+											<div class="clear"></div>
+										</div>																		
+										
+                                    </div>
+                                    <div class="clear"></div>
+                               </div>
+                            </div>
+                            
+                            <div class="continent_edit_box hidden left">
+                                <div class="middle">
+                                    <div class="continent_wrap_box">
+                                        <div class="continent_conts" id="phonic_slides">
+											<!--- Text-Based template---->
+										</div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="clear"></div>
+                        </div>
+                        <div class="clear"></div>
+                    </section>
+                    <div class="clear"></div>
+                </div>
+                <div class="clear"></div>
+            </div>
+            <div class="clear"></div>
+        </div>
+    </script>
+    <!-- End of Extended phonictextbasedslide Template -->
+	
+	<!-- PhonicTextBasedView Template -->
+    <script type="text/template" id="phonictextbasedslide">
+		<div class="swiper-slide main_swiper_slide backgound_images" data-slide-type="<%= slideType %>" reference-key="<%=referenceKey%>" id="<%=referenceKey%>" >
+			<div class="main_wrapper">
+                <div class="slider_swiper_inner slide_with_bg_image">
+                    <section class="container_space addclass_for_padd">
+                        <div class="box_outer_space">
+                            <div class="continent_box_space left">
+                                <div class="continent_box_inner">
+                                    <div class="scroll_padding">
+										<% 
+										var oInteractiveText = data.interactive_text || {},
+											sNewInteractiveText = '';
+										
+										if (typeof oInteractiveText == 'object') {	
+											$.each(oInteractiveText, function(k,oCont){
+												
+												sNewInteractiveText += (oCont.content_type == 'text') ? oCont.content : 
+																		(
+																			(stripHtmlTagsFromString(sNewInteractiveText) == '') ? 
+																			'<img src="'+ mediaPath + oCont.content + '"><br>' : 
+																			'<br><img src="'+ mediaPath + oCont.content + '"><br>'
+																		);
+											});
+										}
+										else {
+											sNewInteractiveText = oInteractiveText;
+										}
+
+										if (sNewInteractiveText != "") {
+%>										
+											<div class="continent_content_inner_iscroll">
+												<div class="draggable_area" style="height:auto;">
+													<%= sNewInteractiveText %>
+													<div class="clear"></div>
+												</div>
+											</div>
+<%
+										}
+%>
+										<div class="edit_box_title">
+											<button class="slideCommonSubmitButton button7 btn <%= ASSIGNMENTS.c_s_ASSIGN_READ_CHKPNT_BTN_SELECTOR %>" id="btnInput">
+												<%= $.trim(ASSIGNMENTS.c_s_INPUT_ANSWER_BTTN) %>
+											</button>
+											<div class="clear"></div>
+										</div>
+                                    </div>
+                                    <div class="clear"></div>
+                               </div>
+                            </div>
+                            
+                            <div class="continent_edit_box hidden left">
+                                <div class="middle">
+                                    <div class="continent_wrap_box">
+                                        <div class="continent_conts" id="phonic_slides">
+											<!--- Text-Based template---->
+										</div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="clear"></div>
+                        </div>
+                        <div class="clear"></div>
+                    </section>
+                    <div class="clear"></div>
+                </div>
+                <div class="clear"></div>
+            </div>
+            <div class="clear"></div>
+        </div>
+    </script>
+    <!-- End of phonictextbasedslide Template -->
+	
+	<!-- PhonicTextBasedView Comprehension Template -->
+    <script type="text/template" id="phonic_comprehension_template">
+	<div class="swiper-padding-right swiper-padding-left">
+	<div class="phonic_compre_conts">
+	<div class="text_content"><%= data.title %></div>
+			<div class="text_content"><%= data.instruction_text %></div>
+				<%
+					var SelectedAnswer = (studentAttemptData.subSlideSelectedAnswer)?studentAttemptData.subSlideSelectedAnswer:'';
+					var Submitted = (studentAttemptData.subSlideSubmitted)?studentAttemptData.subSlideSubmitted:false;
+					var slideScore = (studentAttemptData.subSlideScore)?studentAttemptData.subSlideScore:0;
+					Submitted = (Submitted == 'true') ? true : ((Submitted == 'false') ? false : Submitted);
+				%>			
+				<div class="Phinics_question swiper-scrollbar" data-type="<%= ASSIGNMENTS.c_s_SLIDE_TYPE_COMPREHENSION %>" data-score="<%= slideScore %>">
+					<div class="question_box_space">
+							<% if($.trim(data.content) != ''){ %>
+								<div class="study_question_title_nobg"><%= data.content %></div>
+							<% } %>
+							<div class="new_assignment_irr phonic_compre_box">								
+								<ul class="question_part <%= Submitted ? 'locked' : '' %>">
+									<%
+									$.each(data.answers, function(ansIdx, ansVal){
+										if((ansIdx + 1) == data.answers.length) lastClassName = "margin_none";
+										
+										var active = (SelectedAnswer == GENERAL.c_s_ALPHABET_ORDER[ansIdx])?'active':'';
+										
+										var correctDisplay = (Submitted && ansVal.is_correct)?'display:block;':'display:none;';
+										
+										var inCorrectDisplay = (Submitted && !ansVal.is_correct && active == 'active')?'display:block;':'display:none;';
+									%>
+									<li data-correct="<%= ansVal.is_correct %>" 
+										class="<%= active %>">
+										<div class="correct sprite" style="<%= correctDisplay %>"></div>
+										<div class="incorrect sprite" style="<%= inCorrectDisplay %>"></div>
+										<div class="answer_key bigger_box left"><%= GENERAL.c_s_ALPHABET_ORDER[ansIdx] %></div>
+										<div class="middle"><%= ansVal.answer_text_html %></div>
+										<div class="clear"></div>
+									</li>
+									<%
+									});
+									%>									
+									
+								</ul>								
+								
+								<div class="clear"> </div>
+							</div>
+						<div class="clear"> </div>
+					</div>
+					
+				   
+				<div class="clear"></div>
+			  </div>
+			  <!--<div class="pager_container"><div class="pagination_for_slider"><span class="slider_switch active"></span> <span class="slider_switch"></span></div> </div><div class="edit_box_title">-->
+					<div class="button_cont">
+					<button class="slideCommonSubmitButton button7 btn right comprehension_submit <%= Submitted ? 'disabled btndisabled' : '' %>">
+						<%= buttonLabel %>
+					</button>
+					<div class="clear"></div>
+					</div>
+			<!--<div class="clear"></div></div>-->
+			
+			<div class="clear"></div>
+		</div>
+	</div>
+	</script>
+	<!-- PhonicTextBasedView Comprehension Template Ends -->
+	
+	<!-- PhonicTextBasedView Practice Template -->
+    <script type="text/template" id="phonic_practice_template">
+	<div class="swiper-padding-right swiper-padding-left">
+		<div class="phonic_practice_conts">
+		<div class="text_content"><%= data.title %></div>
+		<div class="text_content"><%= data.instruction_text %></div>
+			<%
+				var DroppedAnswer = (studentAttemptData.subSlideDroppedAnswer)?studentAttemptData.subSlideDroppedAnswer:[];
+				var Submitted = (studentAttemptData.subSlideSubmitted)?studentAttemptData.subSlideSubmitted:false;
+				var slideScore = (studentAttemptData.subSlideScore)?studentAttemptData.subSlideScore:0;
+				Submitted = (Submitted == 'true') ? true : ((Submitted == 'false') ? false : Submitted);
+				
+			%>		
+			<div class="Phinics_question swiper-scrollbar" data-type="<%= ASSIGNMENTS.c_s_SLIDE_TYPE_PRACTICE %>" data-score="<%= slideScore %>">
+				<div class="textbox_heading_content"><%= data.content %></div>
+				<div class="text_box_area practice_drag_drop phonic_dropbox <%= Submitted ? 'locked' : '' %>">
+				<%				
+				_.each(DroppedAnswer, function(val, key){					
+					if ($.inArray($('<div/>').html(val).text(),oSelf.correctAnswers[slideId]) != -1) {
+						var statusClass = Submitted ? 'okey' : '';									
+					}
+					else {
+						var statusClass = Submitted ? 'wrong' : '';
+					}					
+				%>
+					<div class="text_search <%= statusClass %>" data-text="<%= val %>">
+					<div class="cross_icon sprite" style="<%= Submitted ? 'display:block;' : 'display:none;' %>"></div>
+					<% 
+					if(Submitted == false) 
+					{
+					%>
+						<div class="delete_icon sprite"></div>
+					<%
+					}
+					%>
+					<div class="txt_dropped"><%= val %></div></div><div class="clear"></div>
+				<%
+				});
+				%>
+				</div>
+			   
+			<div class="clear"></div>
+		  </div>
+		  <!--<div class="pager_container"><div class="pagination_for_slider"><span class="slider_switch active"></span> <span class="slider_switch"></span></div> </div><div class="edit_box_title">-->
+				<div class="button_cont">
+				<button class="slideCommonSubmitButton button7 btn right practice_submit <%= Submitted ? 'disabled btndisabled' : '' %>">
+					<%= buttonLabel %>
+				</button>
+				<div class="clear"></div>
+				</div>
+		<!--<div class="clear"></div></div>-->
+		
+		<div class="clear"></div>
+	  </div>
+	 </div>
+	</script>
+	<!-- PhonicTextBasedView Practice Template -->
+	
+	<!-- Oral Fluency Template -->
+    <script type="text/template" id="phonic_oralfluency_template">
+	<div class="swiper-padding-right swiper-padding-left">
+		<%
+		/*== bDisableIcons : true if in view mode ==*/
+		/*== Submitted : true if user has submitted the slide ==*/
+		/*== bRejected : true if teacher has rejected the slide (note in this case value of Submitted is true) ==*/
+		/*== isRejectedAttempted : true if user has re-attempted the rejected slide (note in this case value of bRejected is true) ==*/
+		
+		var Submitted = (studentAttemptData.subSlideSubmitted) ? studentAttemptData.subSlideSubmitted : '';
+		var sLockedClass = ((Submitted && !bRejected) || 
+							(
+								bRejected && 
+								typeof studentAttemptData.isRejectedAttempted != 'undefined' && 
+								studentAttemptData.isRejectedAttempted)
+							) ? 'locked' : '';
+							
+		var bRejectedAttempted = (typeof studentAttemptData.isRejectedAttempted != 'undefined' && 
+								studentAttemptData.isRejectedAttempted) ? "true" : "false";
+		%>
+		<div class="phonic_oralfluency_conts <%= sLockedClass %>" data-question-id="<%= data.question_id %>" data-prompt-id="<%= oralFluencyPromptId %>" data-rejected="<%= bRejected %>" data-rejected-attempted=<%= bRejectedAttempted %>>
+		<div class="text_content"><%= data.title %></div>
+		<div class="text_content"><%= data.instruction_text %></div>	
+		
+		<div class="Phinics_question swiper-scrollbar cont-align-middle" data-type="<%= ASSIGNMENTS.c_s_SLIDE_TYPE_ORALFLUENCY %>" data-score="0"> 
+			<%
+				var inactive = (
+									bDisableIcons || 
+									(Submitted && !bRejected) || 
+									(
+										bRejected && 
+										typeof studentAttemptData.isRejectedAttempted != 'undefined' && 
+										studentAttemptData.isRejectedAttempted
+									)
+								) ? 
+								"inactive" : "";
+								
+				var playInactive = (aOralFluencyData.length > 0) ? "" : "inactive";
+				var audioPath = (aOralFluencyData.length > 0) ? aOralFluencyData[0].audiopath : '';				
+				var bDisplay = (bDisplayScore) ? "display: block" : "display: none";				
+			%>
+			<div class="microphone microphone-start <%= inactive %>"></div>			
+			<div class="speaker speaker-on <%= playInactive %>" data-audio="<%= audioPath %>"></div>
+			<div class="oral-fluency-score" style="<%= bDisplay %>">
+				<% 				
+				_.each(objScore[0], function(scoreVal, scoreKey) {
+					if (scoreKey != "QID" && scoreKey != "WC") { %>
+					<p><%= ASSIGNMENTS.c_o_ORAL_FUENCY_SCORE[scoreKey] %> : <%= (scoreVal < 0) ? 0 : scoreVal %></p>
+					<% }
+				});				
+				%>
+			</div>
+			<div style="display:none;">
+				<audio id="audioPlayer" controls="false" autoplay="false" preload="none" ></audio>
+			</div>
+			<div class="clear"></div> 
+		</div>
+		  
+		<div class="button_cont">				
+		<%
+			/* when teacher is viewing then submit button will be enabled */
+			var disabledClass = bDisableIcons ? "" : "btndisabled disabled";
+			var disabledAttr = bDisableIcons ? "" : "disabled";
+		%>
+		<button class="slideCommonSubmitButton button7 btn right microphone_grading_submit <%= disabledClass %>" <%= disabledAttr %>>
+			<%= buttonLabel %>
+		</button>		
+		<div class="clear"></div>
+		</div>
+		<div class="clear"></div>
+	  </div>
+	 </div>							
+	</script>
+	<!-- Oral Fluency Template -->
+	
+	<!-- PHONIC SLIDER TEMPLATE -->
+	<script type="text/template" id="phonic_slider_template">
+		<div class="swiper-container swiper-nested1 swiper-n1">
+			<div class="swiper-wrapper">
+<%
+				var k=0;
+				_.each(slides, function (slide, i) {
+					k++;
+%>
+					<div class="swiper-slide" id="slide_<%= i %>" data-slidecount="<%= k %>"> </div>
+				<% }); %>                
+			</div>
+		</div>
+		<div class='pagination'></div>
+	</script>
+	
+	<!-- Plural Nouns View Template -->
+    <script type="text/template" id="pluralnouns">
+<%
+		var bDisableSubmit = false;
+		_.each(data, function(slides, key) {
+%>
+		<div class="swiper-slide" data-slide-type="<%= slideType %>" reference-key="<%=referenceKey%>" id="<%=referenceKey%>">
+			<div class="main_wrapper plural-nouns">
+				<section class="phonics_game_container">
+					<div class="phonicstext_content"><%= slides.instruction_text %></div>
+					<div class="WordSlam_container">
+						<div class="container2">
+							<div class="container1">
+								<div class="col1_left">
+									<div class="word_matching">
+										<div class="matching_container_content" id="plural-nouns-word-bank">
+										<% _.each(slides.drag_options, function(dragOpt,k){ %>
+											<div class="myButton draggable_box swiper-no-swiping">
+												<div class="myButtoninner">
+													<%= dragOpt.text %>
+												</div>
+											</div>
+										<% }); %>
+											<div class="clear"></div>
+										</div> 
+										<div class="clear"></div>
+									</div>
+								</div>
+								<div class="col1_right">
+									<div class="word_matching_area">
+										<div class="matching_container_answer plural-nouns-drop-area">
+<%
+										_.each(slides.drop_options, function(dropOpt, k) {
+											sBoxLabel = CONSTANTS.c_s_PLURAL_NOUN_DROP_LABEL;
+											if (savedData[k]) {
+												sBoxLabel = savedData[k];
+											}
+											else {
+												bDisableSubmit = true;
+											}
+%>
+											<div class="word_matching_row answer_right">
+												<div class="word_matching_content">
+													<div class="word_text">
+														<div class="wordtext_inner"><%= dropOpt.text %></div>
+													</div>
+												</div>
+												<div class="word_matching_content drop-box-cont">
+													<div class="myButton<% if (sBoxLabel == CONSTANTS.c_s_PLURAL_NOUN_DROP_LABEL) { %> blank<% } %> dropbox swiper-no-swiping">
+														<div class="myButtoninner" data-index="<%= k %>">
+															<%= sBoxLabel %>
+														</div>
+													</div>
+												</div>
+												<div class="word_matching_content final-answer-cont">
+													<div class="fgg"></div>
+													<div class="word_text">
+														<div class="answer_rt sprite" style="display:none;"></div>
+														<div class="answer_wg sprite" style="display:none;"></div>
+														<div class="wordtext_inner wordtext_answer final-answer">
+<%
+														if (savedData[k]) {
+															var sPlural = dropOpt.text.trim();
+															switch (sBoxLabel) {
+																case 'es':
+																case 's':
+																	sPlural += sBoxLabel;
+																	break;
+																case 'ies':
+																	sPlural = (	
+																		(sPlural.charAt(sPlural.length - 1).toLowerCase() == 'y')?
+																		sPlural.substring(0, sPlural.length - 1):
+																		sPlural
+																	) + sBoxLabel;
+																	break;
+															}
+%>
+															<%= sPlural %>
+<%														
+														}
+%>													
+														</div>
+														<div class="wordtext_correct"></div>
+													</div>
+												</div>
+												<div class="clear"></div>
+											</div>
+										<% }); %>
+										</div>
+										<div class="clear"></div>
+									</div>
+									<div class="clear"></div>
+									<div class="studyplan_footer assessment_pagination">
+										<div class="pagination_footer pagination_footer_part assign_teacherview plural-nouns" id="<%= CONSTANTS.c_s_DIV_PLURAL_NOUN_SHOW_SCORE_ID %>">
+											<button class="button7 btn right<% if (bDisableSubmit === true) { %> disabled btndisabled<% } %>" id="<%= CONSTANTS.c_s_BTN_PLURAL_NOUN_SUBMIT_ANSWER_ID %>"<% if (bDisableSubmit === true) { %>  disabled="disabled"<% } %>>
+												<%= CONSTANTS.c_s_SUBMIT_ANSWERS_BTTN %>
+											</button>
+											<div class="clear"></div>
+										</div>
+									</div>
+								</div>
+							</div>
+						</div>
+						<div class="clear"></div>
+					</div>
+					<div class="clear"></div>
+				</section>
+				<div class="clear"></div>
+                <div class="clear"></div>
+            </div>
+            <div class="clear"></div>
+        </div>
+		<% });%>
+    </script>
+    <!-- End of Plural Nouns View Template -->
+	
+	<!-- /*==== Digraph View Template ====*/ -->
+    <script type="text/template" id="digraphs">
+		<% for (var key in data) { %>
+			<% slides = data[key]; %>
+		<div class="swiper-slide digraph" data-slide-type="<%= slideType %>" reference-key="<%=referenceKey%>" id="<%=referenceKey%>">
+			<div class="main_wrapper">                
+				<section class="phonics_game_container">
+					<div class="phonicstext_content"><%= slides.instruction_text %></div>
+					<div class="WordSlam_container">
+						<div class="container2">
+							<div class="container1">
+								<div class="col1_left">
+									<div class="word_matching">
+										<div class="matching_container_content" id="digraphs-word-bank">
+										<% _.each(slides.drag_options, function(dragOpt,k) { %>
+											<div class="myButton draggable_box swiper-no-swiping" data-answer-index="<%= k %>">
+												<div class="myButtoninner">
+													<%= dragOpt.text %>
+												</div>
+											</div>
+										<% }); %>
+											<div class="clear"></div>
+										</div> 
+										<div class="clear"></div>
+									</div>
+								</div>
+								<div class="col1_right">
+									<div class="word_matching_area">
+										<div class="matching_container_answer digraph-drop-area">
+<%
+										_.each(slides.drop_options, function(dropOpt, k) {
+											sBoxLabel = CONSTANTS.c_s_DIGRAPH_DROP_LABEL;
+											if (savedData[k]) {
+												sBoxLabel = savedData[k];
+											}
+%>
+											<div class="word_matching_row answer_right" data-drop-index="<%= k %>">
+												<div class="word_matching_content">
+													<div class="word_text prefix">
+														<div class="wordtext_inner"><%= dropOpt.prefix %></div>
+													</div>
+												</div>
+												<div class="word_matching_content drop-box-cont">
+													<div class="myButton<% if (sBoxLabel == CONSTANTS.c_s_DIGRAPH_DROP_LABEL) { %> blank<% } %> dropbox swiper-no-swiping">
+														<div class="myButtoninner" data-index="<%= k %>">
+															<%= sBoxLabel %>
+														</div>
+													</div>
+												</div>
+												<div class="word_matching_content">
+													<div class="word_text suffix">
+														<div class="wordtext_inner"><%= dropOpt.suffix %></div>
+													</div>
+												</div>
+												<div class="word_matching_content final-answer">
+													<div class="fgg"></div>
+													<div class="word_text">
+														<div class="answer_rt sprite" style="display:none;"></div>
+														<div class="answer_wg sprite" style="display:none;"></div>
+														<div class="wordtext_inner wordtext_answer">
+<%
+														if (savedData[k]) {
+															var sPhrase = dropOpt.prefix + sBoxLabel + dropOpt.suffix;
+%>
+															<%= sPhrase %>
+<%														
+														}
+%>													
+														</div>
+														<div class="wordtext_correct"></div>
+													</div>
+												</div>
+												<div class="clear"></div>
+											</div>
+										<% }); %>
+											<br clear="all" />
+										</div>
+									</div>
+									<div class="clear"></div>
+									<div class="studyplan_footer assessment_pagination">
+										<div class="pagination_footer pagination_footer_part assign_teacherview" id="<%= CONSTANTS.c_s_DIV_DIGRAPH_SHOW_SCORE_ID %>">
+											<button class="button7 btn right<% if (enableButton === false) { %> disabled btndisabled<% } %>" id="<%= CONSTANTS.c_s_BTN_DIGRAPH_SUBMIT_ANSWER_ID %>"<% if (enableButton === false) { %> disabled="disabled"<% } %>>
+												<%= CONSTANTS.c_s_SUBMIT_ANSWERS_BTTN %>
+											</button>
+											<div class="clear"></div>
+										</div>
+									</div>
+								</div>
+							</div>
+						</div>
+						<div class="clear"></div>
+					</div>
+					<div class="clear"></div>
+				</section>
+				<div class="clear"></div>
+                <div class="clear"></div>
+            </div>
+            <div class="clear"></div>
+        </div>
+		<% } %>
+    </script>
+    <!-- /*== End Digraph View Template ==*/ -->
+	
+	<!-- /*==== Word Families Template ====*/ -->
+    <script type="text/template" id="word_families">
+<%
+		var bDisableSubmit = false;
+		_.each(data, function(slides, key) {
+%>
+		<div class="swiper-slide" data-slide-type="<%= slideType %>" reference-key="<%=referenceKey%>" id="<%=referenceKey%>">
+			<div class="main_wrapper">                
+				<section class="phonics_game_container">
+					<div class="phonicstext_content"><%= slides.instruction_text %></div>
+					<div class="WordSlam_container">
+						<div class="container2">
+							<div class="container1">
+								<div class="col1_left">
+									<div class="word_matching">
+										<div class="matching_container_content" id="word-families-word-bank">
+										<% _.each(slides.drag_options, function(dragOpt,k){ %>
+											<div class="myButton draggable_box swiper-no-swiping">
+												<div class="myButtoninner">
+													<%= dragOpt.text %>
+												</div>
+											</div>
+										<% }); %>
+											<div class="clear"></div>
+										</div> 
+										<div class="clear"></div>
+									</div>
+								</div>
+								<div class="col1_right">
+									<div class="header_word_wrap">
+<%
+									var sFamily = '',
+										iFamilyCount = 0;
+									_.each(slides.drop_options, function(dropOpt, k) {
+										if (dropOpt.family != sFamily) {
+											sFamily = dropOpt.family;
+											iFamilyCount++;
+%>
+										<div class="f-<% if (iFamilyCount % 2 == 0) { %>right<% } else { %>left<% } %>">
+											-<%= dropOpt.family %> family
+										</div>
+										<% } %>
+									<% }); %>
+									<div class="clear"></div>
+									</div>
+									<div class="word_matching_area">
+										<div class="matching_container_answer word-families">
+<%
+										sFamily = '';
+										iFamilyCount = 0
+										_.each(slides.drop_options, function(dropOpt, k) {
+											if (dropOpt.family != sFamily) {
+												iFamilyCount++;
+												if (k > 0) {
+%>
+											</div>
+<%
+													if ((k + 1) % 2 == 0) {
+%>
+											<div class="clear"></div>
+<%											
+													}
+												}
+												sFamily = dropOpt.family;
+%>
+											
+											<div class="f-<% if (iFamilyCount % 2 == 0) { %>right<% } else { %>left<% } %>">
+<%												
+											}
+											sBoxLabel = CONSTANTS.c_s_WORD_FAMILIES_DROP_LABEL;
+											if (savedData[k]) {
+												sBoxLabel = savedData[k];
+											}
+											else {
+												bDisableSubmit = true;
+											}
+%>
+												<div class="word_matching_row answer_right">
+													<div class="word_matching_content">
+														<div class="myButton swiper-no-swiping<% if (sBoxLabel == CONSTANTS.c_s_WORD_FAMILIES_DROP_LABEL) { %> blank<% } %> dropbox">
+															<div class="myButtoninner" data-index="<%= k %>" data-family="<%= dropOpt.family %>">
+																<%= sBoxLabel %>
+															</div>
+														</div>
+													</div>
+													<div class="word_matching_content message_word">
+														<div class="word_text" id="result-<%= k %>">
+															<div class="answer_rt sprite" style="display:none;"></div>
+															<div class="answer_wg sprite" style="display:none;"></div>
+															<div class="wordtext_inner wordtext_answer"><%= dropOpt.family %></div>
+														</div>
+													</div>
+													<div class="clear"></div>
+												</div>
+										<% }); %>
+											</div>
+											<div class="clear"></div>
+										</div>
+										<div class="clear"></div>
+										<div class="studyplan_footer assessment_pagination">
+											<div class="pagination_footer pagination_footer_part assign_teacherview" id="<%= CONSTANTS.c_s_DIV_WORD_FAMILIES_SHOW_SCORE_ID %>">
+												<button class="button7 btn right<% if (bDisableSubmit === true) { %> disabled btndisabled<% } %>" id="<%= CONSTANTS.c_s_BTN_WORD_FAMILIES_SUBMIT_ANSWER_ID %>"<% if (bDisableSubmit === true) { %> disabled="disabled"<% } %>>
+													<%= CONSTANTS.c_s_SUBMIT_ANSWERS_BTTN %>
+												</button>
+												<div class="clear"></div>
+											</div>
+										</div>
+									</div>
+								</div>
+							</div>
+						</div>
+						<div class="clear"></div>
+					</div>
+					<div class="clear"></div>
+				</section>
+				<div class="clear"></div>
+                <div class="clear"></div>
+            </div>
+            <div class="clear"></div>
+        </div>
+		<% });%>
+    </script>
+    <!-- /*== End Word Families Template ==*/ -->
+	
+	<!-- /*==== Syllables Template ====*/ -->
+	<script type="text/template" id="syllables">
+<%
+		var bDisableButton = false;
+		_.each(data, function(slides, key) {
+%>
+		<div class="swiper-slide" data-slide-type="<%= slideType %>" reference-key="<%= referenceKey %>" id="<%= referenceKey %>">
+			<div class="main_wrapper">                
+				<section class="phonics_game_container">
+					<div class="phonicstext_content"><%= slides.instruction_text %></div>
+					<div class="WordSlam_container">
+						<div class="container2">
+							<div class="overflow-scroll">
+								<div class="container1">
+									<div class="col1_left">
+										<div class="word_matching">
+											<div class="matching_container_content">
+<%
+											var iTotalWords = slides.drag_options.length;
+											_.each(slides.drag_options, function(dragOpt, k) {
+%>
+												<div id="syllable-bank-<%= k %>" class="syllable-bank<% if (k + 1 == iTotalWords) { %> last<% } %>">
+												<% _.each(dragOpt.syllables, function(syllable, l) { %>
+													<div class="myButton draggable_box swiper-no-swiping" data-index="<%= k %>">
+														<div class="myButtoninner">
+															<%= syllable %>
+														</div>
+													</div>
+												<% }); %>
+												</div>
+											<% }); %>
+												<div class="clear"></div>
+											</div> 
+											<div class="clear"></div>
+										</div>
+									</div>
+									<div class="col1_right">
+										<div class="word_matching_area">
+											<div class="matching_container_answer syllables">
+<%
+											var iTotalWords = slides.drop_options.length;
+											_.each(slides.drop_options, function(dropOpt, k) {
+%>
+												<div id="syllables-drop-area-<%= k %>" class="syllables-drop-area<% if (k + 1 == iTotalWords) { %> last<% } if (k == 0) { %> first<% } %>">
+													<div class="word_matching_row answer_right">
+														<div class="word_matching_content">
+												<span class="header">
+													<% if (dropOpt.question_text) { %>
+														<%= dropOpt.question_text %>
+													<% } else { %>
+														<%= dropOpt.answer.join('') %>
+													<% } %>
+												</span>
+												<br clear="all" />
+<%
+												_.each(dropOpt.answer, function(dropOpt, l) {
+													sBoxLabel = CONSTANTS.c_s_SYLLABLES_DROP_LABEL;
+													if (savedData[k]) {
+														if (savedData[k][l]) {
+															sBoxLabel = savedData[k][l];
+														}
+														else {
+															bDisableButton = true;
+														}
+													}
+													else {
+														bDisableButton = true;
+													}
+%>
+															<div class="myButton swiper-no-swiping<% if (sBoxLabel == CONSTANTS.c_s_SYLLABLES_DROP_LABEL) { %> blank<%  }  else { %> draggable_box<% } %> dropbox" data-index="<%= k %>">
+																<div class="myButtoninner">
+																	<%= sBoxLabel %>
+																</div>
+															</div>
+												<% }); %>
+														</div>
+														<div class="word_matching_content message_word">
+															<div class="word_text" id="result-<%= k %>">
+																<div class="answer_rt sprite" style="display:none;"></div>
+																<div class="answer_wg sprite" style="display:none;"></div>
+																<div class="wordtext_inner wordtext_answer"> </div>
+															</div>
+														</div>
+														<div class="clear"></div>
+													</div>
+												</div>
+												<div class="clear"></div>
+											<% }); %>
+											</div>
+											<div class="clear"></div>
+										</div>
+									</div>
+									<div class="clear"></div>
+								</div>
+							</div>
+							<div class="clear"></div>
+							<div class="studyplan_footer assessment_pagination">
+								<div class="pagination_footer pagination_footer_part assign_teacherview">
+									<button class="button7 btn right<% if (bDisableButton === true) { %> disabled btndisabled<% } %>" id="<%= CONSTANTS.c_s_BTN_SYLLABLES_SUBMIT_ANSWER_ID %>"<% if (bDisableButton === true) { %> disabled="disabled"<% } %>>
+										<%= CONSTANTS.c_s_SUBMIT_ANSWERS_BTTN %>
+									</button>
+									<div class="clear"></div>
+								</div>
+							</div>
+						</div>
+					</div>
+					<div class="clear"></div>
+				</section>
+				<div class="clear"></div>
+                <div class="clear"></div>
+            </div>
+            <div class="clear"></div>
+        </div>
+		<% });%>
+    </script>
+	<!-- /*== End Syllables Template ==*/ -->
+	
+	<!-- /*==== Word Sort Template ====*/ -->
+    <script type="text/template" id="word_sort">
+<%
+		var bDisableButton = false;
+		_.each(data, function(slides, key) {
+%>
+		<div class="swiper-slide" data-slide-type="<%= slideType %>" reference-key="<%= referenceKey %>" id="<%= referenceKey %>">
+			<div class="main_wrapper">                
+				<section class="phonics_game_container">
+					<div class="phonicstext_content"><%= slides.instruction_text %></div>
+					<div class="WordSlam_container">
+						<div class="container2">
+							<div class="container1">
+								<div class="col1_left">
+									<div class="word_matching">
+										<div class="matching_container_content" id="word-bank">
+<%
+										for (var k = 0; k < slides.drag_options.length; k++) {
+											dragOpt = slides.drag_options[k];
+											if ($.inArray(dragOpt.word.toLowerCase(), usedWords) == -1) {
+%>
+											<div class="myButton draggable_box swiper-no-swiping">
+												<div class="myButtoninner">
+													<%= dragOpt.word %>
+												</div>
+											</div>
+<%
+											}
+										}
+%>
+											<div class="clear"></div>
+										</div> 
+										<div class="clear"></div>
+									</div>
+								</div>
+								<div class="col1_right">
+									<div class="header_word_wrap">
+<%
+									var sFamily = '',
+										iFamilyCount = 0;
+										
+									for (var k = 0; k < slides.drop_options.length; k++) {
+										dropOpt = slides.drop_options[k];
+										if (dropOpt.family != sFamily) {
+											sFamily = dropOpt.family;
+											iFamilyCount++;
+%>
+										<div class="f-<% if (iFamilyCount % 2 == 0) { %>right<% } else { %>left<% } %>">
+											<%= dropOpt.family %>
+										</div>
+<%
+										}
+									}
+%>
+									<div class="clear"></div>
+									</div>
+									<div class="word_matching_area">
+										<div class="matching_container_answer word-sort">
+<%
+										sFamily = '';
+										iFamilyCount = 0;
+										_.each(slides.drop_options, function(dropOpt, k) {
+											if (dropOpt.family != sFamily) {
+												iFamilyCount++;
+												if (iFamilyCount > 1) {
+%>
+												</div>
+<%
+												}
+%>
+												<div class="f-<% if (iFamilyCount % 2 == 0) { %>right<% } else { %>left<% } %>">
+<%
+												sFamily = dropOpt.family;
+											}
+											sBoxLabel = CONSTANTS.c_s_WORD_SORT_DROP_LABEL;
+											if (savedData[k]) {
+												sBoxLabel = savedData[k];
+											}
+											else {
+												bDisableButton = true;
+											}
+%>
+												<div class="word_matching_row answer_right">
+													<div class="word_matching_content">
+														<div class="myButton swiper-no-swiping<% if (sBoxLabel == CONSTANTS.c_s_WORD_SORT_DROP_LABEL) { %> blank<% } %> dropbox">
+															<div class="myButtoninner" data-index="<%= k %>" data-family="<%= dropOpt.family %>">
+																<%= sBoxLabel %>
+															</div>
+														</div>
+													</div>
+													<div class="word_matching_content message_word">
+														<div class="word_text" id="result-<%= k %>">
+															<div class="answer_rt sprite" style="display:none;"></div>
+															<div class="answer_wg sprite" style="display:none;"></div>
+															<div class="wordtext_inner wordtext_answer"></div>
+														</div>
+													</div>
+													<div class="clear"></div>
+												</div>
+										<% }); %>
+											</div>
+											<div class="clear"></div>
+											<div id="<%= CONSTANTS.c_s_DIV_CORRECTED_ANSWERS_CONTAINER_ID %>"> </div>
+										</div>
+										<div class="clear"></div>
+										<div class="studyplan_footer assessment_pagination">
+											<div class="pagination_footer pagination_footer_part assign_teacherview" id="<%= CONSTANTS.c_s_DIV_WORD_SORT_SHOW_SCORE_ID %>">
+												<button class="button7 btn right<% if (bDisableButton === true) { %> disabled btndisabled<% } %>" id="<%= CONSTANTS.c_s_BTN_WORD_SORT_SUBMIT_ANSWER_ID %>"<% if (bDisableButton === true) { %> disabled="disabled"<% } %>>
+													<%= CONSTANTS.c_s_SUBMIT_ANSWERS_BTTN %>
+												</button>
+												<div class="clear"></div>
+											</div>
+										</div>
+									</div>
+								</div>
+							</div>
+						</div>
+						<div class="clear"></div>
+					</div>
+					<div class="clear"></div>
+				</section>
+				<div class="clear"></div>
+                <div class="clear"></div>
+            </div>
+            <div class="clear"></div>
+        </div>
+		<% });%>
+    </script>
+    <!-- /*== End Word Sort Template ==*/ -->
+	
+    <!-- /*==== Word Slam Template ====*/ -->
+	<script type="text/template" id="word_slam">
+		<div id="word-slam-swiper">
+			<div id="word-slam-swiper-slide-container" class="swiper-wrapper">
+<%
+		var iTotalSlides = data.length,
+			bDisableSubmit = false,
+			iQuestionIndex = 1;
+		_.each(data, function(oSlide, iSlideIndex) {
+%>
+				<div class="swiper-slide" data-slide-type="<%= slideType %>" reference-key="<%= referenceKey %>" id="<%= referenceKey %>___<%= (iSlideIndex + 1) %>">
+					<div class="main_wrapper">                
+						<section class="phonics_game_container">
+							<div class="phonicstext_content"><%= oSlide.instruction %></div>
+							<div class="WordSlam_container">
+								<div class="container2">
+									<div class="container1">
+										<div class="col1_left">
+											<div class="word_matching">
+												<div class="matching_container_content" id="word-bank-<%= (iSlideIndex + 1) %>">
+													<%= wordBankHtmls[iSlideIndex + 1] %>
+													<div class="clear"></div>
+												</div> 
+												<div class="clear"></div>
+											</div>
+										</div>
+										<div class="col1_right">
+											<div class="word_matching_area">
+												<div class="matching_container_answer word-slam" id="word-slam-drop-area-<%= (iSlideIndex + 1) %>">
+												<% _.each(oSlide['questions'], function(oQuestion, iQIndex) { %>
+													<div class="word_matching_row">
+														<div class="textbox_heading_content">
+															<span><%= iQuestionIndex++ %>. </span><%= oQuestion.text %>
+														</div>
+														<div class="word_matching_content">
+<%
+														var aAnswers = oQuestion.answer.split(','),
+															aSavedAnswers = [],
+															sDropBoxLabel;
+														
+														aSavedAnswers = [];
+														try {
+															aSavedAnswers = savedData[iSlideIndex + 1][iQIndex + 1].answer;
+														}
+														catch (oException) {
+															aSavedAnswers = [];
+														}
+														
+														_.each(aAnswers, function(sAnswer, iAIndex) {
+															sDropBoxLabel = ASSIGNMENTS.c_s_WORD_SLAM_DROP_LABEL;
+															if (aSavedAnswers.fetch(iAIndex)) {
+																if (aSavedAnswers.fetch(iAIndex).length) {
+																	sDropBoxLabel = aSavedAnswers.fetch(iAIndex);
+																}
+																else {
+																	bDisableSubmit = true;
+																}
+															}
+															else {
+																bDisableSubmit = true;
+															}
+%>
+															<div class="myButton<% if (sDropBoxLabel == ASSIGNMENTS.c_s_WORD_SLAM_DROP_LABEL) { %> blank<% } else { %> draggable_box swiper-no-swiping<% } %>" data-slide-id="<%= (iSlideIndex + 1) %>" data-index="<%= (iQIndex + 1) %>">
+																<div class="myButtoninner"><%= sDropBoxLabel %></div>
+															</div>
+														<% }); %>
+														</div>
+														<div class="word_matching_content message_word">
+															<div class="fgg"></div>
+															<div class="word_text" id="result-<%= (iSlideIndex + 1) %>-<%= (iQIndex + 1) %>">
+																<div class="answer_rt sprite"></div>
+																<div class="answer_wg sprite"></div>
+																<div class="wordtext_inner">  </div>
+															</div>
+														</div>
+														<div class="clear"></div>
+													</div>
+												<% }); %>
+												</div>
+												<div class="clear"></div>
+												<% if (iTotalSlides == iSlideIndex + 1) { %>
+												<div class="studyplan_footer assessment_pagination">
+													<div class="pagination_footer pagination_footer_part assign_teacherview" id="<%= ASSIGNMENTS.c_s_DIV_WORD_SLAM_SHOW_SCORE_ID %>">
+														<button class="button7 btn right<% if (bDisableSubmit === true) { %> disabled btndisabled<% } %>" id="<%= ASSIGNMENTS.c_s_BTN_WORD_SLAM_SUBMIT_ANSWER_ID %>"<% if (bDisableSubmit === true) { %> disabled="disabled"<% } %>>
+															<%= ASSIGNMENTS.c_s_SUBMIT_ANSWERS_BTTN %>
+														</button>
+														<div class="clear"></div>
+													</div>
+												</div>
+												<% } %>
+											</div>
+										</div>
+									</div>
+								</div>
+								<div class="clear"></div>
+							</div>
+							<div class="clear"></div>
+						</section>
+						<div class="clear"></div>
+						<div class="clear"></div>
+					</div>
+					<div class="clear"></div>
+				</div>
+		<% }); %>
+			</div>
+		</div>
+    </script>
+    <!-- /*== End Word Slam Template ==*/ -->
+	
+	<!-- New fillableworksheet Template -->
+    <script type="text/template" id="fillableworksheet">
+<%
+		var backgroundStyle = "";
+		if (data.background_image != "" && typeof data.background_image != "undefined") {
+			backgroundStyle = 'style="background-image: url(\''+mediaPath  + data.background_image +'\'); background-size:cover; background-repeat:repeat; height:100%"';
+		}
+%>
+		<div class="swiper-slide" reference-key="<%= referenceKey %>" id="<%= referenceKey %>" <%= backgroundStyle %> data-slide-type="<%= slideType %>">			
+					<section class="dailyassignment_container da_container"> 
+						<div class="daily_assignment_content">
+						<div class="da_container_box">				 
+						<%		
+						var nodes = [];
+						
+						nodes[ASSIGNMENTS.c_s_STEM_TAG] = extractText(data, ASSIGNMENTS.c_s_STEM_START,  ASSIGNMENTS.c_s_STEM_END);
+						
+						nodes[ASSIGNMENTS.c_s_DIRECTION_TAG] = extractText(data,ASSIGNMENTS.c_s_DIRECTION_START, ASSIGNMENTS.c_s_DIRECTION_END);
+						
+						var question_text = extractText(data,ASSIGNMENTS.c_s_QUESTION_START, ASSIGNMENTS.c_s_QUESTION_END);
+						
+						
+						var arrSplited = [];
+						arrSplited = question_text.split(ASSIGNMENTS.c_s_QTEXT_END);						
+						var arrResult = [];
+						_.each(arrSplited, function(val,key) {
+							if(val != '') {	
+								var str = val.toString();								
+								arrResult.push(str.replace(ASSIGNMENTS.c_s_QTEXT_START, ""));
+							}
+						});										 
+						%> 								
+								<div class="daily_assignment_title">
+								<%= nodes[ASSIGNMENTS.c_s_DIRECTION_TAG] %>
+								</div>
+								<div class="daily_assignment_mid no_radius">
+								<% if (nodes[ASSIGNMENTS.c_s_STEM_TAG] != '') { %>
+									<div class="question_det">
+										<%= nodes[ASSIGNMENTS.c_s_STEM_TAG] %>
+									</div>
+								<% } %>
+									<div class="Phinics_question daily_assignment_ans">
+										<%
+											var j = 0;
+											$(arrResult).each(function(k, val){												
+												if($.trim(stripHtmlTagsFromString(val)) != '')
+												{
+													j++;
+											%>
+													<div class="textbox_heading_content" id="da_question<%= j %>">
+													<%=val%>
+													</div>
+													<div class="text_box_area text_box_area_ct">
+													<textarea autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" class="question_textarea" id="textTypeArea<%= j %>"></textarea>
+													</div>
+											<%
+												}
+											});
+											%>
+									</div>
+									
+								</div>
+								
+						</div>						
+						<div class="clear"></div>
+						<div class="edit_box_title">
+							<button class="right button7 btn btndisabled" id="btnSubmit"><%=$.trim(ASSIGNMENTS.c_s_SUBMIT_ANSWER_BTTN)%></button>
+							<button class="right button7 btn" id="btnPrint" style="display:none;"><%=$.trim(ASSIGNMENTS.c_s_PRINT_BTTN)%></button>
+							<div class="clear"></div>
+							<div class="clear"></div>
+						</div>
+						<div class="clear"></div>
+						</div>
+					</section>
+				<!--</div>-->
+                
+            
+            <div class="clear"></div>
+        </div>
+    </script>
+	
+	<!-- /*==== Rotating Lists Template ====*/ -->
+    <script type="text/template" id="rotatinglists">		
+			
+		<div class="swiper-slide rotatinglists" data-slide-type="<%= slideType %>" reference-key="<%=referenceKey%>" id="<%=referenceKey%>" style="width:100%;">
+			<div class="main_wrapper">                
+				<section class="phonics_game_container rotating_list_cont">
+					<div class="phonicstext_content"><%= data.instruction_text %></div>
+					<div class="WordSlam_container">                               
+						<div class="container2">							
+							<div class="matching_container_content">
+								<!---- SWIPER STARTS --->
+								<div class="demo-phone">
+								<div class="demo-phone-screen">
+									<table width="100%">
+<%
+									var sid = 0;
+									_.each (data.questions, function(ques, id) {
+%>
+										<tr>
+										<td width="35%" style="vertical-align: middle">
+										<div class="demo-phone-question"><%= ques.question_text %></div>
+										</td>									
+										<td width="45%">
+										<%
+										_.each (ques.lists, function(list, lid) {
+											sid++;											
+										%>
+											<div id="swiper<%= sid %>" class="swiper">
+											<div class="swiper-wrapper">
+											<%
+											_.each (list.options, function(val,key){
+											%>
+											<div data-key="<%= key %>" data-correct = "<%= (val == list.correct)?'true':'false' %>"><%= ($.trim(val) == '')?'---':val %></div>
+											<% }) %>											
+											</div>
+											<div class="swipper-window"></div>
+											<div class="masker"></div>
+											</div>
+										<% }) %>									
+										</td>
+										<td width="20%" style="vertical-align: middle"><div class="correct_answer" style="display:none;"><%= ques.answer %></div></td>
+										</tr>
+									<% }) %>
+									</table>
+									</div>
+									</div>												
+									<!--- SWIPER ENDS --->
+									
+									<div class="studyplan_footer assessment_pagination">
+										<div id="status-bar" class="pagination_footer pagination_footer_part assign_teacherview">
+											<button id="<%= ASSIGNMENTS.c_s_BTN_ROTATING_SUBMIT_ANSWER_ID%>" class="button7 btn right">
+												<%= ASSIGNMENTS.c_s_SUBMIT_ANSWERS_BTTN %>
+											</button>
+											<div class="clear"></div>
+										</div>
+									</div>
+									
+									<div class="clear"></div>
+								</div> 
+								<div class="clear"></div>										
+							</div>
+							<div class="clear"></div>
+						</div>
+					<div class="clear"></div>
+				</section>
+				<div class="clear"></div>
+                <div class="clear"></div>
+            </div>
+            <div class="clear"></div>
+        </div>
+		
+    </script>
+    <!-- /*== End Rotating List Template ==*/ -->
+	
+	<!-- FRS Master Template -->
+	<script type="text/template" id="frs_master_tpl">
+		<div class="study_plain_container assignment_slider_wrapper frs-master-cont">
+			<div class="study_plain_container_slide">
+				<div class="study_plain_container_contents">
+					<div class="slider_pager_content_outer">
+						<button id="prevPagingBtn" class="slider_pager_left sprite" type="button"></button>
+						<button id="nextPagingBtn" class="slider_pager_right sprite" type="button"></button>
+						<div class="slider_pager_content" style="width:auto;">
+							<div class="swiper-container" style="height:100%; overflow:hidden;">
+								<div id="slide_inner_container" class="swiper-wrapper slider_pager_sl">
+									<!-- Container for Video & question slides --> 
+									<!-- <div class="clear"></div> -->
+								</div>
+							</div>
+							<div class="pagination frs-main-pagination"></div>
+						</div>
+						<div class="clear"></div>
+					</div>
+					<div class="clear"></div>
+				</div>
+				<div class="clear"></div>
+			</div>
+			<div class="clear"></div>
+		</div>
+		<div class="clear"></div>
+	</script>
+
+	<!-- End of FRS Master Template -->
+	
+	<!-- /*== Foundational Reading Skills Video ==*/ -->
+	<script type="text/template" id="frs_video_tpl">
+<%
+			/* var sVideo = "https://lmdevsprint1.s3.amazonaws.com/dev_27_pg/content/ilit/curriculum/gr4/bbca41c545054cac904becbb6ba8ac81/media/AVA237897.mp4";*/
+			if (video != null && video != "null") {
+				sVideo = mediaPath + video;
+			}
+%>
+		<div class="question_box_space swiper-slide padding-right-0" data-page-title="<%= header %>" id="<%= referenceKey %>___<%= partId %><%= slideId %>" data-allow-swipe-next="true">
+			<div class="frs_container studyPlan_practice_video_wrapper">
+				
+				<div class="new_assignment_irr new_assignment_irr_sp_video">
+					<div class="video_container page_container_video">
+						<video id="video__<%= partId %>__<%= slideId %>" class="video-js vjs-default-skin" width="100%" height="100%" controls data-setup='{"controls":true, "preload": false, "autoplay": false,"techOrder": ["html5","flash"]}' >
+							<source type="video/mp4;" src="<%= sVideo %>" />
+						</video>
+						<div class="clear"></div>
+					</div>
+					<div class="clear"> </div>
+				</div>
+				<div class="clear"></div>
+			</div>
+			<div class="clear"></div>
+		</div>
+	</script>
+	<!-- /* End Foundational Reading Skills Video */ -->
+	
+<!-- Non Score Able Template -->
+<script type="text/template" id="nsa_fillableworksheet">
+<%
+	var backgroundStyle = "";
+	if (data.background_image != "" && typeof data.background_image != "undefined") {
+		backgroundStyle = 'style="background-image: url(\''+mediaPath  + data.background_image +'\'); background-size:cover; background-repeat:repeat; height:100%"';
+	}
+%>
+	<div class="swiper-slide" reference-key="<%= referenceKey %>" id="<%= referenceKey %>" <%= backgroundStyle %> data-slide-type="<%= slideType %>">			
+		<section class="dailyassignment_container da_container"> 
+			<div class="daily_assignment_content">
+				<div class="da_container_box">
+			<%		
+				var nodes = [];
+				
+				nodes[ASSIGNMENTS.c_s_STEM_TAG] = extractText(data, ASSIGNMENTS.c_s_STEM_START,  ASSIGNMENTS.c_s_STEM_END);
+				
+				nodes[ASSIGNMENTS.c_s_DIRECTION_TAG] = extractText(data,ASSIGNMENTS.c_s_DIRECTION_START, ASSIGNMENTS.c_s_DIRECTION_END);
+				
+				var question_text = extractText(data,ASSIGNMENTS.c_s_QUESTION_START, ASSIGNMENTS.c_s_QUESTION_END);
+				
+				
+				var arrSplited = [];
+				arrSplited = question_text.split(ASSIGNMENTS.c_s_QTEXT_END);						
+				var arrResult = [];
+				_.each(arrSplited, function(val,key) {
+					if(val != '') {	
+						var str = val.toString();								
+						arrResult.push(str.replace(ASSIGNMENTS.c_s_QTEXT_START, ""));
+					}
+				});										 
+			%>
+					<% if (nodes[ASSIGNMENTS.c_s_DIRECTION_TAG] != "") { %>
+					<div class="daily_assignment_title"><%= nodes[ASSIGNMENTS.c_s_DIRECTION_TAG] %></div>
+					<% } %>
+					<div class="daily_assignment_mid no_radius">
+						<div class="Phinics_question daily_assignment_ans">
+						<% if (nodes[ASSIGNMENTS.c_s_STEM_TAG] != '') { %>
+							<div class="question_det" style="margin-bottom: 0px; border: none;">
+								<%= nodes[ASSIGNMENTS.c_s_STEM_TAG] %>
+							</div>
+						<% } %>
+						</div>
+					</div>
+								
+				</div>						
+				<div class="clear"></div>
+				<div class="edit_box_title">
+					<button class="right button7 btn" id="btnFinish"><%=$.trim(ASSIGNMENTS.c_s_FINISHED_BTTN)%></button>
+					<button class="right button7 btn" id="btnPrint" style="display:none;"><%=$.trim(ASSIGNMENTS.c_s_PRINT_BTTN)%></button>
+					<div class="clear"></div>
+					<div class="clear"></div>
+				</div>
+				<div class="clear"></div>
+			</div>
+		</section>          
+		<div class="clear"></div>
+	</div>
+</script>
+<!-- End: Non Score Able Template -->
+
+<!-- Start Grade Intro Animation -->
+	
+	<script type="text/template" id="grade_animation_intro_slide">
+	<%
+				var _sVideo = "https://lmdevsprint1.s3.amazonaws.com/dev_27_pg/content/ilit/curriculum/gr4/bbca41c545054cac904becbb6ba8ac81/media/AVA237897.mp4";
+				try{
+					if (video != null && video != "null") {
+						_sVideo = mediaPath + video;
+					}
+				}
+				catch(oException){
+				
+				} 
+				
+	%>
+		<div class="swiper-slide" reference-key="<%= referenceKey %>" id="<%= referenceKey %>">
+			<div class="grade_animation_video_wrapper">
+				<div class="new_assignment_irr new_assignment_irr_sp_video">
+					<div class="video_container page_container_video">
+ 
+						<video id="video__<%= partIdx %>" class="video-js vjs-default-skin" width="100%" height="100%"  controls data-setup='{"controls":true, "preload": false, "autoplay": false,"techOrder": ["html5","flash"]}' >
+							<source src="<%= _sVideo %>" type="video/mp4;" />
+						</video> 
+  
+						<div class="clear"></div>
+					</div>
+					<div class="clear"> </div>
+				</div>
+				<div class="clear"></div>
+			</div>
+			<div class="clear"></div>
+		</div>
+	</script>
+	
+<!-- End Grade Intro Animation -->
+
+<!-- textslide Template -->
+    <script type="text/template" id="textslide">
+		<%
+			var pageTitleChk = _.where(data.metadata, {key: "slide_title"}),
+				pageTitle = (pageTitleChk.length)?pageTitleChk[0].keyValue:'';
+		%>
+		<div class="swiper-slide backgound_images assignment_slider_wrapper" reference-key="<%= referenceKey %>" id="<%= referenceKey %>">
+            <div class="main_wrapper">
+                <div class="gradient new_assignment_view multiple_choice_questions">
+                    <div class="slider_swiper_inner">
+                        <section class="container_space addclass_for_padd">
+							<div class="study_plain_title"><%= pageTitle %></div>
+							<div class="textslide media_content" >
+								<% if(textHtml){ %>
+									<p><%=textHtml %></p>
+								<% } %>
+								<% if(audio){ %>
+									<div class="audioPlayer">
+										 <audio id="player_<%= partIdx %>" class="player" controls="false" >
+										  Your browser does not support the <code>audio</code> element.
+										  <source src="<%= mediaPath+audio %>" type="audio/mp3">
+										 </audio>
+										 <span data-slide-idx="<%= partIdx %>" class="playPauseButton sprite2"></span>
+									 </div>
+									 <% } %>
+	
+									<% if(image){ %>
+									<img src="<%= mediaPath+image %>" />
+									<% } %>
+							</div>
+                        </section>
+                    </div>
+                </div>
+            </div>
+            <div class="clear"></div>
+        </div>
+    </script>
+	<!-- End of textslide Template -->
+	
+	<!-- projectorslide Template -->
+    <script type="text/template" id="projectorslide">
+		<%
+		
+			var pageTitleChk = _.where(data.metadata, {key: "slide_title"}),
+				pageTitle = (pageTitleChk.length)?pageTitleChk[0].keyValue:'',
+				pageImage = mediaPath+image,
+				aboveTextHtmlChk = _.where(data.metadata, {key: "above_text_html"}),
+				aboveTextHtml = (aboveTextHtmlChk.length)?aboveTextHtmlChk[0].keyValue:'',
+				pageAudio = mediaPath+audio;
+				
+		%>
+		<div class="swiper-slide backgound_images assignment_slider_wrapper" reference-key="<%= referenceKey %>" id="<%= referenceKey %>">
+            <div class="main_wrapper">
+                <div class="gradient new_assignment_view multiple_choice_questions">
+                    <div class="slider_swiper_inner">
+                        <section class="container_space addclass_for_padd">
+							<div class="study_plain_title"><%= pageTitle %></div>
+								<div class="projectorslide media_content" >
+									<div class="above_text_html"><%= aboveTextHtml %></div>
+									<% if(audio){ %>
+									<div class="audioPlayer">
+										 <audio id="player_<%= partIdx %>" class="player" controls="false" >
+										  Your browser does not support the <code>audio</code> element.
+										  <source src="<%= pageAudio %>" type="audio/mp3">
+										 </audio>
+										 <span data-slide-idx="<%= partIdx %>" class="playPauseButton sprite2"></span>
+									 </div>
+									 <% } %>
+	
+									<% if(image){ %>
+									<img src="<%= pageImage %>" />
+									<% } %>
+									
+								</div>
+                        </section>
+                    </div>
+                </div>
+            </div>
+            <div class="clear"></div>
+        </div>
+    </script>
+	<!-- End of projectorslide Template -->
+	
+</html>

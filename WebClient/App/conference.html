@@ -1,0 +1,1494 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta name="viewport" content="width=device-width; initial-scale=1.0; maximum-scale=1.0;">
+<title>iLiT</title>
+	<link href="css/conference.css" media="all" rel="stylesheet" />        
+	<link href="css/fonts/fonts.css" media="all" rel="stylesheet" />     
+	<link href="css/conference_dev.css" type="text/css" rel="stylesheet"/>
+	<link href="css/jquery-ui.css" media="all" rel="stylesheet"/>
+	
+	<script type="text/javascript" src="js/jquery-1.10.2.js"></script>
+	<script type="text/javascript" src="js/jquery-ui.js"></script>
+	<script type="text/javascript" src="js/underscore-min.js"></script>
+	<script type="text/javascript" src="js/jquery.ui.touch-punch.min.js"></script>
+	<script type="application/javascript" src="js/fastclick.js"></script>
+	<script type="text/javascript" src="js/util.js"></script>
+	<script type="text/javascript" src="js/constants.js"></script>
+	<script type="text/javascript" src="js/message_handler.js"></script>
+	<script type="text/javascript" src="js/assignment_category.js"></script>
+	<script type="text/javascript" src="js/application.js"></script>
+	<script type="text/javascript" src="js/iSeriesBase.js"></script>
+	<script type="text/javascript" src="js/conference.js"></script>
+    <script type="text/javascript" src="js/client_native_communication.js"></script>
+	<!--[if gte IE 9]>
+	  <style type="text/css">
+		.gradient {
+		   filter: none !important;
+		}
+	  </style>
+	<![endif]-->
+
+	<script type="text/javascript">
+		/* Conference Info notes data*/
+		objLessonConferenceJsonData = {
+			rootFolderPath:'/path/to/curricullam',
+			gradeId:8,
+			mediaPath:'',
+			jsPath:'assignment-content/ilit/curriculum/gr8/conference_info.js'
+		};
+		
+		window.CheckConferenceDetails = function() {
+			if (objLessonConferenceJsonData != null) {
+				loadJS("js/conference_info.js", conferenceInfoJsLoaded);
+			}
+			else {
+				setTimeout(CheckConferenceDetails, 500);
+			}
+		};
+		oAttemptInfo = null;	
+		/**
+		* Check Conference Info Js Content loaded or not 
+		* @returns void
+		*/
+		window.conferenceInfoJsLoaded =  function () {
+			if (objLessonConferenceData != null) {
+				GetConferenceStudentData(decodeURIComponent($_GET(LESSON.c_s_POPUP_CONFERENCE_TYPE)), $_GET(LESSON.c_s_POPUP_STUDENT_ID),$_GET(LESSON.c_s_POPUP_LESSON_ID));
+				setTimeout(function() {
+					studentConferenceDataCheck();
+				}, 200);
+			}
+			else {
+				setTimeout(function() {
+					conferenceInfoJsLoaded();
+				}, 500);
+			}
+		};
+			
+		/**
+		* Get Assignment List from GetGradableItemForInstructor
+		* @returns Void
+		*/
+		window.assignmentListCheck = function() {
+			if (objAssignmentListJsonData != null) {
+			   try{
+					if (parseInt(objAssignmentListJsonData.Status) == 200) {
+						if($_GET(LESSON.c_s_POPUP_SERVICE_VERSION) == "v2"){
+							GetGradebookForInstructorV2("Unit", "all", false, null);
+							setTimeout(function() {
+								gradeBookAttemtDataCheck();
+								}, 200);
+							}else{
+							GetGradeBookInfo("Unit", "1,2,3", false, $_GET(LESSON.c_s_POPUP_STUDENT_ID));
+							setTimeout(function() {
+								gradeBookCheck();
+								}, 200);
+							}
+					}
+					else {
+						throw(objAssignmentListJsonData.Error);
+					}
+			   }
+			   catch(exp){
+					if (exp.ErrorCode != "U1065") {
+						LessonConferenceView._alert({
+							divId:		'dialog-message',
+							message:	exp.ErrorUserDescription
+						});
+					}
+				}
+			   
+			} 
+			else {
+				setTimeout(function() {
+					assignmentListCheck();
+				}, 500);
+			}
+		};
+		
+		/**
+		 * Get Assigned Assignment List
+		 * @returns Void
+		 */
+		window.gradeBookCheck = function() {
+			if (objGradeBookJsonData != 0) {
+				$("#loaderContainer").hide();
+				$('body').css({'background-color': '#E0E1E1'});
+				$('.wrapper').show();
+				Application.init(VIEWTYPE.c_s_SMALLGROUP_CONFERENCE);
+				$('.wrapper').animate({'opacity' : '1'}, 800);
+			}
+			else {
+				setTimeout(gradeBookCheck, 100);
+			}
+		};
+		
+		/**
+		* Get Student Conference Data from GetConferenceStudentData
+		* @returns Void
+		*/
+		window.studentConferenceDataCheck = function() {
+			if (objconferenceStudentData != null) {
+			    try{
+					if (parseInt(objconferenceStudentData.Status) == 200) {
+						// For ClassRoom Conference
+						if($_GET(LESSON.c_s_POPUP_CONFERENCE_TYPE) == LESSON_TAB_VIEW[0].c_s_TABTYPE || 
+							$_GET(LESSON.c_s_POPUP_CONFERENCE_TYPE) == LESSON_TAB_VIEW[3].c_s_TABTYPE) {
+							GetLibraryInfo();
+							setTimeout(function(){
+								CheckLibraryDetails();
+							}, 500);
+						}
+						// For small group conference
+						else {							
+							var aUnitsWeeksDetails = ($_GET(LESSON.c_s_UNIT_WEEK_DETAILS)) ? 
+													JSON.parse($_GET(LESSON.c_s_UNIT_WEEK_DETAILS)) : 
+													DEFAULT_UNIT_WEEK_DETAILS;
+														
+							var sUnitsDetails = GENERAL.c_s_SPECIAL_CHARACTERS_BLANK;								
+							
+							for (var i=0; i < aUnitsWeeksDetails.length; i++) {
+								sUnitsDetails += aUnitsWeeksDetails[i][0];
+								sUnitsDetails += i < aUnitsWeeksDetails.length - 1 ? ',' : '';
+							}
+														
+							GetAssignmentListInfo(sUnitsDetails);
+							
+							setTimeout(function() {
+								assignmentListCheck();
+							}, 200);
+						}
+					}
+					else {
+						throw(objconferenceStudentData.Error);
+					}
+			}
+			catch(exp){
+					if (exp.ErrorCode != "U1065") {
+						LessonConferenceView._alert({
+							divId:		'dialog-message',
+							message:	exp.ErrorUserDescription
+						});
+					}
+				}
+			} 
+			else {
+				setTimeout(function() {
+					studentConferenceDataCheck();
+				}, 500);
+			}
+		};
+		
+		window.CheckLibraryDetails = function() {
+			if (objLibraryJsonData != null) {
+				loadJS(objLibraryJsonData.jsPath, isLibraryLoaded);
+			}
+			else {
+				setTimeout(CheckLibraryDetails, 500);
+			}
+		};
+		
+		window.isLibraryLoaded = function() {
+			if (typeof objBookList != "undefined" && objBookList != null) {				
+				GetListOfConferenceStudentData($_GET(LESSON.c_s_POPUP_CONFERENCE_TYPE), $_GET(LESSON.c_s_POPUP_STUDENT_ID));
+				setTimeout(function() {
+					studentConferenceListDataCheck();
+				}, 200);
+			} else {
+				setTimeout(isLoaded, 100);
+			}
+		};
+		/**
+		* Get  Student ConferenceList Data from GetConferenceStudentData
+		* @returns Void
+		*/
+		window.studentConferenceListDataCheck = function() {
+			if (objconferenceListStudentData != null) {
+				try{
+					if(parseInt(objconferenceListStudentData.Status) == 200){
+						//GetLibraryProgress($_GET(LESSON.c_s_POPUP_STUDENT_ID),$_GET(LESSON.c_s_POPUP_LESSON_ID));						
+						GetLibraryProgressSummary($_GET(LESSON.c_s_POPUP_STUDENT_ID));						
+						setTimeout(function(){
+							studentLibraryProgressDataCheck();
+						}, 500);						
+					}
+					else {
+						throw(objconferenceListStudentData.Error);
+					}
+				}
+				catch(exp){
+					if (exp.ErrorCode != "U1065") {
+						LessonConferenceView._alert({
+							divId:		'dialog-message',
+							message:	exp.ErrorUserDescription
+						});
+					}
+				}
+			}
+			else {
+				setTimeout(function() {
+					studentConferenceListDataCheck();
+				}, 500);
+			}
+		};	
+
+		/**
+		* Get  Student Library Progress Data from GetLibraryProgress
+		* @returns Void
+		*/
+		window.studentLibraryProgressDataCheck = function() {
+			if (objLibraryProgressSummary != null) {
+				try{
+					if(parseInt(objLibraryProgressSummary.Status) == 200){
+						onPageLoadComplete(GENERAL.c_s_CLASSROOM_CONFERENCE);
+						$("#loaderContainer").hide();
+						$('body').css({'background-color': '#E0E1E1'});
+						$('.wrapper').show();
+						Application.init(VIEWTYPE.c_s_CLASSROOM_CONFERENCE);
+						$('.wrapper').animate({'opacity' : '1'}, 800);
+					}
+					else {
+						throw(objLibraryProgressSummary.Error);
+					}
+				}catch(exp){
+					if (exp.ErrorCode != "U1065") {
+						LessonConferenceView._alert({
+							divId:		'dialog-message',
+							message:	exp.ErrorUserDescription
+						});
+					}
+				}
+			} 
+			else {
+				setTimeout(function() {
+					studentLibraryProgressDataCheck();
+				}, 500);
+			}
+		};
+
+		/* window.GetLibraryProgressCallback = function (pobjLibraryProgress) {
+			if(pobjLibraryProgress !== null) objlibraryProgressData = JSON.parse(pobjLibraryProgress);
+			else objlibraryProgressData = null;     
+		};*/
+		
+		/*
+		*  checkForAlldAttemptIds : Used for getting all attempt id and revision ids
+		*/
+		window.checkForAlldAttemptIds = function(oData){ 
+			var aItemAttemptIds = [];
+			
+			aItemAttemptIds = _.map(oData.GradeBookData, function (obj) {
+					return {
+						IAID: obj.IAID,
+						ARID: obj.ARID
+					};
+				});
+			oAttemptInfo = aItemAttemptIds;
+			GetGradebookAttemptData(aItemAttemptIds);	
+		}
+		/*
+		*  checkForUpdatedAttemptIds : Used for checking if any attempt id added or its revision id changed or not
+		*/
+		window.checkForUpdatedAttemptIds = function(oData){
+			var oSelf = this;
+			var aItemAttemptIds = _.map(oData.GradeBookData, function (obj) {
+			return {
+				IAID: obj.IAID,
+				ARID: obj.ARID
+			};
+		});	
+		 
+		var aFilteredAttemptIds	=	[];	// Updated/Added V2 Element
+		
+		for(var i = 0; i < aItemAttemptIds.length; i++) {		
+				
+			var aRevId	=	_.where(oAttemptInfo, {IAID: aItemAttemptIds[i].IAID});				
+			var revId	=	(aRevId.length == 0) ? '' : aRevId[0].ARID;
+			
+			if(revId === '') {	//	New Entry					
+				oAttemptInfo.push(aItemAttemptIds[i]);
+				aFilteredAttemptIds.push(aItemAttemptIds[i]);
+			} else if(revId != aItemAttemptIds[i].ARID) {	//	Exists but Updated					
+				aFilteredAttemptIds.push(aItemAttemptIds[i]);					
+				oAttemptInfo = _.reject(oAttemptInfo, function(obj){ return obj.IAID == aItemAttemptIds[i].IAID; });					
+				oAttemptInfo.push(aItemAttemptIds[i]);					
+			}
+		}
+			// native call
+			if(aFilteredAttemptIds.length > 0) {
+				GetGradebookAttemptData(aFilteredAttemptIds);
+			}
+		}
+        
+		window.gradeBookAttemtDataCheck = function() {
+		if(oPlatform.isDevice()){
+			objGradeBookV2JsonData = parent.parent.objGradeBookV2JsonData;
+		}
+		if (objGradeBookV2JsonData != 0) { 
+			try { 
+				if(parseInt(objGradeBookV2JsonData.Status) == 200){ 
+					if(oAttemptInfo ==  null){
+						checkForAlldAttemptIds(objGradeBookV2JsonData.Content);
+					}else{
+						checkForUpdatedAttemptIds(objGradeBookV2JsonData.Content);	
+					} 
+					setTimeout( function() { 
+						if(objGradeBookJsonData != 0) {
+							
+								var finalData = [];
+								for(var iIdx = 0; iIdx < objGradeBookJsonData.Content.length; iIdx++) {
+									var oItem = objGradeBookJsonData.Content[iIdx];
+									if(typeof oItem == "string") {
+										finalData.push(JSON.parse(oItem));
+									} else {
+										finalData.push(oItem);
+									}
+								}
+								objGradeBookJsonData.Content = finalData;
+								gradeBookCheck();
+						}
+					},2000);
+					
+				} else {
+					//throw(objNoteBookData.Error.ErrorUserDescription);
+				}
+			}catch(exp){}
+			
+			}else {
+					setTimeout(gradeBookAttemtDataCheck, 100);
+			}
+		}
+			
+		$(document).ready(function () {
+			if(oPlatform.isIOS()) {
+				loadJS('js/NativeBridge.js', CheckConferenceDetails);
+			}
+			else {
+				setTimeout(CheckConferenceDetails, 400);
+			}
+			
+			var loaderImg = '<div style=" font-size: 13px;"><img src="media/loader.gif" style="margin-bottom: 15px;"><br />LOADING</div>';
+			$('body').css({'background-color': '#FFF'});
+			$('.wrapper').hide();
+			$("#loaderContainer").css({'background-color': '#FFF', 'text-align':'center', 'top' : '45%', 'left': '50%', 'position' : 'absolute'}).html(loaderImg);
+			
+			$(".wrapper").off("click tap").on("click tap", function(e){
+				$("#" +LESSON.c_s_PROCESS_ENGMENT_LIST).hide();
+				$("#" +LESSON.c_s_CONFERENCE_HISTORY_LIST).hide();
+				$("#" +LESSON.c_s_SPEAKING_LIST).hide();
+				$("#" +LESSON.c_s_LISTENING_LIST).hide();
+			});
+			$(".outside_reading__Notes").off("click tap").on("click tap", function(e){
+				$("#" +LESSON.c_s_PROCESS_ENGMENT_LIST).hide();
+				$("#" +LESSON.c_s_CONFERENCE_HISTORY_LIST).hide();
+				$("#" +LESSON.c_s_SPEAKING_LIST).hide();
+				$("#" +LESSON.c_s_LISTENING_LIST).hide();
+			});
+		});
+				
+		$(window).resize(function () {
+			LessonConferenceView.resize();
+		});
+		
+		window.onorientationchange = function () {
+			LessonConferenceView.resize();
+		};
+	</script>
+	
+	<script type="text/javascript">
+		/**
+		 * Check Platform
+		 */
+
+		var objPlatform = {
+			isAndroid: function() {
+				return navigator.userAgent.match(/Android/i);
+			},
+			isBlackBerry: function() {
+				return navigator.userAgent.match(/BlackBerry/i);
+			},
+			isIOS: function() {
+				return navigator.userAgent.match(/iPhone|iPad|iPod/i);
+			},
+			isWindows: function() {
+		//        return navigator.userAgent.match(/IEMobile|Windows|WebView/i);
+				return navigator.userAgent.match(/Windows.*WebView/i);
+			},
+			isBrowser: function () {
+			return !this.isDevice();
+			},
+			isDevice: function() {
+			return (this.isAndroid() || this.isBlackBerry() || this.isIOS() || this.isWindows());
+			}
+		};
+	</script>
+	
+</head>
+<body>
+	<div id="loaderContainer"></div>
+	<div class="wrapper">
+		<div class="assignment_background" id="timetoReadConferencingArea">
+			<!-- render header panel-->
+			 <div id="headerpanel">
+			 </div>
+			 <!-- render header panel-->
+             <div class="view_assignment" >
+				<div class="main_wrapper" >
+				<div class="classconference_wrapper" >
+					<div id="classconference">
+					<div class="view_assignment_header_part">
+						<div class="outside_reading_wrap middle" id="comprehensionpanel">
+					`<!-- render comprehension panel --->
+					`<!--- render comprehension panel--->
+						</div>
+						<div class="outside_reading_wrap right_outside_reading right" id="outsidereadingpanel">
+							<!-- render outside reading panel --->
+							<!--- render outside reading panel--->
+						</div>
+						
+						
+					</div>
+
+					<div class="clear"></div>
+					<div class="view_assignment_container_part" id="instructorinputpanel">
+						<!-- render instructor input details area-->
+						
+						<!-- render instructor input details area-->
+						
+					</div>
+
+					<div class="clear"></div>
+					</div>
+					
+					<!-- class room conference tab starts-->
+					<div id="classroomconference" style="display:none;">
+						<div class="view_assignment_header_part">
+							<div class="outside_reading_wrap middle" id="classroomparticipationpanel">
+							<!-- render comprehension panel --->
+							<!--- render comprehension panel--->
+							</div>
+							<div class="outside_reading_wrap right_outside_reading right" id="studentfeedbackpanel">
+								<!-- render outside reading panel --->
+								<!--- render outside reading panel--->
+							</div>						
+							
+						</div>	
+
+							<div class="clear"></div>
+							<div class="view_assignment_container_part" id="classroominputpanel">
+								<!-- render instructor input details area-->
+								
+								<!-- render instructor input details area-->
+								
+							</div>
+
+						<div class="clear"></div>
+					</div>
+					
+					<!-- class room conference tab ends -->
+					
+					 <div class="view_assignment_container_part" id="groupconference" style="display:none;">
+                    	<div class="Conferencing_part">
+							<!-- student's to do list-->
+							<div class="Conferencing_part_lft_panel" id="studenttodolistpanel">
+                       
+                        	</div>
+							<!-- student's to do list -->
+                        	<div class="Conferencing_part_rgt_panel" id="studentnotespanel">
+                                
+                        	</div>
+                        </div>
+                        
+                        
+                        
+                    	<div class="clear"></div>
+					</div>
+					
+				<div class="clear"></div>
+				</div>
+				<div class="clear"></div>
+				</div>
+			
+			<div class="clear"></div>
+		</div>
+	  <div class="clear"></div>
+	</div>
+	
+	<div id="dialog-message" title="Alert!" class="Ilit_alert_box" style="display:none;">
+		
+	</div>
+	<div id="notpopuparea"></div>
+	<div id="speakingpopuparea"></div>
+	<div id="listeningpopuparea"></div>
+		
+</body>
+
+<script type="text/template" id="ConfigureconferencingTemplate">
+			 
+      
+</script>
+<script type="text/template" id="comprehenstiontemplate">
+
+							<div class="outside_reading_wrapinn">
+								<div class="book_cover_image_wrap">
+								<% 
+									var lastReadBookId = "";
+									var currentReadBookImg = LIBRARY.c_s_NO_COVER_IMAGE;
+									var currentBookTitle =  "";
+									var currentBookAuthor = "";
+									var imagePath = "";									
+									
+									if(data.libraryProgressData && _.size(data.libraryProgressData.Content) > 0) {
+										var imagePath = objLibraryJsonData.mediaPath;
+									}
+									
+									if($_GET(LESSON.c_s_POPUP_CURRENT_READING_ID) != ""){										
+										currentBookid = $_GET(LESSON.c_s_POPUP_CURRENT_READING_ID);										
+										currentBook = _.where(data.libraryData.bookset[0], {book_id: currentBookid});											
+																				
+										currentReadBookImg = (currentBook && currentBook.length) ? imagePath+currentBook[0].book_image : LIBRARY.c_s_NO_COVER_IMAGE;
+										
+										
+									}									
+									
+								%>
+									<img src="<%=currentReadBookImg%>"  alt="">
+								</div>
+								
+								
+								<div style="display:none; " id="viewBooksPopupArea" class="lesson_tooltip container_book_grid">
+                                <div class="page_arrow sprite"></div>
+                                   <div class="toc_tooltip_title">Book List
+                                	<!--<div class="lt pages_slide sprite"></div>
+                                    <div class="rt pages_slide active sprite"></div>
+                                    -->
+                                </div>
+                                
+                            	<div class="container_book_lists">
+                                      <div class="container_book_grid_view">
+									    <% 	var book_container_width = 800;											
+											if (data.libraryProgressData && _.size(data.libraryProgressData.Content) > 8){
+												book_container_width =  (85 *_.size(data.libraryProgressData.Content));
+											}
+										%>
+                                        <div class="container_book_grid_view_inner" style="width:<%=book_container_width%>px;">
+										<%  if(data.libraryProgressData && _.size(data.libraryProgressData.Content) > 0) {
+											
+											var selectedBook= '';
+											var bookImageUrl = LIBRARY.c_s_NO_COVER_IMAGE;
+											var bookAuthorName = '';
+											var imagePath = objLibraryJsonData.mediaPath;										
+											
+											$.each(data.libraryProgressData.Content.BookItemIDs, function (bookidlist, idx) {												
+												bookId = idx;												
+                                                selectedBook = _.where(data.libraryData.bookset[0], {'book_id': bookId });
+												if(selectedBook.length > 0){
+													bookImageUrl = imagePath+selectedBook[0].book_image;
+													bookAuthorName = selectedBook[0].author_name;
+												}else{
+													bookAuthorName = "";
+													bookImageUrl = LIBRARY.c_s_NO_COVER_IMAGE;
+												}
+										%>
+                                            <div class="container_book_view_box">
+                                                <div class="container_book_box"><img alt="" src="<%=bookImageUrl%>"></div>
+                                                <div class="container_book_view_name"><%=bookAuthorName%></div>
+                                            </div>
+										<% });
+                                         }else{												
+										%>
+											<div><%=LESSON.c_s_LIBRARY_PROGRESS_EMPTY_LABEL%></div>
+										<% } %>
+                                            <div class="clear"></div>
+                                        </div>
+                                        <div class="clear"></div>
+                                    </div>
+                                </div>
+                            </div>
+								
+								
+								<div class="current_level_content middle">
+									<div class="current_level_content_row">
+										<div class="current_level_left left">
+											<div class="read_current"><%=LESSON.c_s_CURRENT_READING_TXT%></div>
+											<div class="Phantom_text"><%=currentBookTitle%></div>
+											<div class="clear"></div>
+										</div> 
+										<div class="current_level_right middle">
+											<div class="compre_current"><%=LESSON.c_s_COMPREHENSION_LEVEL_TXT%></div>
+											
+											
+											<div class="level_slider_range slide_bar_container">
+												<div id="slider-range-min"></div>
+												<div class="clear"></div>
+											</div>
+											
+											
+											
+											<div class="clear"></div>
+										</div>
+										<div class="clear"></div>
+									</div>
+									
+									<div class="current_level_content_row last">
+										<div class="current_level_left left">
+											<div class="Phantom_text"><%=currentBookAuthor%></div>
+											<div class="clear"></div>
+										</div> 
+										<div class="current_level_right middle">
+											<% if(Object.keys(data.conferencedetails.comprehensionlevel).length > 0) { %>
+											<div class="level_slider_range scrore_range">
+											   <% $.each(data.conferencedetails.comprehensionlevel,function(idx,valx){ %>
+												<div class="range_div">
+												    <% if(idx <= Object.keys(data.conferencedetails.comprehensionlevel).length-2){ %> 
+													<div class="number_scrore_bullet">&bull;</div>
+													<% } %>
+													<div class="number_scrore_text"><%=idx%></div>
+													<div class="clear"></div>
+													<div class="score_name_text"><%=valx.title%></div>
+												</div>
+												 <% }); %>
+												<div class="clear"></div>
+											</div>
+											<% } %>
+											
+											<div class="clear"></div>
+										</div>
+										<div class="clear"></div>
+									</div>
+									<div class="clear"></div>
+								</div>
+								<div class="clear"></div>
+							</div>
+								<div class="clear"></div>
+							</div>
+
+
+
+							<div class="clear"></div>
+
+
+</script>
+
+<script type="text/template" id="participationtemplate">
+
+		<div class="outside_reading_wrapinn">
+			<!-- <div class="book_cover_image_wrap"></div> -->
+			
+			<div class="current_level_content middle">
+				<div class="current_level_content_row">										 
+					<div class="current_level_right middle">
+						<div class="compre_current"><%=LESSON.c_s_PARTICIPATION_LEVEL_TXT%></div>
+						
+						<div class="level_slider_range slide_bar_container">
+							<div id="slider-range-min"></div>
+							<div class="clear"></div>
+						</div>
+						
+						<div class="clear"></div>
+					</div>
+					<div class="clear"></div>
+				</div>
+				
+				<div class="current_level_content_row last">										
+					<div class="current_level_right middle">
+						<% if(Object.keys(data.conferencedetails.comprehensionlevel).length > 0) { %>
+						<div class="level_slider_range scrore_range">
+						   <% $.each(data.conferencedetails.comprehensionlevel,function(idx,valx){ %>
+							<div class="range_div">
+								<% if(idx <= Object.keys(data.conferencedetails.comprehensionlevel).length-2){ %> 
+								<div class="number_scrore_bullet">&bull;</div>
+								<% } %>
+								<div class="number_scrore_text"><%=idx%></div>
+								<div class="clear"></div>
+								<div class="score_name_text"><%=valx.title%></div>
+							</div>
+							 <% }); %>
+							<div class="clear"></div>
+						</div>
+						<% } %>
+						
+						<div class="clear"></div>
+					</div>
+					<div class="clear"></div>
+				</div>
+				<div class="clear"></div>
+			</div>
+			<div class="clear"></div>
+		</div>
+			<div class="clear"></div>
+		</div>
+
+
+
+		<div class="clear"></div>
+
+
+</script>
+
+<script type="text/template" id="outsidereadingtemplate">
+							<% if(_.isEmpty(confdata)) {
+								var bookTitle = LESSON.c_s_ADD_OUTSIDEREADING_BOOKTITLE_TXT;
+								var noOfPages = LESSON.c_s_ADD_OUTSIDEREADING_NOOFPAGES_TXT;
+								var wordsPerPage = LESSON.c_s_SPECIAL_CHARACTERS_BLANK;
+								var bookComplete= LESSON.c_s_SPECIAL_CHARACTERS_BLANK;
+							}else{
+								confdetails = confdata;
+								try {
+									var bookTitle = decodeURIComponent(confdetails.BookTitle);
+								} catch (ex) {
+									var bookTitle = confdetails.BookTitle;
+								}
+								var noOfPages = confdetails.NoOfPages;
+								var wordsPerPage = confdetails.WordsPerPage;
+								var bookComplete= confdetails.BookComplete;
+							}
+						    %>
+							<div class="outside_reading_wrapinn">
+                                <div class="outside_title">
+                                    <%=LESSON.c_s_OUTSIDE_READING_TXT%>
+                                </div>
+                                
+                                <div class="input_filed_read">
+                                    <input name="" type="text" id="<%=LESSON.c_s_ADD_OUTSIDEREADING_BOOKTITLE_INPUT%>" value="<%=bookTitle%>" onfocus="(this.value == '<%=LESSON.c_s_ADD_OUTSIDEREADING_BOOKTITLE_TXT%>') && (this.value = '')" onblur="(this.value == '<%=GENERAL.c_s_SPECIAL_CHARACTERS_BLANK%>') && (this.value = '<%=LESSON.c_s_ADD_OUTSIDEREADING_BOOKTITLE_TXT%>')"/>
+                                </div>
+                                
+                                <div class="input_filed_read input_filed_read2 left">
+                                    <input name="" type="text" id="<%=LESSON.c_s_ADD_OUTSIDEREADING_NOOFPAGES_INPUT%>"
+									value="<%=noOfPages%>" onfocus="(this.value == '<%=LESSON.c_s_ADD_OUTSIDEREADING_NOOFPAGES_TXT%>') && (this.value = '')" onblur="(this.value == '<%=GENERAL.c_s_SPECIAL_CHARACTERS_BLANK%>') && (this.value = '<%=LESSON.c_s_ADD_OUTSIDEREADING_NOOFPAGES_TXT%>')" />
+                                </div>
+								<div class="input_filed_read input_filed_read3 right">
+                                        <select type="" class="" name="" id="<%=LESSON.c_s_ADD_OUTSIDEREADING_WORDS_PERPAGES_INPUT%>" >
+											<option value="" <%  if(wordsPerPage == LESSON.c_s_SPECIAL_CHARACTERS_BLANK) { %> selected <%} %> ><%=LESSON.c_s_TXT_WORD_PER_PAGE%></option>
+										    <% for(var i= 1;i <= 7; i++) { %> 
+                                        	<option value="<%=i*50%>" <%  if(wordsPerPage == (i*50)) { %> selected <% } %> ><%=i*50%></option>
+											<% } %>
+                                            
+                                        </select>
+                                 </div>
+                        		<div class="clear"></div>
+                                <div class="check_filed_read_area">
+                                    <!-- <div class="right"><button type="button" class="button7 btn" id="<%//=LESSON.c_s_SUBMIT_BTN%>"><%//=LESSON.c_s_SUBMIT_BTN_TXT%></button></div> --->
+                                    <div class="middle check_filed_read">
+                                        <div class="left"><input name="" type="checkbox" id="<%=LESSON.c_s_ADD_OUTSIDEREADING_COMPLETEBOOK_INPUT%>" <% if(bookComplete == true) { %> checked <% } %>/></div>
+                                        <div class="text_check"><%=LESSON.c_s_BOOK_COMPLETE_TXT%></div>
+                                    </div>
+                                    
+                                    <div class="clear"></div>
+                                </div>
+                                <div class="clear"></div>
+                            </div>
+                        	<div class="clear"></div>
+</script>
+<script type="text/template" id="instructorinputtemplate">
+				<% 
+					if(_.isEmpty(confdata)){
+						var additionalNotes = "";
+						var ProcessNotes = "";
+					}else{
+						confdetails = confdata;
+						try {
+							var additionalNotes = decodeURIComponent(confdetails.AdditionalNotes);
+						} catch (ex) {
+							var additionalNotes = confdetails.AdditionalNotes;
+						}
+						var ProcessNotes = confdetails.ProcessNotes;
+					}
+				%>
+				
+				<div class="view_container_part middle" >
+				
+					<div class="outside_reading_wrap margin-left" id = "processEngagementDiv">
+						<div class="outside_reading_wrapinn boxes_read">
+							<div class="outside_reading_heading">
+								<button class="right button9 plus" id="<%=LESSON.c_s_PROCESS_ADD_BTN%>"><strong>+</strong></button>
+								
+								<div class="read_out_text"><%=LESSON.c_s_PROCESS_ENG_LABEL%></div>
+								
+								<div class="clear"></div>
+							</div>
+							<!--/*<div class="drow_heading"></div>*/-->
+							<div class="outside_reading_cont first_box_wrap">
+							<div class="outside_reading_cont_inner">
+
+								<div class="outside_reading__Notes outside_reading__Notes2" id="<%=LESSON.c_s_PROCESS_ENGAGEMENT_NOTES%>">
+								    <% if(ProcessNotes != "") {
+										nodes = ProcessNotes;
+										
+										_.each(nodes, function (listdata, idx) {  %>
+										<p> <span id="noteid_<%=nodes[idx]%>" class="text_remove sprite"></span>
+											<%=data.conferencedetails.notes[listdata].title%>
+										</p>
+										<%});
+									}
+									%>
+								</div>
+								
+								</div>
+							<div class="clear"></div>
+						</div>
+							<div class="clear"></div>
+						</div> 
+						<div class="clear"></div>
+					</div>
+				<div class="outside_reading_wrap"  id = "additionalNotesDiv">
+						<div class="outside_reading_wrapinn boxes_read">
+							<div class="outside_reading_heading">
+								<!-- <button class="right button9" id="btnAdditiontxt"><%=LESSON.c_s_EDIT_BTN_TXT%></button> -->
+								<div class="read_out_text" ><%=LESSON.c_s_ADDITIONAL_NOTES_LABEL%> </div>
+								
+								<div class="clear"></div>
+							</div>
+							<div class="drow_heading"></div>
+							<div class="outside_reading_cont">
+							<div class="outside_reading_cont_inner">
+
+								<div class="outside_reading__Notes" id="inputAdditionaltxt" contenteditable="true">
+									<%=additionalNotes%>
+									
+								</div>
+								
+								</div>
+							<div class="clear"></div>
+						</div>
+							<div class="clear"></div>
+						</div>
+						<div class="clear"></div>
+					</div>
+				
+				<div class="outside_reading_wrap margin-right" id = "guideQuestionDiv">
+					<div class="outside_reading_wrapinn boxes_read">
+						<div class="outside_reading_heading">
+							<div class="read_out_text"><%=LESSON.c_s_GUIDING_QUESTIONS_LABEL%></div>
+							<div class="clear"></div>
+						</div>
+						<div class="drow_heading"></div>
+						<div class="outside_reading_cont">
+							<div class="outside_reading_cont_inner">
+								<div class="outside_reading__Notes">
+								<% if(Object.keys(data.conferencedetails.guidingquestions).length > 0) { %>
+									
+									<% $.each(data.conferencedetails.guidingquestions,function(idx,valx){ %>
+										<p><%=valx.title%></p>
+									<%})%>  
+									
+								<% } %>
+								</div>
+								
+								</div>
+							<div class="clear"></div>
+						</div>
+						
+						<div class="clear"></div>
+					</div>
+					<div class="clear"></div>
+				</div>
+				
+					
+
+					
+					<div class="clear"></div>
+				</div>
+
+				<div class="clear"></div>
+</script>
+<script type="text/template" id="headertemplate">
+<header>
+			<div class="header_inner">
+					<nav class="top_navbar">
+						
+							
+						 <div class="left button_content">
+						 <% if($_GET(LESSON.c_s_POPUP_CONFERENCE_TYPE) == LESSON_TAB_VIEW[0].c_s_TABTYPE || 
+								$_GET(LESSON.c_s_POPUP_CONFERENCE_TYPE) == LESSON_TAB_VIEW[3].c_s_TABTYPE) { %>
+							<button class="left button9" id="BtnAddOutHistory"><%=LESSON.c_s_HISTORY_BTN_TXT%></button>
+							<% if(data.conferenceListStudentData.Content != null) {
+								if(oPlatform.isWindows() || (oPlatform.isBrowser())){
+									var position = "11";
+								}else{
+									var position = "13";
+								}
+						     %>	 		
+								<div style="display: none; left:<%=position%>%;  top:56px" class="lesson_tooltip" id="<%=LESSON.c_s_CONFERENCE_HISTORY_LIST%>">
+									<div class="page_arrow sprite" style="right: 50%; left:inherit;"></div>
+									<div class="Tooltip_menu_wrap" >
+									<div class="Tooltip_menu_wrap_inn">
+										
+										<ul><% /* if(isCurrent == true){ %>
+											<!--<a id="confItemId_<%//=curitemId%>" data_value="<%//=curitemId%>" unitNo="<%//=curunitNo%>" lessonNo ="<%//=curlessonNo%>" href="javascript:void(0);" style="text-decoration:none;"><li ><%//=LESSON.c_s_CONFERENCE_CURRENT_EDITING%></li>
+											</a>-->
+											<% } */  %>
+										<%	var historyAvailable = 0,
+												aUnitLesson = [];
+										/* made changes on 21.08.2014 for reverse chronological order */
+											var confHistoryList = [];
+											_.each(data.conferenceListStudentData.Content, function (conflist, idx) {
+												try{ 
+													lessonConfData = {};                                               
+													/*lessonConfData = ($.parseJSON(conflist.ConferenceData)).time_to_read;*/
+													lessonConfData.ItemID = conflist.ItemID; 
+													lessonConfData.ConferenceLessonName = conflist.ConferenceLessonName;
+													aUnitLesson = conflist.ConferenceLessonName.split(',');
+													lessonConfData.unitNo = (typeof aUnitLesson[0] == 'string') ? 
+																			aUnitLesson[0].replace('Unit','').trim() : 
+																			'';
+													lessonConfData.lessonNo = (typeof aUnitLesson[1] == 'string') ? 
+																			aUnitLesson[1].replace('Lesson','').trim() : 
+																			'';
+													
+													confHistoryList.push(lessonConfData);
+												}catch(e){
+												}
+											});
+											if(confHistoryList.length != 0){ /* for reverse order */
+												confHistoryList = _.sortBy(confHistoryList, function(s){ 
+													return s. lessonNo * -1;
+												});
+											}
+										  /* made changes on 21.08.2014 for reverse chronological order */
+										_.each(confHistoryList, function (conflist, idx) {
+											confdata = conflist;
+											if(confdata != null){
+												unitNo = confdata.unitNo;
+												lessonNo = confdata.lessonNo;
+												itemId = conflist.ItemID;												
+												if(objconferenceStudentData.Content.ItemID != itemId) {												
+												historyAvailable = 1;
+										%>
+											<a id="confItemId_<%=itemId%>" data_value="<%=itemId%>" unitNo="<%=unitNo%>" lessonNo ="<%=lessonNo%>" href="javascript:void(0);" style="text-decoration:none;"><li ><%=confdata.ConferenceLessonName%></li>
+											</a>
+										<% } 
+											}
+										}) ;
+										
+										if(historyAvailable == 0){	
+										%>
+										<li ><%=LESSON.c_s_CONFERENCE_EMPTY_HISTORY_TXT%></li>
+										<% } %>
+										</ul>
+										<%  %>
+									</div>
+									</div>
+								</div>
+								<% }
+								
+								} %>
+							<button class="left button9 active" id="BtnAddOutDone"><%=LESSON.c_s_DONE_BTN_TXT%></button>
+						 </div> 
+						 
+						 <div class="right unitname" id="unitLessonId"><%=itemDisplayName%></div>
+						 
+						 <div class="lesson_week profile_name_content">
+							<div class="profile_view"><img src="media/student_img3.png"  alt=""></div>
+							<div class="middle profile_text"><%=studentName%></div> 
+						 
+						 </div>
+						   
+							<div class="clear"></div>
+					</nav>
+				<div class="clear"></div>
+			</div>
+			<div class="clear"></div>
+			</header>
+</script>
+<script type="text/template" id="notestemplate">
+        <div style="display: none;  left:inherit; " class="lesson_tooltip left_arrow_tolls outerlessontooltip" id="<%=LESSON.c_s_PROCESS_ENGMENT_LIST%>">
+		<div class="page_arrow sprite" ></div>
+		<div style="display: block;  " class="lesson_tooltip left_arrow_tolls" >
+		
+
+		<div class="Tooltip_menu_wrap" >
+			<div class="Tooltip_menu_wrap_inn">
+				<% 
+						if(_.isEmpty(confdata)){
+						var additionalNotes = "";
+						var ProcessNotes = "";
+						}else{
+							confdetails = confdata;
+							try {
+								var additionalNotes = decodeURIComponent(confdetails.AdditionalNotes);
+							} catch (ex) {
+								var additionalNotes = confdetails.AdditionalNotes;
+							}
+							var ProcessNotes = confdetails.ProcessNotes;
+						}
+				%>
+				<ul>
+				<%  
+					if(ProcessNotes != "") { 
+						nodes = ProcessNotes;
+					}
+					$.each(data.conferencedetails.notes,function(idx,valx){ 
+						if(typeof nodes != "undefined"){ 
+							if(($.inArray(idx, nodes)) != -1){
+						%>  
+						<li class = "notelist" note_id="<%=idx%>"><%=valx.title%>
+								<div class="check sprite"></div>
+						</li>
+						<% } else { %>
+							<li class = "notelist" note_id="<%=idx%>"><%=valx.title%></li>
+						<% }
+						}
+						else { %>
+							<li class = "notelist" note_id="<%=idx%>"><%=valx.title%></li>
+						<%	 } 
+					}); 
+				%>
+				</ul>
+				
+			</div>
+		</div>
+		</div>
+		</div>
+</script>
+
+<!-- Speaking Notes Template -->
+<script type="text/template" id="speakingnotestemplate">
+        <div style="display: none;  left:inherit; " class="lesson_tooltip left_arrow_tolls outerlessontooltip" id="<%=LESSON.c_s_SPEAKING_LIST%>">
+		<div class="page_arrow sprite" ></div>
+		<div style="display: block;  " class="lesson_tooltip left_arrow_tolls" >
+		
+
+		<div class="Tooltip_menu_wrap" >
+			<div class="Tooltip_menu_wrap_inn">
+				<% 
+						var SpeakingNotes = "",
+							nodes = [];
+						
+						if(!_.isEmpty(confdata)) {							
+							SpeakingNotes = confdata.SpeakingNotes;
+						}
+				%>
+				<ul>
+				<%  
+					if(SpeakingNotes != "") { 
+						nodes = SpeakingNotes;
+					}
+					$.each(data.conferencedetails.speakingnotes,function(idx,valx){ 
+						if(typeof nodes != "undefined"){ 
+							if(($.inArray(idx, nodes)) != -1){
+						%>  
+						<li class = "speakingnotelist" note_id="<%=idx%>"><%=valx.title%>
+								<div class="check sprite"></div>
+						</li>
+						<% } else { %>
+							<li class = "speakingnotelist" note_id="<%=idx%>"><%=valx.title%></li>
+						<% }
+						}
+						else { %>
+							<li class = "speakingnotelist" note_id="<%=idx%>"><%=valx.title%></li>
+						<%	 } 
+					}); 
+				%>
+				</ul>
+				
+			</div>
+		</div>
+		</div>
+		</div>
+</script>
+
+<!-- Speaking Notes Template -->
+<script type="text/template" id="listeningnotestemplate">
+        <div style="display: none;  left:inherit; " class="lesson_tooltip left_arrow_tolls outerlessontooltip" id="<%=LESSON.c_s_LISTENING_LIST%>">
+		<div class="page_arrow sprite" ></div>
+		<div style="display: block;  " class="lesson_tooltip left_arrow_tolls" >
+		
+
+		<div class="Tooltip_menu_wrap" >
+			<div class="Tooltip_menu_wrap_inn">
+				<%
+					var ListeningNotes = "",
+						nodes = [];	
+						
+					if(!_.isEmpty(confdata)) {							
+						ListeningNotes = confdata.ListeningNotes;
+					}
+				%>
+				<ul>
+				<% 
+					if(ListeningNotes != "") { 
+						nodes = ListeningNotes;
+					}
+					console.log(nodes);
+					$.each(data.conferencedetails.listeningnotes,function(idx,valx){ 
+						if(typeof nodes != "undefined"){ 
+							if(($.inArray(idx, nodes)) != -1){
+						%>  
+						<li class = "listeningnotelist" note_id="<%=idx%>"><%=valx.title%>
+								<div class="check sprite"></div>
+						</li>
+						<% } else { %>
+							<li class = "listeningnotelist" note_id="<%=idx%>"><%=valx.title%></li>
+						<% }
+						}
+						else { %>
+							<li class = "listeningnotelist" note_id="<%=idx%>"><%=valx.title%></li>
+						<%	 } 
+					}); 
+				%>
+				</ul>
+				
+			</div>
+		</div>
+		</div>
+		</div>
+</script>
+
+<script type="text/template" id="studenttodolisttemplate">
+		<div class="outside_reading_wrap">
+			<div class="outside_reading_wrapinn boxes_read" id="studentToDoList">
+				<div class="outside_reading_heading">
+					<div class="read_out_text"><%=LESSON.c_s_CONFERENCE_STUDENT_TODOLIST_LABEL%></div>
+					<div class="clear"></div>
+				</div>
+				<div class="outside_reading_cont first_box_wrap">
+					<div class="outside_reading_cont_inner" id="studentToDoListDiv">
+
+						<div class="outside_reading_todo">
+						<div class="todo_listing_wrapper">
+							<ul>
+							<%
+							var oTodoList = $.extend(true,{},TODO_LIST);
+							
+							/* GET DATA UNIT WISE */
+							_.each(todolistdata, function (unitdata, id) {
+								oUnitdata = _.groupBy(unitdata, function(obj){ return obj.ItemSubType; });								
+								
+								
+								/* STORE DATA ITEM TYPE WISE */								
+								oTodoList = $.extend(true,{},TODO_LIST);
+								_.each(oUnitdata, function (aVal, key) {								
+									if ($.inArray(key, ITEM_SUB_TYPE.c_s_ASSESSMENT) > -1) {
+										for (var i=0; i < aVal.length; i++) {											
+											oTodoList.c_s_ASSESSMENT[aVal[i].ItemCompletionStatus].push(aVal[i]);
+										}
+									}
+									else if (key == ITEM_SUB_TYPE.c_s_INTERACTIVE_READING) {
+										for (var i=0; i < aVal.length; i++) {
+											oTodoList.c_s_INTERACTIVE_READING[aVal[i].ItemCompletionStatus].push(aVal[i]);
+										}
+									}
+									else if (key == ITEM_SUB_TYPE.c_s_iPRACTICE) {
+										for (var i=0; i < aVal.length; i++) {
+											oTodoList.c_s_iPRACTICE[aVal[i].ItemCompletionStatus].push(aVal[i]);
+										}
+									}
+									else if ($.inArray(key, ITEM_SUB_TYPE.c_s_WRITING) > -1) {
+										for (var i=0; i < aVal.length; i++) {
+											oTodoList.c_s_WRITING[aVal[i].ItemCompletionStatus].push(aVal[i]);
+										}
+									}
+									else if (key == ITEM_SUB_TYPE.c_s_STUDY_PLAN) {
+										for (var i=0; i < aVal.length; i++) {
+											oTodoList.c_s_STUDY_PLAN[aVal[i].ItemCompletionStatus].push(aVal[i]);
+										}
+									}
+									else if (key == ITEM_SUB_TYPE.c_s_WORD_SLAM) {
+										for (var i=0; i < aVal.length; i++) {
+											oTodoList.c_s_WORD_SLAM[aVal[i].ItemCompletionStatus].push(aVal[i]);
+										}
+									}
+									else {
+										for (var i=0; i < aVal.length; i++) {
+											oTodoList.c_s_OTHERS[aVal[i].ItemCompletionStatus].push(aVal[i]);
+										}
+									}
+								});								
+								
+								/* RENDER DATA ITEM TYPE WISE*/
+								_.each(oTodoList, function (typeList, typeId) {
+								
+									/* RENDER DATA STATUS WISE */
+									_.each(typeList, function (statusList, statusId) {
+									
+									_.each(statusList, function (listdata, idx) {
+																
+							%>
+								<li>
+									<div class="right todo_right_cont">
+									<% if(listdata.FinalScore == 0 && listdata.ItemCompletionStatus != "scored") { %>
+										<div class="math_round text_messeges">
+											<div class="inner_txt_todo">
+												<%=listdata.ItemCompletionStatus%>
+											</div>
+										</div>
+									<% } else{ %>
+										<div class="math_round">
+											<div class="symbol_wrap">
+												<div class="symbol_middle_content">
+													<div class="box_symbold">
+													<div class="main_input"><%=listdata.FinalScore%></div>
+													</div>
+													<div class="box_devider"></div>
+													<div class="box_symbold">
+														<div class="main_input"><%=listdata.ItemMaxScore%></div>
+													</div>
+												</div>
+											</div>
+										</div>
+									<% } %>
+									</div>
+									<div class="middle">
+									<h5><%=listdata.ItemSubType%></h5>
+									<p><i><%=listdata.ItemName%></i></p>
+									</div>
+									<div class="clear"></div>
+								</li>
+								<% 	}); 
+									});
+									});
+								});
+								%>
+
+							</ul>
+						<div class="clear"></div>  
+					</div>  
+					<div class="clear"></div>           
+					</div>
+
+					</div>
+		<div class="clear"></div>
+		</div>
+		<div class="clear"></div>
+		</div>
+		<div class="clear"></div>
+		</div>
+		<div class="clear"></div>
+</script>
+
+<script type="text/template" id="studentnotetemplate">
+<% if(_.isEmpty(confdata)) {
+		var additionalNotes = "";
+		var ProcessNotes = "";
+	}else{
+		confdetails = confdata;
+		try {
+			var additionalNotes = decodeURIComponent(confdetails.AdditionalNotes);
+		} catch (ex) {
+			val.additionalNotes = confdetails.AdditionalNotes;
+		}
+		var ProcessNotes = confdetails.ProcessNotes;
+	}
+%>
+<div class="outside_reading_wrap" id="worktimeAdditionalnotes">
+	<div class="outside_reading_wrapinn boxes_read">
+		<div class="outside_reading_heading">
+			<!--<button class="right button9" id="btnAdditiontxt"><%=LESSON.c_s_EDIT_BTN_TXT%></button>-->
+			<div class="read_out_text"><%=LESSON.c_s_ADDITIONAL_NOTES_LABEL%></div>
+			
+			<div class="clear"></div>
+		</div>
+		
+		<div class="drow_heading"></div>
+		<div class="outside_reading_cont">
+		<div class="outside_reading_cont_inner">
+
+			<div class="outside_reading__Notes outside_reading__Notes2" id="<%=LESSON.c_s_INPUT_ADDITIONAL_TXT%>" contenteditable="true">
+				<%=additionalNotes%>		
+			</div>
+			
+			</div>
+		<div class="clear"></div>
+	</div>
+		<div class="clear"></div>
+	</div> 
+	<div class="clear"></div>
+</div>
+
+<div class="outside_reading_wrap" >
+	<div class="outside_reading_wrapinn boxes_read">
+		<div class="outside_reading_heading">
+			<button class="right button9 plus" id="<%=LESSON.c_s_PROCESS_ADD_BTN%>" ><strong>+</strong></button>
+				<div style="display: none;  left:inherit; right: 0%;top: 56px;" class="lesson_tooltip top_arrow_tolls" id="<%=LESSON.c_s_PROCESS_ENGMENT_LIST%>">
+					<div class="page_arrow sprite" ></div>
+					<div class="Tooltip_menu_wrap" >
+						<div class="Tooltip_menu_wrap_inn" style="max-height: 144px;">
+									
+							<ul>
+							<% 
+							if(ProcessNotes != "") {
+								nodes = ProcessNotes;
+							}
+
+							$.each(data.conferencedetails.notes,function(idx,valx){ 
+								if(typeof nodes != "undefined"){
+									if(($.inArray(idx, nodes)) != -1){
+							%>  
+							<li class = "notelist" note_id="<%=idx%>"><%=valx.title%>
+									<div class="check sprite"></div>
+							</li>
+							<% } else { %>
+								<li class = "notelist" note_id="<%=idx%>"><%=valx.title%></li>
+							<% }
+							}
+							else { %>
+								<li class = "notelist" note_id="<%=idx%>"><%=valx.title%></li>
+							<%	 } 
+							}); 
+							%>
+							</ul>
+						</div>
+					</div>
+				</div>		
+			<div class="read_out_text"><%=LESSON.c_s_CONFERENCE_ASSIGNMENT_PROGRESS_LABEL%></div>
+			<div class="clear"></div>
+		</div>
+		<div class="outside_reading_cont">
+		<div class="outside_reading_cont_inner" id="worktimeAssignmentProcess">
+
+			<div class="outside_reading__Notes" id="<%=LESSON.c_s_PROCESS_ENGAGEMENT_NOTES%>">
+				<% if(ProcessNotes != "") { 
+					nodes = ProcessNotes;
+					_.each(nodes, function (listdata, idx) {  %>
+					<p> <span id="noteid_<%=nodes[idx]%>" class="text_remove sprite"></span>
+						<%=data.conferencedetails.notes[listdata].title%>
+					</p>
+					<%});
+				}
+				%>		
+			</div>
+			
+			</div>
+		<div class="clear"></div>
+	</div>
+		<div class="clear"></div>
+	</div>
+	<div class="clear"></div>
+</div>
+<div class="clear"></div>
+
+</script>
+
+<!-- Student Feedback Template -->
+<script type="text/template" id="studentfeedbacktemplate">							
+	<div class="outside_reading_wrapinn">
+		<div class="outside_title">
+			<%= LESSON.c_s_STUDENT_FEEDBACK_TITLE_TXT %>
+		</div> 
+		<div class="feedback-main-text">
+			<p><%= LESSON.c_s_STUDENT_FEEDBACK_TXT %></p>
+		</div>
+		<div class="clear"></div>                                
+	</div>
+	<div class="clear"></div>
+</script>
+
+<!-- Class Room Conference Input Template-->
+<script type="text/template" id="classroominputtemplate">
+				<% 
+					if(_.isEmpty(confdata)){
+						var additionalNotes = "";
+						var SpeakingNotes = "";
+						var ListeningNotes = "";
+					}else{
+						confdetails = confdata;
+						try {
+							var additionalNotes = decodeURIComponent(confdetails.AdditionalNotes);
+						} catch (ex) {
+							var additionalNotes = confdetails.AdditionalNotes;
+						}
+						var SpeakingNotes = confdetails.SpeakingNotes;
+						var ListeningNotes = confdetails.ListeningNotes;
+					}
+				%>				
+				<div class="view_container_part middle" >
+					<div class="outside_reading_wrap margin-left" id = "speakingNotesDiv">
+						<div class="outside_reading_wrapinn boxes_read">
+							<div class="outside_reading_heading">
+								<button class="right button9 plus" id="<%=LESSON.c_s_SPEAK_ADD_BTN%>"><strong>+</strong></button>
+								
+								<div class="read_out_text"><%=LESSON.c_s_SPEAKING_LABEL%></div>
+								
+								<div class="clear"></div>
+							</div>
+							<!--/*<div class="drow_heading"></div>*/-->
+							<div class="outside_reading_cont first_box_wrap">
+							<div class="outside_reading_cont_inner">
+
+								<div class="outside_reading__Notes outside_reading__Notes2" id="<%=LESSON.c_s_SPEAKING_NOTES%>">
+								    <% if(SpeakingNotes != "") {
+										nodes = SpeakingNotes;
+										
+										_.each(nodes, function (listdata, idx) {  %>
+										<p> <span id="noteid_<%=nodes[idx]%>" class="text_remove sprite"></span>
+											<%=data.conferencedetails.speakingnotes[listdata].title%>
+										</p>
+										<%});
+									}
+									%>
+								</div>
+								
+								</div>
+							<div class="clear"></div>
+						</div>
+							<div class="clear"></div>
+						</div> 
+						<div class="clear"></div>
+					</div>
+					
+					<div class="outside_reading_wrap" id = "listeningNotesDiv" >
+						<div class="outside_reading_wrapinn boxes_read">
+							<div class="outside_reading_heading">
+								<button class="right button9 plus" id="<%=LESSON.c_s_LISTEN_ADD_BTN%>"><strong>+</strong></button>
+								
+								<div class="read_out_text"><%=LESSON.c_s_LISTENING_LABEL%></div>
+								
+								<div class="clear"></div>
+							</div>
+							<!--/*<div class="drow_heading"></div>*/-->
+							<div class="outside_reading_cont first_box_wrap">
+							<div class="outside_reading_cont_inner">
+
+								<div class="outside_reading__Notes outside_reading__Notes2" id="<%=LESSON.c_s_LISTENING_NOTES%>">
+								    <% if(ListeningNotes != "") {
+										nodes = ListeningNotes;
+										
+										_.each(nodes, function (listdata, idx) {  %>
+										<p> <span id="noteid_<%=nodes[idx]%>" class="text_remove sprite"></span>
+											<%=data.conferencedetails.listeningnotes[listdata].title%>
+										</p>
+										<%});
+									}
+									%>
+								</div>
+								
+								</div>
+							<div class="clear"></div>
+						</div>
+							<div class="clear"></div>
+						</div> 
+						<div class="clear"></div>
+					</div>
+
+					<div class="outside_reading_wrap margin-right"  id = "additionalNotesDiv">
+						<div class="outside_reading_wrapinn boxes_read">
+							<div class="outside_reading_heading">								
+								<div class="read_out_text" ><%=LESSON.c_s_ADDITIONAL_NOTES_LABEL%> </div>
+								
+								<div class="clear"></div>
+							</div>
+							<div class="drow_heading"></div>
+							<div class="outside_reading_cont">
+							<div class="outside_reading_cont_inner">
+
+								<div class="outside_reading__Notes" id="inputAdditionaltxt" contenteditable="true">
+									<%=additionalNotes%>
+									
+								</div>
+								
+								</div>
+							<div class="clear"></div>
+						</div>
+							<div class="clear"></div>
+						</div>
+						<div class="clear"></div>
+					</div>
+					<div class="clear"></div>
+				</div>
+
+				<div class="clear"></div>
+</script>
+
+</html>

@@ -1,0 +1,55 @@
+<section class="snap-block-container">
+
+			
+        	<div class="snap-block-wrap">
+			  <div class="snap-block" ng-repeat ="(id,student) in selectedStudents" ng-click="showDetailPopup(id)" >
+					<label class="snap-rating">{{student.DataPointValue }}</label>
+					<div class="snap-block-img"><img src="media/snap-img1.jpg" alt=""/></div>
+					<div class="snap-block-title">{{student.name}}</div>
+			</div>
+           
+			
+			<!-- student data detail pop up -->
+			 <div class="modal fade snap-modal in" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" style="display: block;" ng-show = "isModalVisible">
+              <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                  <div class="modal-header">
+                    <button type="button" class="snap-close" data-dismiss="modal" aria-label="Close"  ng-click="hideDetailPopup()"><i class="fa fa-times" aria-hidden="true"></i></button>
+                    <h4 class="modal-title" id="myModalLabel">{{selectedStudent.name}}</h4>
+                  </div>
+                  <div class="modal-body snap-modal-body">
+                    <div class="clearfix">
+                    	<div class="col-sm-3 sna-mblock-text">
+                        	<div class="sna-mblock bor-btm">LEXILE <strong>{{selectedStudent.currentLexileLevel}}</strong> </div>
+                            <div class="sna-mblock bor-btm">IR LEVEL <strong>{{selectedStudent.currentReadingLevel}}</strong> </div>
+                        </div>
+                        <div class="col-sm-6 sna-mblock-img"><img src="media/modal-img1.jpg" alt=""/></div>
+                        <div class="col-sm-3 sna-mblock-text">
+                        	<div class="sna-mblock bor-btm">GLE <strong>{{selectedStudent.Gle}}</strong> </div>
+                            <div class="sna-mblock bor-btm">PERIOD <strong>{{selectedStudent.period}}%</strong> </div>
+                        </div>
+                   </div>
+                   <div class="clearfix">
+                    	<div class="col-sm-3 sna-mblock-text"><div class="sna-mblock"><div class="sna-title-bottom">Books Read</div> <div class="sna-no-block">{{selectedStudent.bookCompleted}}</div> </div></div>
+                        <div class="col-sm-3 sna-mblock-text"><div class="sna-mblock"><div class="table-stuc"></div><div class="sna-title-bottom">READING COMPREHENSION</div> <div class="sna-no-block">{{selectedStudent.readingComp}}</div> </div></div>
+                        <div class="col-sm-3 sna-mblock-text"><div class="sna-mblock"><div class="table-stuc"></div><div class="table-stucr"></div><div class="sna-title-bottom">OPEN ASSIGNMENTS</div> <div class="sna-no-block">{{selectedStudent.openAssignments}}</div> </div></div>
+                        <div class="col-sm-3 sna-mblock-text"><div class="sna-mblock"><div class="sna-title-bottom">STARZ</div> <div class="sna-no-block">{{selectedStudent.StarCount}}</div> </div></div>
+                    </div>
+                  </div>
+                 
+                </div>
+              </div>
+            </div>
+            
+            <div class="modal-backdrop fade in" style="height:100%; width:100%;display:block;"  ng-show = "isModalVisible"></div>
+            <!-- student data detail pop up -->
+			
+            </div>
+            
+            <div class="text-center snap-button-area">
+            	<button type="button" class="btn btn-primary">{{CONSTANTS.c_s_PROJECT_TXT}}</button>
+                <button type="button" class="btn btn-primary">{{CONSTANTS.c_s_AT_A_GLANCE_TXT}}</button>
+                <button type="button" class="btn btn-primary">{{CONSTANTS.c_s_ALL_PARENTS_TXT}}</button>
+            </div>
+            
+        </section>

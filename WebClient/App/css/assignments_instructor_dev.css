@@ -1,0 +1,237 @@
+.dp_select_option{cursor: pointer;}
+.table_inner_box .middle{line-height: 25px;height: 58px;display: table-cell;vertical-align: middle;}
+.headerSliderWrapper {overflow:hidden; width:1024px; height:119px;}
+.headerSliderContainer {width: 8024px;}
+.bodySliderContainer {width: 8024px;}
+.bodySliderWrapper {overflow:hidden; width:1024px; height:91px;}
+#prevPagingBtn {display: none;}
+#nextPagingBtn {display: none;}
+.lesson_tooltip{margin-left: 0px;}
+.slider_boxes_title {position: relative;}
+.lesson_toolls {opacity: 0; left: 0; top: 0; position: absolute;}
+#scorePopupArea {display: none; position: absolute; z-index: 5; left: 0; top: 0;}
+.grading_page_pop_box{display: none;}
+.grading_page_btn_box button{cursor: pointer;}
+.grading_page_container_rght{position: relative; overflow: hidden; margin-left: 20px;}
+.btnReassignWrap, .btnScoreWrap{padding: 0%;}
+.grading_page_container_lft .grading_page_content {min-height: 506px;}
+.grading_page_container_rght .grading_page_content {height: 380px; }
+.Ilit_alert_box.ui-dialog  { -moz-box-shadow: 0 2px 9px 3px #888;
+-webkit-box-shadow: 0 6px 12px rgba(0,0,0,.3);
+box-shadow: 0 6px 12px rgba(0,0,0,.3); background: none; border:0;border-radius:8px 8px; -moz-border-radius:8px 8px; -webkit-border-radius:8px 8px ; -o-border-radius:8px 8px;-ms-border-radius:8px 8px ; padding: 0.5em 0.7em; font-size:14px; color:#444;padding:0px;}
+.Ilit_alert_box.ui-dialog .ui-dialog-titlebar {border: 0; box-shadow: 0 1px 3px rgba(0,0,0, .2); font-size: 18px; color: #000  !important; border-bottom: 1px solid #ddd; background: #eeeeee; padding:14px;border-radius:8px 8px 0 0; -moz-border-radius:8px 8px 0 0; -webkit-border-radius:8px 8px 0 0; -ms-border-radius:8px 8px 0 0;-o-border-radius:8px 8px 0 0;}
+.Ilit_alert_box.ui-dialog .ui-dialog-titlebar .ui-dialog-titlebar-close { margin-right:6px; display: none; }
+.ui-dialog .ui-dialog-content{ font-size: 16px; line-height: 22px;}
+body .ui-dialog .ui-dialog-buttonpane{padding: 2px 10px !important; position: relative; background-image: none !important; margin: 0; border: 0; box-shadow: 0 0px 3px 0 rgba(0,0,0, .2) !important; font-size: 18px; color: #000  !important; border-top: 1px solid #ddd; background-color: #eeeeee; padding:14px;border-radius: 0 0 8px 8px; -moz-border-radius: 0 0 8px 8px; -webkit-border-radius: 0 0 8px 8px; -ms-border-radius: 0 0 8px 8px;-o-border-radius: 0 0 8px 8px;}
+.ui-dialog-buttonpane.ui-widget-content{  background-image: none !important;}
+.ui-dialog-content.ui-widget-content{ background:#fff !important; box-shadow: 0 0px 3px 0 rgba(0,0,0, .2) !important;  height: auto !important; padding: 1.5em 1em !important;}
+.ui-button-text-only .ui-button-text{ padding: 0;}
+
+
+body .ui-dialog-buttonset button.ui-button.ui-state-default{background: #3444ad; /* Old browsers */
+/* IE9 SVG, needs conditional override of 'filter' to 'none' */
+background: url(data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiA/Pgo8c3ZnIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgd2lkdGg9IjEwMCUiIGhlaWdodD0iMTAwJSIgdmlld0JveD0iMCAwIDEgMSIgcHJlc2VydmVBc3BlY3RSYXRpbz0ibm9uZSI+CiAgPGxpbmVhckdyYWRpZW50IGlkPSJncmFkLXVjZ2ctZ2VuZXJhdGVkIiBncmFkaWVudFVuaXRzPSJ1c2VyU3BhY2VPblVzZSIgeDE9IjAlIiB5MT0iMCUiIHgyPSIwJSIgeTI9IjEwMCUiPgogICAgPHN0b3Agb2Zmc2V0PSIwJSIgc3RvcC1jb2xvcj0iIzM0NDRhZCIgc3RvcC1vcGFjaXR5PSIxIi8+CiAgICA8c3RvcCBvZmZzZXQ9IjEwMCUiIHN0b3AtY29sb3I9IiMzNDQ0YWQiIHN0b3Atb3BhY2l0eT0iMSIvPgogIDwvbGluZWFyR3JhZGllbnQ+CiAgPHJlY3QgeD0iMCIgeT0iMCIgd2lkdGg9IjEiIGhlaWdodD0iMSIgZmlsbD0idXJsKCNncmFkLXVjZ2ctZ2VuZXJhdGVkKSIgLz4KPC9zdmc+);
+background: -moz-linear-gradient(top,  #3444ad 0%, #3444ad 100%); /* FF3.6+ */
+background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,#3444ad), color-stop(100%,#3444ad)); /* Chrome,Safari4+ */
+background: -webkit-linear-gradient(top,  #3444ad 0%,#3444ad 100%); /* Chrome10+,Safari5.1+ */
+background: -o-linear-gradient(top,  #3444ad 0%,#3444ad 100%); /* Opera 11.10+ */
+background: -ms-linear-gradient(top,  #3444ad 0%,#3444ad 100%); /* IE10+ */
+background: linear-gradient(to bottom,  #3444ad 0%,#3444ad 100%); /* W3C */
+filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#3444ad', endColorstr='#3444ad',GradientType=0 ); /* IE6-8 */
+border:0; border-radius:5px;  -moz-border-radius:5px; -webkit-border-radius:5px; -o-border-radius:5px; -ms-border-radius:5px;
+-webkit-box-shadow:0 1px 0px 0 #1a2b96,inset 0 -2px 0 0 #1a2b96,inset 0 0 0 1px #3444ad;-ms-box-shadow:0 1px 0px 0 #1a2b96,inset 0 -2px 0 0 #1a2b96,inset 0 0 0 1px #3444ad;box-shadow:0 1px 0px 0 #1a2b96,inset 0 -2px 0 0 #1a2b96,inset 0 0 0 1px #3444ad;
+font-size: 15px; padding: 5px 20px; color:#fff;text-decoration:none;  min-width:90px; margin-right:10px;  font-weight:bold;  border: 0; }
+.ui-state-default, .ui-widget-content .ui-state-default, .ui-widget-header .ui-state-default{ border: 0;}
+
+body .ui-dialog-buttonset button.ui-button.ui-state-default:not(.disabled):hover{color:white;background:#3d57b4; }
+body .ui-dialog-buttonset button.ui-button.ui-state-default:not(.disabled):active, .bookTitle:not(.disabled):active{color:white;background:#3d57b4; 
+}
+
+
+body .ui-dialog-buttonset button.ui-button.gray{background: #484d51; /* Old browsers */
+/* IE9 SVG, needs conditional override of 'filter' to 'none' */
+background: url(data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiA/Pgo8c3ZnIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgd2lkdGg9IjEwMCUiIGhlaWdodD0iMTAwJSIgdmlld0JveD0iMCAwIDEgMSIgcHJlc2VydmVBc3BlY3RSYXRpbz0ibm9uZSI+CiAgPGxpbmVhckdyYWRpZW50IGlkPSJncmFkLXVjZ2ctZ2VuZXJhdGVkIiBncmFkaWVudFVuaXRzPSJ1c2VyU3BhY2VPblVzZSIgeDE9IjAlIiB5MT0iMCUiIHgyPSIwJSIgeTI9IjEwMCUiPgogICAgPHN0b3Agb2Zmc2V0PSIwJSIgc3RvcC1jb2xvcj0iIzQ4NGQ1MSIgc3RvcC1vcGFjaXR5PSIxIi8+CiAgICA8c3RvcCBvZmZzZXQ9IjEwMCUiIHN0b3AtY29sb3I9IiMzYjQwNDQiIHN0b3Atb3BhY2l0eT0iMSIvPgogIDwvbGluZWFyR3JhZGllbnQ+CiAgPHJlY3QgeD0iMCIgeT0iMCIgd2lkdGg9IjEiIGhlaWdodD0iMSIgZmlsbD0idXJsKCNncmFkLXVjZ2ctZ2VuZXJhdGVkKSIgLz4KPC9zdmc+);
+background: -moz-linear-gradient(top,  #484d51 0%, #3b4044 100%); /* FF3.6+ */
+background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,#484d51), color-stop(100%,#3b4044)); /* Chrome,Safari4+ */
+background: -webkit-linear-gradient(top,  #484d51 0%,#3b4044 100%); /* Chrome10+,Safari5.1+ */
+background: -o-linear-gradient(top,  #484d51 0%,#3b4044 100%); /* Opera 11.10+ */
+background: -ms-linear-gradient(top,  #484d51 0%,#3b4044 100%); /* IE10+ */
+background: linear-gradient(to bottom,  #484d51 0%,#3b4044 100%); /* W3C */
+filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#484d51', endColorstr='#3b4044',GradientType=0 ); /* IE6-8 */border:0; border-radius:5px;  -moz-border-radius:5px; -webkit-border-radius:5px; -o-border-radius:5px; -ms-border-radius:5px;
+-webkit-box-shadow:0 1px 0 0 #1C1E22, 0 -2px 0 0 #1C1E22 inset, 0 0 0 1px #3F4348 inset;-ms-box-shadow:0 1px 0 0 #1C1E22, 0 -2px 0 0 #1C1E22 inset, 0 0 0 1px #3F4348 inset;box-shadow:0 1px 0 0 #1C1E22, 0 -2px 0 0 #1C1E22 inset, 0 0 0 1px #3F4348 inset;
+font-size: 15px; padding: 5px 20px; color:#fff;text-decoration:none;  min-width:90px; margin-right:10px;  font-weight:bold;  border: 0;}
+
+
+.gray{ border: 0;}
+
+body .ui-dialog-buttonset button.ui-button.gray:not(.disabled):hover{color:white;background:#3F4348; }
+body .ui-dialog-buttonset button.ui-button.gray:not(.disabled):active{color:white;background:#3F4348; 
+}
+
+
+.classRed {color: #F00; }
+.loaderContainer {display: block; text-align: center; top: 50%; left: 50%; width: 65px; height: 35px;margin-left: -17.5px;position: absolute;margin-top: -17.5px; z-index: 7;}
+.loaderContainerOverlay { width: 100%; height: 100%; position: absolute; background: rgba(255,255,255,0.8); display: none; z-index: 6; top:0px; left:0px; }
+.grading_page_content p { word-wrap: break-word;}
+.scoreModalContainer{background: #50b7e4; /* Old browsers */
+/* IE9 SVG, needs conditional override of 'filter' to 'none' */
+background: url(data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiA/Pgo8c3ZnIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgd2lkdGg9IjEwMCUiIGhlaWdodD0iMTAwJSIgdmlld0JveD0iMCAwIDEgMSIgcHJlc2VydmVBc3BlY3RSYXRpbz0ibm9uZSI+CiAgPGxpbmVhckdyYWRpZW50IGlkPSJncmFkLXVjZ2ctZ2VuZXJhdGVkIiBncmFkaWVudFVuaXRzPSJ1c2VyU3BhY2VPblVzZSIgeDE9IjAlIiB5MT0iMCUiIHgyPSIwJSIgeTI9IjEwMCUiPgogICAgPHN0b3Agb2Zmc2V0PSIwJSIgc3RvcC1jb2xvcj0iIzUwYjdlNCIgc3RvcC1vcGFjaXR5PSIxIi8+CiAgICA8c3RvcCBvZmZzZXQ9IjEwMCUiIHN0b3AtY29sb3I9IiM0N2M3ZDYiIHN0b3Atb3BhY2l0eT0iMSIvPgogIDwvbGluZWFyR3JhZGllbnQ+CiAgPHJlY3QgeD0iMCIgeT0iMCIgd2lkdGg9IjEiIGhlaWdodD0iMSIgZmlsbD0idXJsKCNncmFkLXVjZ2ctZ2VuZXJhdGVkKSIgLz4KPC9zdmc+);
+background: -moz-linear-gradient(top,  #50b7e4 0%, #47c7d6 100%); /* FF3.6+ */
+background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,#50b7e4), color-stop(100%,#47c7d6)); /* Chrome,Safari4+ */
+background: -webkit-linear-gradient(top,  #50b7e4 0%,#47c7d6 100%); /* Chrome10+,Safari5.1+ */
+background: -o-linear-gradient(top,  #50b7e4 0%,#47c7d6 100%); /* Opera 11.10+ */
+background: -ms-linear-gradient(top,  #50b7e4 0%,#47c7d6 100%); /* IE10+ */
+background: linear-gradient(to bottom,  #50b7e4 0%,#47c7d6 100%); /* W3C */
+filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#50b7e4', endColorstr='#47c7d6',GradientType=0 );}
+.right_grading_title.second_title{ border-radius:0;}
+.scoreColumnContainer {max-width: 1125px; margin: 0 auto;}
+.table_inner_box_out {cursor: pointer;}
+.nopointer {cursor: default;}
+.studentResponse {border: 1px solid #d4d4d4;padding: 10px;border-radius: 5px;-moz-border-radius: 5px;-webkit-border-radius: 5px;-o-border-radius: 5px;-ms-border-radius: 5px;background: #f6f6f6; word-wrap: break-word; width: 500px; }
+#comments {font-family: sans-serif; font-size: 16px;}
+.textAreaL {height: 150px;}
+.lessonSelect {width: 130px;}
+.studyPlanHeaderBubble {padding: 5px 2px !important;}
+/*.scoreModalContainer .assignment_slider_wrapper.grading_page_container{max-width: 801px; margin: 0 auto;}*/
+.assignment_toc_blank_msg { position: absolute;
+width: 220px;
+height: 50px;
+top: 50%;
+left: 50%;
+margin-left: -100px;
+margin-top: -40px;
+padding-top: 41px; text-align: center;}
+
+
+.polls_icons{width: 42px;
+height: 42px;
+background-position: -456px -485px;
+top: 50%;
+left: 50%;
+margin-left: -21px;
+margin-top: -48px;
+position: absolute;
+}
+.table_container_assignment{ position: relative;}
+.top_navbar {color: #fff;}
+.deactivate{opacity: 0.4; }
+.deactivate .select_bg, .deactivate button.button8, .deactivate button.button9 {cursor:default !important;}
+.actionButton{float: right; width: 250px;}
+.ui-dialog .ui-dialog-title {display: block !important; height: 20px !important;width: 92% !important;}
+.updateRubric-content {border-bottom: #ddd 1px solid; text-align: center;}
+.toggleGleView {	float:left; width:50px; height:22px;}
+.gradeExpand {		
+	display: block;		
+	cursor: pointer;
+	background-image: url(../media/ar-expand.png);
+	background-repeat: no-repeat;
+	background-position: left 0;    
+	margin-top: 9px;
+}
+.gradeExpand.active {	
+	background-image: url(../media/ar-collapse.png) !important;	
+	background-repeat: no-repeat; 
+	background-position: left 0;    	
+	margin-top: 6px !important;
+}
+.grade_cnt {
+
+}
+
+.grade_cnt .slider_boxes_ct {
+	width:210px;
+}
+
+.grade_cnt .gray_col {
+	width:200px;
+}
+.totGle {
+width:120px; float:left; font-size: 17px; text-align:center; margin-top: 3px;font-weight: normal;
+}
+#viewNotebookPopupArea {display: none; position: absolute; z-index: 5; left: 0; top: 0;height:100%;width: 100%;overflow: hidden;}
+
+/* Start: CSS created for Oral Fluency on 19/6/2015 */
+.audio-panel{ border:1px solid #ddd; border-radius:4px; margin-bottom:15px;}
+.audio-header{ color:#086A87; text-decoration:underline; font-size:14px; font-weight:normal; padding:8px 15px; border-bottom:1px solid #ddd;}
+.pktheader-accordian{ color:#0ca4d0;font-size:14px; font-weight:normal; padding:8px 10px; border-bottom:1px solid #ddd;}
+.audio-body{padding:8px 15px;}
+.ply-list{ width:33.3333%; float:left; padding-top:15px;}
+.radio-list{ /*padding-top:30px;   text-align: right; */}
+.ply-list label{ font-size:11px; font-weight:bold;}
+
+.radio-list div {
+    word-wrap: break-word;
+	float:right;
+    color: #3c3c3c;
+    font-size: 16px;
+    font-weight: normal;
+    margin-bottom: 5px;line-height: 28px;
+}
+
+
+.radio-list label{ vertical-align:middle;}
+.radio-list input[type=checkbox], .radio-list input[type=radio] {  margin: -4px 0 0;}
+.of_title-main{color:#538EFF; font-size:22px; font-weight:bold; padding: 0 0 5px;}
+.pktResponeConteainer{ padding:10px;}
+.pktScoreResult, .pktScoreErrorMessage{ border:1px solid #ddd; padding:10px;}
+.pktAudioContainer{ margin:5px 10px; background-color:#eee; border:1px solid #ddd; text-align:center; padding:10px;cursor: pointer;}
+.pkt-score{ margin-bottom:10px; color:#333; font-weight:bold;  padding: 0px;}
+.pktScoreErrorMessage .radio-list{ float:right; padding-top:5px;}
+.singlePKTAudioPanel div{ border:0; padding:5px 0;}
+.singlePKTAudioPanel div.pktAudioContainer{border: 1px solid #ddd; margin: 5px 10px 5px 0;}
+.singlePKTAudioPanel div.clear{ padding:0;}
+.oralFluencyLoader {text-align:center; top:45%; left:50%;}
+
+
+
+button.button7.disabled{background: #ADADAD; /* Old browsers */
+
+background: -moz-linear-gradient(59deg, #ADADAD 100%, #008080 100%); /* ff3.6+ */
+background: -webkit-gradient(linear, left bottom, right top, color-stop(100%, #ADADAD), color-stop(100%, #008080)); /* safari4+,chrome */
+background: -webkit-linear-gradient(59deg, #ADADAD 100%, #008080 100%); /* safari5.1+,chrome10+ */
+background: -o-linear-gradient(59deg, #ADADAD 100%, #008080 100%); /* opera 11.10+ */
+background: -ms-linear-gradient(59deg, #ADADAD 100%, #008080 100%); /* ie10+ */
+background: linear-gradient(31deg, #ADADAD 100%, #008080 100%); /* w3c */
+filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#008080', endColorstr='#ADADAD',GradientType=0 ); /* ie6-9 */
+
+border:0; border-radius:5px;  -moz-border-radius:5px; -webkit-border-radius:5px; -o-border-radius:5px; -ms-border-radius:5px;
+-webkit-box-shadow:0 1px 0px 0 #ADADAD,inset 0 -2px 0 0 #ADADAD,inset 0 0 0 1px #ADADAD;-ms-box-shadow:0 1px 0px 0 #ADADAD,inset 0 -2px 0 0 #ADADAD,inset 0 0 0 1px #ADADAD;box-shadow:0 1px 0px 0 #ADADAD,inset 0 -2px 0 0 #ADADAD,inset 0 0 0 1px #ADADAD;
+font-size: 15px; padding: 10px 20px; color:#888;text-decoration:none;  min-width:90px; margin-right:3px;  font-weight:bold; cursor:default; }
+
+
+/* End: CSS created for Oral Fluency on 19/6/2015 */
+
+.select_bg1{ background:url(../media/select_bg1.png) no-repeat 0 -1px !important; width:145px !important; }
+.dp_select_bg1_option{ width:160px !important;}
+
+/*==== IPP-5024 ====*/
+#btnShowRubricCriteria {
+	background:url(../media/rubric-btn.png) no-repeat transparent; background-size:198px 35px; text-indent:-9999px; width:198px; height:35px;
+	border:0px none; border-radius:0px; -webkit-border-radius:0px; -moz-border-radius:0px; -ms-border-radius:0px; box-shadow:none;
+}
+.scoring-guide-info {
+	background:url(../media/rubric-icon.png) no-repeat transparent; background-size:24px 24px; text-indent:-9999px; margin:8px 0 0 5px;
+	border:0px none; border-radius:0px; -webkit-border-radius:0px; -moz-border-radius:0px; -ms-border-radius:0px;
+}
+.da-rubric-label-box > p { line-height:normal !important; }
+/*== End IPP-5024 ==*/
+
+/*==== IPP-5056 ====*/
+.ga-score-table-cont { position: absolute; opacity:0; width: 756px; height: auto; background:#fff; z-index: 1; }
+	.ga-score-row { height: 91px; border-top: 1px solid; }	
+		.ga-score-cell {
+			background:none !important; border:1px solid #000000 !important; font-size:12px; margin:0; padding:0 !important; text-align:center !important;
+			vertical-align:middle; width:84px !important;
+		}
+		
+.class-average .studentCell .table_inner_box { color:#333 !important; font-size:15px; height:58px; line-height:58px; text-align:center; }
+.class-average .bodySliderWrapper .table_inner_box_out {	
+	color:#666 !important; font:14px/75px normal Helvetica, Arial, sans-serif; height:75px; text-align:center; cursor:default;
+}
+/*== End IPP-5056 ==*/
+
+/*==== IPP-5092 ====*/
+.da-score-column-1 { width:30%; margin-left:5%; }
+.da-score-column-2 { width:30%; margin-left:5%; }
+.da-score-column-3 { width:25%; margin-left:5%; }
+/*== End IPP-5092 ==*/

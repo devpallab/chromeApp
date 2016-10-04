@@ -1,0 +1,107 @@
+
+/* Collect screen */
+#rwCollect
+{   
+	z-index: 		500;
+	left: 			0;
+	position: 		absolute;
+	top: 			0;
+	overflow:		hidden;
+	visibility:		hidden;
+}
+
+#rwToolbarOutlineCollect
+{
+	cursor:				default;
+	font-family:		Verdana,inherit;
+	font-size:			10px;
+	color:				#000000;
+	padding:			0;
+	width:				600px;
+}
+
+.rwToolbarCaptionCollect
+{
+	height:				21px;
+	background-image:   url(rwimgs/rwCollectedCaption.gif);
+	padding:			0;
+	font-family:		Verdana,inherit;
+	color:				#ffffff;
+	font-weight:		bold;
+	font-size:			10px;
+	cursor:				default;
+}
+
+.rwToolbarSpanCaptionCollect
+{
+	height:				21px;
+	background-image:   url(rwimgs/rwCollectedSpanCaption.gif);
+	padding:			0;
+	font-family:		Verdana,inherit;
+	color:				#ffffff;
+	font-weight:		bold;
+	font-size:			10px;
+	cursor:				default;
+}
+
+.rwToolbar500CaptionCollect
+{
+	height:				21px;
+	background-image:   url(rwimgs500/rwCollected500Caption.gif);
+	padding:			0;
+	font-family:		Verdana,inherit;
+	color:				#ffffff;
+	font-weight:		bold;
+	font-size:			10px;
+	cursor:				default;
+}
+
+
+#rwToolbarBarCollectBorder
+{
+	background-color:	#ece9d8;
+	border-top:		1px solid #0218af;
+	border-left:		2px solid #0218af;
+	border-right:		2px solid #0218af;
+	border-bottom:		2px solid #0218af;
+}
+
+#rwToolbarBarCollectBorder500
+{
+	background-color:	#ece9d8;
+	border-top:		1px solid #EE333E;
+	border-left:		2px solid #EE333E;
+	border-right:		2px solid #EE333E;
+	border-bottom:		2px solid #EE333E;
+}
+
+.rwToolbarBarCollect
+{
+	overflow-x:		hidden;
+	overflow-y:		scroll;
+	vertical-align:		top;
+	padding:			2px;
+	cursor:				default;
+	font-family:		Verdana,inherit;
+	font-size:			10px;
+	color:				#000000;
+}
+
+.rwIconCollect
+{
+	margin-left:		0;
+	margin-right:		0;
+	margin-top:		0;
+}
+
+
+#rwcollatewrapper
+{
+	margin-left:5px;
+	margin-right:5px;
+}
+
+.rwSSButton
+{
+	margin:5px;
+}

@@ -1,0 +1,58 @@
+.btn-normal.disabled{ cursor:default; opacity:0.5; }
+.week-no.active{border:2px solid #0075FF;}
+.active.selected .week-name{ border-radius:0;}
+.week-period-no{ word-break: break-all;}
+.slided{
+	display: block!important;
+    position: absolute!important;
+    left: 326px;
+	z-index:999999;
+	width:300px;
+	border:2px solid #00f5ff; background-color: #fff; color:#000;
+}
+
+#academic-calender-container-overlay{
+	z-index:99;
+	position:absolute;
+	background-color:rgba(0,0,0,0.6);
+	left:0;
+	top:0;
+	height:100%;
+	width:100%; 
+	display:none;
+}
+.week-period-no[contenteditable] {
+    -webkit-user-select: text;
+    user-select: text;
+}
+
+/* for send BOY grade popup */
+#send-grade-error { height:306px; width:375px; border:1px solid #FFF; border-radius:8px; }
+#send-grade-error > h4 {
+	background-color:#000000; color:#FFF; font-weight:bold; height:45px; line-height:45px; text-align:center;
+	border-top-right-radius:8px; border-top-left-radius:8px; font-size:16px; position:relative;
+}
+#send-grade-error > h4.sprite { background-position:-450px -485px; }
+	#send-grade-error > h4 button.close {
+		height:35px; width:35px; border:0px none; text-indent:-9999px; background-position:-417px -212px;
+		position:absolute; right:3px; top:2px; padding:0px;
+	}
+#send-grade-error > p.content {
+	padding:8px 60px; line-height:20px; font-size:15px; background-color:#FFF; text-align:left; min-height:200px; max-height:200px; overflow-y:auto;
+}
+#send-grade-error > div.button-container {
+	background-color:#ffffff; border-bottom-left-radius:5px; border-bottom-right-radius:5px; padding:8px 0 7px; text-align:center;
+}
+#send-grade-error > div.button-container > button {
+	background-color:#000000; color:#FFF; text-align:center; font-weight:bold; border:0px none; border-radius:5px; height:30px; line-height:28px;
+	text-transform:uppercase;
+}
+.aca-sett-title.switch-title{
+	padding-left: 10px;
+    line-height: 36px;
+}
+.center.btn-block.asm{
+	line-height:40px;
+} 
+
+

@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="en" class=" js no-touch">
+<head id="head">
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+	<meta name="viewport" content="width=device-width; initial-scale=1.0; maximum-scale=1.0;">
+	<meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">
+	<meta http-equiv="Cache-control" content="no-cache">
+	<title>BTS2016 - Instructor</title>
+	<!-- <link href="css/style.css" media="all" rel="stylesheet">  -->
+	<link href="css/jquery-ui.css" media="all" rel="stylesheet" />
+	<link rel="shortcut icon" type="image/ico" href="media/favicon_inst.png" />
+	<script src="js/modernizr.custom.34982.js"></script>
+	<script src="js/jquery-1.11.1.min.js"></script>
+	<script type="text/javascript" src="js/jquery-ui.js"></script>
+	<script src="js/underscore-min.js"></script>
+	<script src="js/bundle.js"></script>
+	<link media="all" rel="stylesheet" href="css/style.css">
+</head>
+
+<body>
+	
+	<body style="background-image: none;">
+	<div class="wrapper">
+	
+
+	   
+	   <!-- login screen will appear here depending upon product -->
+		
+		<article class="afterLoginWrapper" style="display: block;">
+			<section>
+				<div class="iframeWrap" style="height: 614px;">
+					<iframe id="wrapperFrame" name="wrapperFrame" src="App/planner.html?_=1475584601834" style="display: inline-block; height: 614px;">
+						&lt;html&gt;
+							&lt;body&gt;
+								&lt;h1&gt;Loading.......&lt;/h1&gt;
+							&lt;/body&gt;
+						&lt;/html&gt;
+					</iframe>
+				</div>
+				<div class="clear"></div>
+			</section>
+			<footer>
+				<div class="footer_inner">
+					<div id="infoToolTip" class="lesson_tooltip btm_tooltip logout_setting_tooltip">
+						<div class="page_arrow sprite"></div>
+						
+						<div class="Tooltip_menu_wrap">
+							<div class="Tooltip_menu_wrap_inn">                            
+								
+								<div class="logout_deatils">
+									<div class="middle">
+										<p class="logout_title"><strong>Version:</strong> <span id="appVerNum">6.0.20</span>[<span id="deployServer">D</span>] <!-- [<span id="appZipVersionNum">1.0</span>] --></p>
+										<!-- <p><strong>ProductCode:</strong> <span class="productCode"></span></p> -->
+										<p><strong>Class:</strong> <span class="className">pallabinst6-inst-90-Grade 4 (iLit 90 CC)</span></p><p></p>
+										<p><strong>Configuration:</strong> <span class="connectedState">A - A</span></p>
+										<p class="userName">pallabinst6 inst</p>
+										<!-- <p id="appZipVersionNum">app.zip <strong></strong></p> -->
+									</div>
+								</div>
+								<div class="footer_button_area">
+								<button id="btnSwitchClass" onclick="switchClass();" class="button7 logout btn">Switch</button>
+								<button id="btnLogout" onclick="checkLogout();" class="button7 logout btn">Logout</button>
+								</div>
+							</div>
+						</div>
+						<div class="clear"></div>
+					</div>
+					<div id="studentConnectPopup" class="lesson_tooltip btm_tooltip toc_profile">
+						<div class="page_arrow sprite"></div>
+						<div class="toc_tooltip_title">Class Roster</div>
+						<div class="Tooltip_menu_wrap">
+						<div class="Tooltip_menu_wrap_inn">                            
+							<ul>
+								<li>Loading.......</li>
+							</ul>
+							<!--<div class="footer_button_area">
+								<button class="button7 btn">Create Roll</button>
+							</div>-->
+						</div>
+						</div>
+						<div class="clear"></div>
+					</div>
+					<button class="logout_setting sprite right footerTab" type="button"></button>
+					
+					<!-- part of footer to be enabled/disabled -->
+					<div class="footer-to-overlay">
+						<div class="footer_in_overlay"></div>
+						<div class="avatar right"> 
+							<img src="media/avtar_img.png" alt="">
+							<div class="avatar_inner"><img src="media/avtar.png" alt=""></div>
+						</div>
+						<!-- IPP-4099 -->
+						<button id="btnConnectStatus" class="session sprite right" type="button">Connect</button>
+						<!-- End IPP-4099 -->
+						<div class="loader inst right" style="display: none;"></div>
+						<button id="projectStatus" class="session sprite left" type="button">Project</button>
+						<button id="broadcastStatus" class="session sprite left" type="button" style="display: block;">Broadcast</button>
+						
+						<div class="footer_in">
+							<!-- <div class="footer_in_overlay"></div> -->
+							<div id="button-container" style="visibility: visible;">
+	
+	<button class="Planner sprite footerTab active" type="button"><span>Planner</span></button>
+	<button id="btnLesson" class="Lessons sprite footerTab" type="button"><span>Lessons</span></button>
+	<button class="Assignments sprite footerTab" type="button"><span>Assignments</span></button>
+	<button class="Performance sprite footerTab" type="button"><span>Performance</span></button>
+	<button class="Library sprite footerTab" type="button"><span>Library</span></button>
+	<button class="Messages sprite footerTab" type="button"><!-- <div class="message_number">0</div> --><span>Messages</span></button>
+	
+</div>
+						</div>
+					</div>
+				</div>
+			</footer>
+		</article>
+		<div class="clear"></div>
+	</div>
+	<!------------------------------------------------------------>
+	<div class="expandOverlay">
+		<div class="topBar">
+			<button class="btnBack sprite left" type="button"></button>
+		</div>
+		<div class="expandImgWrapper" style="width: 1349px; height: 642px; max-width: 1349px; max-height: 642px;">
+			<img src="" alt="">
+		</div>
+	</div>
+	
+<!--------------------------------------------------------------->
+	<!------ pdf reader overlay starts -------------------------->
+	<div class="pdfReaderOverlay">
+		<div class="topBar">
+			<button id="pdfReaderBackBtn" class="btnBack sprite left" type="button"></button>
+			<div class="middle"></div>
+		</div>
+		<div class="pdfReaderWrapper">
+			<iframe id="pdfReaderFrame" name="pdfReaderFrame" src=""></iframe>
+		</div>
+	</div>
+	<!-- IPP-4099 -->
+	<div class="connectWrapper">
+		<div class="loader" style="display: none;"></div>
+		<iframe id="connectFrame" name="connectFrame" src=""></iframe>
+	</div>
+	<!-- End IPP-4099 -->
+	<!------ pdf reader overlay ends -------------------------->
+
+<script type="text/template" id="class-switcher">
+	<div class="gradeSelect">
+		<form id="frm_SelectGrade" action="#" method="post">
+			<div class="selectGradeOverlayUI" style="cursor: default;"></div>
+			<div class="assignments_wrapper">
+				<div class="assignments_wrapper_inner">
+					<div class="assignment_title">Select Class</div>
+					<div class="assignments_container">
+						<ul id="classListUL" class="assignments_container_ui">
+							<%= classSwitcherHtml %>
+						</ul>
+						<div class="clear"></div>
+						<div class="gradeSelectBtnArea">
+							<button class="button7 btnclassselect btn left" type="button" id="btnCancelClassSelect">Cancel</button>
+							<button class="button7 btnclassselect btn right" type="button" id="btnClassSelect">Select</button>
+							<div class="clear"></div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</form>
+	</div>
+</script>
+<script type="text/template" id="footer-buttons">
+	<% if (strStartsWith(productCode, ILIT20PREFIX, true) !== true) { %>
+	<button class="Planner sprite footerTab" type="button"><span>Planner</span></button>
+	<button id="btnLesson" class="Lessons sprite footerTab" type="button"><span>Lessons</span></button>
+	<button class="Assignments sprite footerTab" type="button"><span>Assignments</span></button>
+	<button class="Performance sprite footerTab" type="button"><span>Performance</span></button>
+	<button class="Library sprite footerTab" type="button"><span>Library</span></button>
+	<button class="Messages sprite footerTab" type="button"><!-- <div class="message_number">0</div> --><span>Messages</span></button>
+	<% } else { %>
+	<!-- <button class="Snapshot sprite footerTab" type="button"><span>Snapshot</span></button> -->
+	<button id="btnLesson" class="Lessons sprite footerTab" type="button"><span>Organizer</span></button>
+	<button class="Assignments sprite footerTab" type="button"><span>Progress</span></button>
+	<button class="Performance sprite footerTab" type="button"><span>Performance</span></button>
+	<button class="Library sprite footerTab" type="button"><span>Library</span></button>
+	<button class="Settings sprite footerTab" type="button"><!-- <div class="message_number">0</div> --><span>Settings</span></button>
+	<% } %>
+</script>
+<script type="text/template" id="connect-options">
+	<div class="connect-options-cont" id="connect-options-cont" style="display:none;">
+		<ul>
+<%
+			for (var iI = 0; iI < connectOptions.length; iI++) {
+				sDataAttribs = "";
+				sAttribStr = "";
+				sHandlerStr = "";
+				
+				if (iI === 0) {
+					if (!(connectOptions[iI].attribs instanceof Array)) {
+						connectOptions[iI].attribs = [];
+					}
+					for (var iJ = 0; iJ < connectOptions[iI].attribs.length; iJ++) {
+						if (connectOptions[iI].attribs[iJ].prop === "class") {
+							connectOptions[iI].attribs[iJ].value += " first";
+							break;
+						}
+					}
+					
+					if (iJ === connectOptions[iI].attribs.length) {
+						connectOptions[iI].attribs.push({
+							"prop":		"class",
+							"value":	"first"
+						});
+					}
+				}
+				
+				if ((iI + 1) === connectOptions.length) {
+					if (!(connectOptions[iI].attribs instanceof Array)) {
+						connectOptions[iI].attribs = [];
+					}
+					
+					for (var iJ = 0; iJ < connectOptions[iI].attribs.length; iJ++) {
+						if (connectOptions[iI].attribs[iJ].prop === "class") {
+							connectOptions[iI].attribs[iJ].value += " last";
+							break;
+						}
+					}
+					
+					if (iJ === connectOptions[iI].attribs.length) {
+						connectOptions[iI].attribs.push({
+							"prop":		"class",
+							"value":	"last"
+						});
+					}
+				}
+				
+				if ([null, undefined, ""].indexOf(connectOptions[iI].handler) === -1) {
+					sHandlerStr = " onclick=\"" + connectOptions[iI].handler + "(this);\"";
+				}
+				if (connectOptions[iI].dataAttribs instanceof Array) {
+					for (var iJ = 0; iJ < connectOptions[iI].dataAttribs.length; iJ++) {
+						if (
+							typeof connectOptions[iI].dataAttribs[iJ].value !== "object" &&
+							typeof connectOptions[iI].dataAttribs[iJ].prop === "string"
+						) {
+							sDataAttribs += (
+								" " +
+								"data-" + connectOptions[iI].dataAttribs[iJ].prop +
+								"=" +
+								"\"" + connectOptions[iI].dataAttribs[iJ].value + "\""
+							);
+						}
+					}
+				}
+				if (connectOptions[iI].attribs instanceof Array) {
+					for (var iJ = 0; iJ < connectOptions[iI].attribs.length; iJ++) {
+						if (
+							typeof connectOptions[iI].attribs[iJ].value !== "object" &&
+							typeof connectOptions[iI].attribs[iJ].prop === "string"
+						) {
+							sAttribStr += (
+								" " +
+								connectOptions[iI].attribs[iJ].prop +
+								"=" +
+								"\"" + connectOptions[iI].attribs[iJ].value + "\""
+							);
+						}
+					}
+				}
+%>
+			<li<%= sHandlerStr %><%= sDataAttribs %><%= sAttribStr %>> <%= connectOptions[iI].label %> </li>
+			<% } %>
+		</ul>
+		<div class="page_arrow sprite"></div>
+	</div>
+	
+</script>
+
+<!-- start for district dropdown -->
+<script type="text/template" id="districtListTpl">
+	<select id="districtDDL">
+		<option value=""><%= GENERAL.c_s_DIST_DDL_LABEL %></option>
+		<%
+		
+		for(var iI=0; iI<districtList.length; iI++){
+			%>
+			<option value="<%= districtList[iI].DistrictID %>" data-distSuffix="<%= districtList[iI].DistSuffix %>" >
+				<%= districtList[iI].DistName %>
+			</option> 
+			<%
+		}
+		%>
+	</select>
+</script>
+<!-- end for district dropdown -->
+
+<!-- login wrapper for ilit and myeld -->
+<script type="text/template" id="tplLoginWrapper">
+	<article class="loginWrapper">
+		<header class="login_bg_top teacher">
+			<section class="header_inner teacher"></section>
+			<section class="login_heading"></section>
+		</header>
+		<section class="login_wrapper">
+			<div class="login_box">
+				<div class="login_box_middle_bg">
+					 <form id="frm_ValidateLogin" action="#" method="post">
+						<div class="login_box_cont">
+							<div id="districtList" class="ui-widget">
+								<div class="loader districtList"></div>
+							</div>
+							<div class="help tooltip"><img src="media/help.png" alt="">
+							  <span class="tooltiptext">Each user belongs to a class that is associated with a district or organization. Select your district or organization by starting to type the name using the search functionality or scroll to find.</span>
+							</div>
+						</div>	
+						<div class="clear"></div>
+						 <div class="login_box_cont">
+							<div class="main_login">
+								<input type="text" onBlur="if(this.value==&#39;&#39;){this.value=&#39;Username&#39;};" onFocus="if(this.value==&#39;Username&#39;){this.value=&#39;&#39;};" value="Username" class="login_field" name="txt_UserName" id="txt_UserName"> 
+								
+								<input type="password" onBlur="if(this.value==&#39;&#39;){this.value=&#39;Password&#39;};" onFocus="if(this.value==&#39;Password&#39;){this.value=&#39;&#39;};" value="Password" class="login_field" name="txt_Password" id="txt_Password">
+							</div>
+						</div>
+						<div class="clear"></div>
+						<div class="continue_button startTagButton">
+							<input type="submit" style="opacity: 0;" class="continue_buttonhover" value="">
+							<div class="loader login" style="display: none;"></div>
+						</div>
+					</form>
+					<div class="clear"></div>
+				</div>
+				<div class="login_box_bottom_bg"></div>
+		  </div>
+		  <div class="clear"></div>
+	    </section>
+	    <div class="clear"></div>
+	    <footer class="footer_container">
+			<div class="pearson_logo"></div>
+			<div class="copyright">Copyright © 2014 Pearson Education, Inc. or its affiliate(s). All rights reserved.</div>
+			<div class="verNo">ver 3.1.4</div>
+	    </footer>
+	    <div class="clear"></div>
+	</article>
+</script>
+
+<!-- login wrapper for wtw -->
+<script type="text/template" id="tplLoginWrapperWTW">
+	<article class="loginWrapper">
+		<header class="login_bg_top">
+			<section class="header_inner header_inner_instructor"></section>
+			<section class="login_heading"></section>
+		</header>
+		<section class="login_wrapper">
+			<div class="login_box">
+				<div class="login_box_middle_bg">					
+					 <form id="frm_ValidateLogin" action="#" method="post">
+						<div class="login_content">
+						<div class="login_box_cont">
+							<div id="districtList" class="ui-widget">
+								<select id="district" >
+									<option value="">Select Organization</option>										
+								</select>
+							</div>
+						</div>
+						<div class="clear"></div>
+						 <div class="login_box_cont">
+							<div class="main_login">
+								<input type="text" placeholder="User Name" value="" class="login_field" name="txt_UserName" id="txt_UserName" required> 
+								<input type="password" placeholder="Password" value="" class="login_field" name="txt_Password" id="txt_Password" required>
+							</div>
+						</div>
+						</div>
+						<div class="clear"></div>
+						<div class="continue_button continue_button_instructor startTagButton">
+							<input type="submit" style="opacity: 0;" class="continue_buttonhover" value="">
+							<div class="loader login" style="display: none;"></div>
+						</div>
+					</form>
+					<div class="clear"></div>
+				</div>
+				<div class="alert alert-danger" id="error_alert"  style="display: none;"><strong>Oh snap!</strong><br><span class="errorMesg"></span></div>
+			</div>
+		</section>
+		<div class="clear"></div>
+		<!--<footer class="footer_container">
+			<div class="pearson_logo"></div>
+			<div class="copyright">Copyright &copy; 2014 Pearson Education, Inc. or its affiliate(s). All rights reserved.<div class="verNo">ver 5.1</div></div>
+		</footer>-->
+		<div class="clear"></div>
+	</article>
+</script>
+
+</body>
+	  
+
+</html>

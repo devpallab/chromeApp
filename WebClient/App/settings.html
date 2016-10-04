@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=0, minimum-scale=1.0, maximum-scale=1.0">
+        <title>iLiT</title>        
+        <link href="css/jquery-ui.css" media="all" rel="stylesheet"/>        
+        <link href="css/fonts/fonts.css" media="all" rel="stylesheet"/>
+		<link href="css/settings.css" media="all" rel="stylesheet"/>        
+		<link href="css/settings-dev.css" media="all" rel="stylesheet"/>        
+        <!--[if gte IE 9]>
+        <style type="text/css">
+            .gradient {
+				filter: none !important;
+			}
+        </style>
+        <![endif]-->
+        <script type="text/javascript" src="js/jquery-1.10.2.js"></script>
+        <script type="text/javascript" src="js/jquery-ui.js"></script>
+        <script type="text/javascript" src="js/underscore-min.js"></script>
+        <script type="text/javascript" src="js/jquery.ui.touch-punch.min.js"></script>        
+		<script type="text/javascript" src="js/iSeriesBase.js"></script>
+        <script type="text/javascript" src="js/util.js"></script>
+        <script type="text/javascript" src="js/globals.js"></script>
+        <script type="text/javascript" src="js/constants.js"></script>
+        <script type="text/javascript" src="js/message_handler.js"></script>        
+        <script type="text/javascript" src="js/client_native_communication.js"></script>		
+		
+		<script type="text/javascript" src="js/settings.js"></script>
+		<script type="text/javascript">
+			var $setUp;
+			$(document).ready(function () {				
+				if (oPlatform.isIOS()) {
+					loadJS('js/NativeBridge.js', function () {
+						$setUp = new SetUp();
+					});					
+				}
+				else {
+					$setUp = new SetUp();
+				}
+			});
+		</script>
+    </head>
+	
+<body class="lessonview connectview">
+	<!-- main template goes here -->
+	<section id="main_container">		
+	</section>
+	<!-- DIALOG BOX --->
+	<div id="dialog-message" title="Alert!" class="Ilit_alert_box"></div>
+</body>
+
+<!-- SEND GRADE FIRST POPUP --->
+<script type="text/template" id="dialog-message-auto">
+	<div id="send-grade-error">
+		<h4 class="sprite"><%= title %><button class="close sprite" id="btnClosePopUp"></button></h4>
+		<p class="content"><%= content %></p>
+		<div class="button-container">
+			<button id="btnSendBOY"><%= btnSendBOY %></button>
+			<button id="btnContinuePopUp"><%= btnContinue %></button>
+			<button id="btnCancelPopUp"><%= btnCancel %></button>	
+		</div>
+	</div>
+</script>
+<!-- SETUP CONFIG TEMPLATE  -->
+<script type="text/template" id="mainTemplate">
+	<div class="wrapper">
+		<div class="academic-container">
+			<div class="app-configuration-settings" id="configContainer"></div>        
+			<div class="academic-calender" id="calendarContainer">
+				
+			</div>		
+			<div class="clear"></div>
+		</div>
+	</div>
+</script>
+
+<!-- SETUP CONFIG TEMPLATE  -->
+<script type="text/template" id="configTemplate">
+	<div class="aca-sett-heading">
+		<%= SETUP.c_s_HEADING_APP_CONFIG %>
+	</div>
+	
+	<div style="display:none" class="academic-cont">
+			<p></p>
+	</div>
+	<div class="academic-block-wrapper">
+	
+	<div class="academic-block-acc">
+	<div class="academic-block">
+		<span class="blk-arrow" id="row1"></span>
+		<div class="aca-sett-title">
+			<%= SETUP.c_s_LBL_ASSIGNMENT_SEND_MODE %>
+		</div>
+		<div class="center btn-block asm">
+			<button class="button asm-manual <%= data.AssignmentSendingMode ? "disabled" : "active" %>">MANUAL</button><br />
+			<button class="button asm-auto <%= data.AssignmentSendingMode ? "active" :"disabled" %>">AUTOMATIC</button>                    
+		</div>
+	</div>
+	<!-- 	<div class="academic-cont row1">
+			<p><%= SETUP.c_s_ASM_INFO %></p>
+		</div> -->
+		<div class="clear"></div>
+	</div>
+	
+	
+	<div class="academic-block-acc">
+	<div class="academic-block">
+		<span class="blk-arrow" id="row2"></span>
+		<div class="aca-sett-title">
+			<%= SETUP.c_s_LBL_ASSIGNMENT_MANUAL_SCORE %>
+			 
+		</div>
+		<div class="right switch-wrap">
+			<div class="onoffswitch">
+				<input type="checkbox" name="onoffswitch" class="onoffswitch-checkbox" id="ofSwitch" <%= data.AcceptOralFluencyScore ? "checked" : "" %>>
+				<label class="onoffswitch-label ofSwitchLbl" for="ofSwitch">
+					<span class="onoffswitch-inner" <%= data.AcceptOralFluencyScore ? "text='On' label='On'" : "text='Off' label='Off'" %>></span>
+					<span class="onoffswitch-switch"></span>
+				</label>
+			</div>
+		</div>
+		<div class="aca-sett-title switch-title">
+			<%= SETUP.c_s_LBL_OF_SCORE %>
+		</div>
+		<div class="clear"></div>
+		
+		<span class="blk-arrow" id="row3"></span>
+		<div class="right switch-wrap">
+			<div class="onoffswitch">
+				<input type="checkbox" name="onoffswitch" class="onoffswitch-checkbox" id="crSwitch" <%= data.ShowCriticalResponse ? "checked" : "" %>>
+				<label class="onoffswitch-label crSwitchLbl" for="crSwitch">
+					<span class="onoffswitch-inner" <%= data.ShowCriticalResponse ?  "text='On' label='On'" : "text='Off' label='Off'" %>></span>
+					<span class="onoffswitch-switch"></span>
+				</label>
+			</div>
+		</div>
+		<div class="aca-sett-title switch-title">
+			<%= SETUP.c_s_LBL_CRITICAL_RESPONSE %>
+		</div>
+		<div class="clear"></div>
+		
+		<span class="blk-arrow" id="new-row1"></span>
+		<div class="right switch-wrap">
+			<div class="onoffswitch">
+				<input type="checkbox" name="onoffswitch" class="onoffswitch-checkbox" id="lrSwitch" <%= data.AcceptLibraryResponseScore ? "checked" : "" %>>
+				<label class="onoffswitch-label crSwitchLbl" for="lrSwitch">
+					<span class="onoffswitch-inner" <%= data.AcceptLibraryResponseScore ?  "text='On' label='On'" : "text='Off' label='Off'" %>></span>
+					<span class="onoffswitch-switch"></span>
+				</label>
+			</div>
+		</div>
+		<div class="aca-sett-title switch-title">
+			<%= SETUP.c_s_LBL_LIBRARY_RESPONSE %>
+		</div>
+		<div class="clear"></div>
+		
+		<span class="blk-arrow" id="new-row2"></span>
+		<div class="right switch-wrap">
+			<div class="onoffswitch">
+				<input type="checkbox" name="onoffswitch" class="onoffswitch-checkbox" id="ewSwitch" <%= data.AcceptNarrativeEssayResponseScore ? "checked" : "" %>>
+				<label class="onoffswitch-label crSwitchLbl" for="ewSwitch">
+					<span class="onoffswitch-inner" <%= data.AcceptNarrativeEssayResponseScore ?  "text='On' label='On'" : "text='Off' label='Off'" %>></span>
+					<span class="onoffswitch-switch"></span>
+				</label>
+			</div>
+		</div>
+		<div class="aca-sett-title switch-title">
+			<%= SETUP.c_s_LBL_ESSAY_WRITING %>
+		</div>
+		<div class="clear"></div>
+		
+	</div>
+		<!-- <div class="academic-cont row2">
+			<p><%= SETUP.c_s_AOFS_INFO %></p>
+		</div> -->
+		<div class="clear"></div>
+	</div>
+	
+	<!-- <div class="academic-block-acc">
+	<div class="academic-block"> -->
+		<!-- <span class="blk-arrow" id="row3"></span>
+		<div class="right switch-wrap">
+			<div class="onoffswitch">
+				<input type="checkbox" name="onoffswitch" class="onoffswitch-checkbox" id="crSwitch" <%= data.ShowCriticalResponse ? "checked" : "" %>>
+				<label class="onoffswitch-label crSwitchLbl" for="crSwitch">
+					<span class="onoffswitch-inner" <%= data.ShowCriticalResponse ?  "text='On' label='On'" : "text='Off' label='Off'" %>></span>
+					<span class="onoffswitch-switch"></span>
+				</label>
+			</div>
+		</div>
+		<div class="aca-sett-title">
+			<%= SETUP.c_s_LBL_CRITICAL_RESPONSE %>
+		</div> -->
+		
+	<!-- </div> -->
+	
+	<!-- Library Response -->
+	<!-- <div class="academic-block"> -->
+		<!-- <span class="blk-arrow" id="new-row1"></span>
+		<div class="right switch-wrap">
+			<div class="onoffswitch">
+				<input type="checkbox" name="onoffswitch" class="onoffswitch-checkbox" id="lrSwitch" <%= data.AcceptLibraryResponseScore ? "checked" : "" %>>
+				<label class="onoffswitch-label crSwitchLbl" for="lrSwitch">
+					<span class="onoffswitch-inner" <%= data.AcceptLibraryResponseScore ?  "text='On' label='On'" : "text='Off' label='Off'" %>></span>
+					<span class="onoffswitch-switch"></span>
+				</label>
+			</div>
+		</div>
+		<div class="aca-sett-title">
+			Library Response
+		</div> -->
+		
+	<!-- </div> -->
+	<!-- Essay Writing -->
+	<!-- <div class="academic-block"> -->
+		<!-- <span class="blk-arrow" id="new-row2"></span>
+		<div class="right switch-wrap">
+			<div class="onoffswitch">
+				<input type="checkbox" name="onoffswitch" class="onoffswitch-checkbox" id="ewSwitch" <%= data.AcceptNarrativeEssayResponseScore ? "checked" : "" %>>
+				<label class="onoffswitch-label crSwitchLbl" for="ewSwitch">
+					<span class="onoffswitch-inner" <%= data.AcceptNarrativeEssayResponseScore ?  "text='On' label='On'" : "text='Off' label='Off'" %>></span>
+					<span class="onoffswitch-switch"></span>
+				</label>
+			</div>
+		</div>
+		<div class="aca-sett-title">
+			Essay Writing
+		</div> -->
+		
+	<!-- </div> -->
+		<!-- <div class="academic-cont row3">
+			<p><%= SETUP.c_s_SCR_INFO %></p>
+		</div> -->
+		<div class="clear"></div>
+	<!-- </div>
+	
+	<div class="academic-block-acc"> -->
+		<!-- <div class="academic-block">
+			<span class="blk-arrow" id="row4"></span>
+			<div class="aca-sett-title">
+				<%= SETUP.c_s_LBL_GRAPH_SNAP %>
+			</div>
+			<div class="radio-block width50">
+				<div class="radio-wrap">	
+					<input type="radio" id="radio3" name="graph-op" value="0" <%= (!data.ClassGraphSnapshot || data.ClassGraphSnapshot == 0) ? "checked" : "" %> class="switch" />
+					<label for="radio3">Class Only</label>
+				</div>
+			</div>
+			<div class="radio-block width50">
+				<div class="radio-wrap">	
+					<input type="radio" id="radio4" name="graph-op" value="1" <%= (data.ClassGraphSnapshot == 1) ? "checked" : "" %> class="switch" />
+					<label for="radio4">Add District</label>
+				</div>
+			</div>
+			<div class="clear"></div>
+			<div class="radio-block width50">
+				<div class="radio-wrap">	
+					<input type="radio" id="radio5" name="graph-op"  value="2" <%= (data.ClassGraphSnapshot == 2) ? "checked" : "" %> class="switch" />
+					<label for="radio5">Add Global</label>
+				</div>
+			</div>
+			<div class="radio-block width50">
+				<div class="radio-wrap">	
+					<input type="radio" id="radio6" name="graph-op" value="3" <%= (data.ClassGraphSnapshot == 3) ? "checked" : "" %> class="switch" />
+					<label for="radio6">Add Both</label>
+				</div>
+			</div>
+			<div class="clear"></div>
+			
+			
+		</div> -->
+		<!-- <div class="academic-cont row4">
+			<p><%= SETUP.c_s_CGN_INFO %></p>
+		</div> -->
+		<!-- <div class="clear"></div>
+	</div> -->
+	
+	
+	<div class="academic-block-acc">
+	<!--  <div class="academic-block">
+		<span class="blk-arrow" id="row5"></span>
+		<div class="aca-sett-title">
+			<%= SETUP.c_s_LBL_DEFAULT_STUD_DATA %>
+		</div>
+		<div class="radio-block width50">
+			<div class="radio-wrap">	
+				<input type="radio" id="radio7" name="stud-data-op" value="0" <%= (!data.StudentDataSnapshot || data.StudentDataSnapshot == 0) ? "checked" : "" %> class="switch" />
+				<label for="radio7">GLE</label>
+			</div>
+		</div>
+		<div class="radio-block width50">
+			<div class="radio-wrap">	
+				<input type="radio" id="radio8" name="stud-data-op" value="1" <%= (data.StudentDataSnapshot == 1) ? "checked" : "" %> class="switch" />
+				<label for="radio8">LEXILE</label>
+			</div>
+		</div>
+		<div class="clear"></div>
+		<div class="radio-block width50">
+			<div class="radio-wrap">	
+				<input type="radio" id="radio9" name="stud-data-op" value="2" <%= (data.StudentDataSnapshot == 2) ? "checked" : "" %> class="switch" />
+				<label for="radio9">IR LEVEL</label>
+			</div>
+		</div>
+		<div class="radio-block width50">
+			<div class="radio-wrap">	
+				<input type="radio" id="radio10" name="stud-data-op" value="3" <%= (data.StudentDataSnapshot == 3) ? "checked" : "" %> class="switch" />
+				<label for="radio10">STARZ</label>
+			</div>
+		</div>
+		<div class="clear"></div>
+		<!-- <div class="radio-block width50">
+			<div class="radio-wrap">	
+				<input type="radio" id="radio11" name="stud-data-op" value="4" <%= (data.StudentDataSnapshot == 4) ? "checked" : "" %> class="switch" />
+				<label for="radio11">PERIOD %</label>
+			</div>
+		</div> -->
+		<!-- <div class="clear"></div>
+	</div> -->
+		<!-- <div class="academic-cont row5">
+			<p><%= SETUP.c_s_SDS_INFO %></p>
+		</div> -->
+		<div class="clear"></div>
+	</div>
+	
+ <div class="academic-block-acc">
+		<!--	<div class="academic-block">
+			<span class="blk-arrow" id="row6"></span>
+			<div class="right switch-wrap">
+				<div class="onoffswitch">
+					<input type="checkbox" name="onoffswitch" class="onoffswitch-checkbox" id="projection-switch" <%= data.ProjectSnapshot ? "checked" : "" %>>
+					<label class="onoffswitch-label ofSwitchLbl" for="projection-switch">
+						<span class="onoffswitch-inner" <%= data.ProjectSnapshot ?  "text='On' label='On'" : "text='Off' label='Off'" %>></span>
+						<span class="onoffswitch-switch"></span>
+					</label>
+				</div>
+			</div>
+			<div class="aca-sett-title">
+				<%= SETUP.c_s_LBL_PS %>
+			</div> 					
+		</div> -->
+		<!-- <div class="academic-cont row6">
+			<p><%= SETUP.c_s_PS_INFO %></p>
+		</div> -->
+		<div class="clear"></div>
+	</div>	
+
+	<div class="academic-btn-wrap">
+		<button type="button" class="btn-normal" data-save-global="n" id="saveBtn">Save</button>
+		<button type="button" class="btn-normal" data-save-global="y" id="saveGlobalBtn">Save Globally</button>
+		<div class="clear"></div>
+	</div>
+	
+	</div>
+</script>
+
+
+<!-- CALENDAR TEMPLATE -->
+<script type="text/template" id="calendarTemplate">
+	<div class="aca-sett-heading">
+		<%= SETUP.c_s_HEADING_ACADEMIC_CALENDAR %>
+	</div>
+	<div class="academic-calender-container">
+		<div id="academic-calender-container-overlay"></div>
+
+		<div class="academic-calender-selecter">
+			<div class="width30">
+				<label>
+					<!-- <span class="ainput-text">Grading Period Title</span> -->
+					<!-- <input type="text" class="ainput-field" readonly="true">  -->
+				</label>
+				<div class="clear"></div>
+			</div>
+			
+			<div class="width70 academic-rules">
+				<p><%= SETUP.c_s_CALENDAR_INFO %> <!-- <span class="help"><img src="media/help.png" width="20px" height="20px" alt=""/></span> --></p>
+				<div class="clear"></div>
+			</div>
+			<div class="clear"></div>
+		</div>
+		<div class="academic-selecter-container">
+			<div class="academic-right-selecter">
+				
+				<%
+				var sTitle = GENERAL.c_s_SPECIAL_CHARACTERS_BLANK;
+				var oCalendarJson = data.AcademicCalendarJSON ? JSON.parse(decodeURIComponent(data.AcademicCalendarJSON)) : {};				
+				var aWeek = [];
+				var aColor = [];
+				
+				for (var i=0; i <= SETUP.c_s_COLOR_TAB_LEN; i++) {					 					
+					sTitle = oCalendarJson[i] ? decodeURIComponent(oCalendarJson[i].t) : GENERAL.c_s_SPECIAL_CHARACTERS_BLANK;
+					if (oCalendarJson[i]) {
+						for (var k=0; k < oCalendarJson[i].wr.length; k++) {
+							aWeek.push(oCalendarJson[i].wr[k]);
+							aColor.push("color"+i);
+						}
+					}
+				%>			
+					<div class="week-period color<%= i %>">
+						<span class="week-color" resource-id="colorBox<%= i %>"></span>
+						<div class="week-period-no" resource-id="period<%= i %>" label="period<%= i %>"><%= sTitle %></div>
+						
+					</div>
+				<% } %>
+				
+				<div class="clear"></div>
+				
+				<div class="center aca-button">
+					
+					<button class="btn-normal disabled" type="button" id="ResetBtn" data-save-global="n">Reset</button>
+					
+					<button class="btn-normal disabled" type="button" id="saveCalendarBtn" data-save-global="n">Save</button>
+					<div class="clear"></div>
+					<button class="btn-normal margin-top10 disabled" type="button" id="saveCalendarGlobalBtn" data-save-global="y">Save Globally</button>
+					<div class="clear"></div>
+				</div>
+				
+				<div class="clear"></div>
+			</div>
+			<div class="academic-left-selecter">
+			
+			
+				<!-- <div class="week-no iperiod"> -->
+				<%  
+				var iIndex = -1;
+				var sColor = GENERAL.c_s_SPECIAL_CHARACTERS_BLANK;
+				var sSelectedClass = GENERAL.c_s_SPECIAL_CHARACTERS_BLANK;
+				
+				for (var j=1; j <= SETUP.c_s_WEEK_TAB_LEN; j++) {
+					iIndex = $.inArray(j, aWeek);
+					sColor = aColor[iIndex] || GENERAL.c_s_SPECIAL_CHARACTERS_BLANK;
+					sSelectedClass = aColor[iIndex] ? "selected" : GENERAL.c_s_SPECIAL_CHARACTERS_BLANK;
+				%>
+				<div class="week-no <%= sSelectedClass %> <%= sColor %>">
+					<div class="week-name">Week</div>
+					<div class="weekend-no" resource-id="week<%= j %>">
+						<%= j %>
+					</div>
+				</div>
+				<% } %>	
+				
+				<div class="clear"></div>
+			</div>
+			<div class="clear"></div>
+		</div>
+		
+		
+		
+		<div class="clear"></div>
+	</div>
+</script>
+
+</html>

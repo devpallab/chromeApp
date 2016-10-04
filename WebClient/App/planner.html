@@ -1,0 +1,512 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+	<meta name="viewport" content="width = device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0" />
+	<title>iLiT</title>
+	
+	<link href="css/planner.css" media="all" rel="stylesheet" />
+	<link href="css/jquery-ui.css" media="all" rel="stylesheet" />
+	<link href="css/planner_dev.css" media="all" rel="stylesheet" />
+	<link href="css/fonts/fonts.css" media="all" rel="stylesheet" />
+	<!-- <link href="css/swiper.css" media="all" rel="stylesheet" /> -->
+	<link href="css/idangerous.swiper.css" media="all" rel="stylesheet" />
+	
+	<script type="text/javascript" src="js/jquery-1.10.2.js"></script>
+	<script type="text/javascript" src="js/jquery-ui.js"></script>
+	<script type="text/javascript" src="js/underscore-min.js"></script>
+	<script type="text/javascript" src="js/jquery.ui.touch-punch.min.js"></script>
+	<script type="text/javascript" src="js/util.js"></script> 
+	<!-- <script type="text/javascript" src="js/swiper.3.min.js"></script> -->
+	<script type="text/javascript" src="js/idangerous.swiper-2.1.min.js"></script>
+	<script type="text/javascript" src="js/iSeriesBase.js"></script>
+	<script type="text/javascript" src="js/constants.js"></script>
+	<script type="text/javascript" src="js/message_handler.js"></script>
+	<script type="text/javascript" src="js/application.js"></script>
+	<script type="text/javascript" src="js/client_native_communication.js"></script>
+	<script type="text/javascript" src="js/planner_year_view.js"></script>
+	
+	<!--[if gte IE 9]>
+	  <style type="text/css">
+		.gradient {
+		   filter: none !important;
+		}
+	  </style>
+	<![endif]-->	
+</head>
+<body>
+<div id="loaderContainer"></div>
+<div class="wrapper">
+	<div class="backgound_images planner_bg" ></div>
+        <div class="main_wrapper">  
+		<header>
+			<nav class="top_navbar">
+				<button class="toc_icn left sprite"></button>
+				<button type="button" class="slide_bullet right sprite"></button>
+				<div class="left tabbing" style="margin-left:-10px;">
+					<button id="btnUnit" class="left button8 active">Lessons</button>
+				</div>
+				<div class="left tabbing">
+					<button id="btnSupplemenatlLesson" class="left button8">Supplemental Lessons</button>
+				</div>
+				<div class="left tabbing btnGradeCont"><!-- gradeBtn -->
+					<button id="btnGrade" class="right button8 "><img src="media/grade_button.jpg" alt="GRADE" style="height:23px" /></button>
+				</div>
+				
+				<div id="unitDropDown" class="select"></div>    <!-- active -->
+				<div id="weekDropDown" class="select"></div>    <!-- active -->
+				
+				<div  class="clear"></div>
+			</nav>
+		</header>
+		<section class="container_space dashboard_instructor" id="main_container">
+			<div class="button_area" id="navButtonArea" style="-ms-touch-action: none;"></div>
+			<div class="dash_lesson_container">
+				<div class="page_arrow sprite"></div>
+				<div id="innerContentArea"></div>
+			</div>
+			<div id="teachButton" class="bottom_button_area" style="display:none">
+				<button id="btnViewGrade"  data-preview-flag="0" class="button7 btn left">View GRADE</button>
+				<div class="right"><button type="button"  data-preview-flag="1" id="btnPreview" class="preview right sprite"></button></div>
+				<div class="centerBtn"><button id="btnTech"  data-preview-flag="0" class="button7 teach btn">Teach</button></div>
+				
+				<div class="clear"></div>
+			</div>
+			<div class="clear"></div>
+		</section>
+		<footer></footer>
+		<div class="clear"></div>
+	</div>
+	<div class="clear"></div>
+</div>
+<div id="messagePopUp" style="display:none"></div>
+<div id="normalPopUp" style="display:none"></div>
+<div id="dialog-message" title="Alert!" class="Ilit_alert_box" style="display:none;">
+  <p>Under Construction</p>
+</div>
+
+<div id="viewAssignmentPopupArea" style="display: none;">
+	<iframe src="" frameborder="0" width="100%" height="100%" allowfullscreen="true" webkitallowfullscreen="true" mozallowfullscreen="true">
+	<p>Your browser does not support iframes.</p>
+	</iframe>
+</div>
+
+
+<script type="text/javascript">
+	$(document).ready(function () {
+		/*addNativeBridge();*/
+		var scheduleCheck = function() {
+			if(objPlannerJsonData != null) {
+				loadJS(objPlannerJsonData.jsPath, isLoaded);                        
+			} else {
+				setTimeout(scheduleCheck, 100);
+			}
+		};
+
+		var isLoaded = function() {
+			if (typeof objPlannerData != 'undefined' && objPlannerData != null) {
+				objPlannerJsonData['content']   =   objPlannerData;				
+				loadJS(objPlannerJsonData.tocJsPath, isTOCLoaded);				
+			} else {
+				setTimeout(isLoaded, 100);
+			}
+		};
+		
+		var isTOCLoaded = function() {			
+			if (typeof objGradeItemsData  != 'undefined' && objGradeItemsData  != null) {
+				/*GetAppInfo();
+				setTimeout(appInfoCheck, 500);*/
+				GetMessageList();
+				setTimeout(messageListCheck, 2000);
+			} else {
+				setTimeout(isTOCLoaded, 100);
+			}
+		};
+        		
+		/*var appInfoCheck = function() {			
+			if (typeof objAppVersionInfo  != 'undefined' && objAppVersionInfo  != null) {
+				//GetMessageList();
+				//setTimeout(messageListCheck, 2000);
+			} else {
+				setTimeout(appInfoCheck, 100);
+			}
+		};*/
+				
+		var messageListCheck = function() {
+			if(objMessageJsonData != null) {
+				try{
+					if(objMessageJsonData.Status == 200 || objMessageJsonData.Status == "200"){
+						onPageLoadComplete(GENERAL.c_s_PAGE_TYPE_PLANNER);
+						$("#loaderContainer").hide();
+						$('body').css({'background-color': '#E0E1E1'});
+						$('.wrapper').show();												
+						
+						Application.init(VIEWTYPE.c_s_PLANNER_YEAR);
+						$('.wrapper').animate({'opacity' : '1'}, 800);
+					}else{
+						throw (objMessageJsonData.Error);
+					}
+				}catch(err){
+					if (err.ErrorCode != "U1065") {
+						PlannerYearView._alert({
+							divId:		'dialog-message',
+							title:		'Alert!',
+							message:	err.ErrorUserDescription
+						});
+					}
+				}
+			} else {
+				setTimeout(messageListCheck, 100);
+			}
+		};
+		
+		
+		//scheduleCheck();
+		// Loader Image
+		var loaderImg = '<div style=" font-size: 13px;"><img src="media/loader.gif" style="margin-bottom: 15px;"><br />LOADING</div>';
+		$('body').css({'background-color': '#FFF'});
+		$('.wrapper').hide();
+		$("#loaderContainer").css({'background-color': '#FFF', 'text-align':'center', 'top' : '45%', 'left': '50%', 'position' : 'absolute'}).html(loaderImg);
+                
+		if(oPlatform.isIOS()) {
+			loadJS('js/NativeBridge.js', GetPlannerInfo);
+		}
+		else {
+			GetPlannerInfo();
+		}
+		setTimeout(scheduleCheck, 200);
+	});
+	
+	$(".wrapper").off("click tap").on("click tap", function(e){
+		
+		if($(".select").find(".dp_select_bg_option").is(':visible')) {
+			$(".select").find(".dp_select_bg_option").slideUp();
+		}
+		
+		var  elem = $("#plannerdropdown").parent();
+		if (elem.hasClass('active')) {
+			elem.removeClass("active");
+			$("#plannerdropdown").siblings(".lesson_tooltip").hide({
+				duration: 500,
+				easing: "easeOutBounce"
+			});
+		}
+		var  elemG = $("#btnGrade").parent();
+		if (elemG.hasClass('active')) {
+			elemG.removeClass("active");
+			$("#btnGrade").siblings(".lesson_tooltip").hide({
+				duration: 500,
+				easing: "easeOutBounce"
+			});
+		}
+	});
+	
+	$(window).resize(function () {
+		PlannerYearView.resize();
+	});
+
+	window.onorientationchange = function () {
+		PlannerYearView.resize();
+	};
+</script>
+</body>
+
+<script type="text/template" id="navButtonTemplate">
+	<button id="prevPagingBtn" class="left_arrow sprite btn"></button><!--  swiper-button-prev -->
+	<button id="nextPagingBtn" class="right_arrow sprite btn"></button><!--  swiper-button-next -->
+	<div class="swiper-container" style="backface-visibility: visible;">
+		<div class="swiper-wrapper">
+			<%
+			var iCnt = 0,
+				matchIndex = 0,
+				slWeekBtnClass = "";
+			
+			$.each(data, function(Idx, Val){
+				var tempArr = Val.elemId.split("_");
+				if (iCnt == 0){
+					if(tempArr[0] == "week"){
+						matchIndex = tempArr[1];
+					}
+					if(tempArr[0] == "lesson"){
+						matchIndex = tempArr[2];
+					}
+			%>
+			<div class="lesson_button_container swiper-slide swiper-no-swiping">
+				<div class="lesson_button_row">
+			<%
+				}
+				
+				if(
+					((tempArr[0] == "week") && (matchIndex != tempArr[1])) || 
+					((tempArr[0] == "lesson") && (matchIndex != tempArr[2]))
+				){
+					if(tempArr[0] == "week"){
+						matchIndex = tempArr[1];
+					}
+					if(tempArr[0] == "lesson"){
+						matchIndex = tempArr[2];
+					}
+					iCnt = 0;
+			%>
+				</div>
+			</div>
+			<div class="lesson_button_container swiper-slide swiper-no-swiping">
+				<div class="lesson_button_row">
+ 			<%
+				}
+				
+				if(
+					tempArr[0] == "slweek" || 
+					tempArr[0] == "sllesson" 
+				) {
+					slWeekBtnClass = "SLWeekBtn";
+				}
+			%>
+				<a href="javascript:void(0);" id="<%= Val.elemId %>" class="button5 <%= Val.sActiveClass %> <%= Val.sLessonClass %> navButton" role="button">
+					<span class="light <%= slWeekBtnClass %>"><%= Val.topText %></span>
+					<span class="bold"><%= Val.bottomText %> </span>
+				</a>
+			<%
+				iCnt++;
+				if (iCnt == 5) {
+			%>
+				</div>
+			</div>
+			<%
+					iCnt = 0;
+				}
+			});
+			
+			if(iCnt != 0) {
+			%>
+				</div>
+			</div>
+			<% }%>
+		</div>
+	</div>
+	<div class="clear"></div>
+</script>
+
+<script type="text/template" id="unitContentTemplate">
+	<div id="weekviewLeftContent" class="left_object left">
+		<h3><%= PLANNER.c_s_OVERVIEW_TXT %></h3>
+		<div id="weekviewLeftInnerContent"><%= unitData.objectives %></div>
+		<div class="clear"></div>
+	</div>
+	<div id="weekviewMiddleContent" class="middle">
+		<h3><%= PLANNER.c_s_TXT_TEXT_TO_READ %></h3>
+		<%= unitData.explanation %>
+	</div>
+	<div class="clear"></div>	
+</script>
+
+<script type="text/template" id="weekContentTemplate">
+	<div class="middle">
+		<%
+		if(weekData.length > 0){
+			_.each(weekData, function(wVal, wIdx){
+				if((wIdx + 1) == weekData.length) {
+					var borderNone = 'style="border-bottom: none;"';
+				}else{
+					var borderNone = '';
+				}
+		%>
+		<div class="unitView" <%=borderNone%> >
+			<div class="content_left left"></div>
+			<div class="content_middle left"><%= wVal.itemDisplayName %></div>
+			<div class="content_right middle"><%= wVal.itemDesc %></div>
+			<div class="clear"></div>
+		</div>
+		<% 
+			});
+		}else{
+		%>
+		<div class="unitView"></div>
+		<% }%>
+	</div>
+	<div class="clear"></div>
+</script>
+
+
+
+<script type="text/template" id="sLessonWeekContentTemplate">
+	<div class="middle">
+		<%
+		var len = 0,
+			cnt = 0;
+		if(weekData.length > 0){
+			_.each(weekData, function(Val, Idx){
+				len += Val.length;
+				var oItem = _.sortBy(
+								_.filter(Val.item, function(num){ 
+									return num.itemSubType == "sl";  
+								}), 
+								function(obj) {
+									return parseInt(obj.itemNumber);
+								}
+							);
+				
+				_.each(oItem, function(wVal, wIdx){			
+					cnt++;
+					if(cnt == len) {
+						var borderNone = 'style="border-bottom: none;"';
+					}else{
+						var borderNone = '';
+					}
+		%>
+		<div class="unitView" <%=borderNone%> >
+			<div class="content_left left"></div>
+			<div class="content_middle left"><%= wVal.itemDisplayName %></div>
+			<div class="content_right middle"><%= wVal.itemDesc %></div>
+			<div class="clear"></div>
+		</div>
+		<% 
+				});
+			});
+		}else{
+		%>
+		<div class="unitView"></div>
+		<% }%>
+	</div>
+	<div class="clear"></div>
+</script>
+
+<script type="text/template" id="lessonContentTemplate">
+	<div id="weekviewLeftContent" class="left_object left">
+		<h3><%= $.trim(PLANNER.c_s_STUDENT_OBJECTIVES) %></h3>
+		<div id="weekviewLeftInnerContent">
+		<%=lessonData[0].keyValue%>
+		<!--<h3>Professional Development Videos</h3>
+		<div class="video_container">
+			<img src="media/video.png"  alt="">
+			<button class="play_button"></button>
+		</div>-->
+		</div>
+		<div id="weekviewLeftButtonContent">
+			<button id="btnEmail" class="button7 btn" style="display:none;"><%= $.trim(PLANNER.c_s_EMAIL_BTTN) %></button><button id="btnPrint" class="button7 btn active" style="display:none;"><%= $.trim(PLANNER.c_s_PRINT_BTTN) %></button>
+		</div>
+		<div class="clear"></div>
+	</div>
+	<div id="weekviewMiddleContent" class="middle">
+		<h3><%= $.trim(PLANNER.c_s_LESSON_OVERVIEW) %></h3>
+		<%=lessonData[1].keyValue%>
+		<h3><%= PLANNER.c_s_COMMON_CORE_STATE_STANDARDS %></h3>
+		<%=lessonData[2].keyValue%>
+	</div>
+	<div class="clear"></div>
+</script>
+
+<script type="text/template" id="sLessonLessonContentTemplate">
+	<%
+	if (sLessonType != "routinecards") {
+	%>
+	<div id="weekviewLeftContent" class="left_object left">
+		<h3><%= $.trim(PLANNER.c_s_STUDENT_OBJECTIVES) %></h3>
+		<div id="weekviewLeftInnerContent"><%=lessonData[0].keyValue%></div>
+		<div id="weekviewLeftButtonContent">
+			<button id="btnEmail" class="button7 btn" style="display:none;"><%= $.trim(PLANNER.c_s_EMAIL_BTTN) %></button><button id="btnPrint" class="button7 btn active" style="display:none;"><%= $.trim(PLANNER.c_s_PRINT_BTTN) %></button>
+		</div>
+		<div class="clear"></div>
+	</div>
+	<%
+	}
+	%>
+	<div id="weekviewMiddleContent" class="middle">		
+		<%
+		switch (sLessonType){
+			case "routinecards":
+			case "phonologicalawareness":
+				overviewTitle = PLANNER.c_a_SL_TYPE_TXT[sLessonType];
+			break;
+			case "supplementalrata":
+				overviewTitle = overviewTitle;/* + " " + PLANNER.c_s_OVERVIEW_RATA;*/
+			break;
+			case "bookclub":
+				overviewTitle = overviewTitle + " " + PLANNER.c_a_SL_TYPE_TXT[sLessonType];
+			break;
+			default:
+				
+		}
+		%>
+		<h3><%= overviewTitle %> <%= PLANNER.c_s_OVERVIEW_TXT %></h3>
+		<%=lessonData[1].keyValue%>
+		<%
+		if (sLessonType != "routinecards") {
+		%>
+		<h3><%= PLANNER.c_s_COMMON_CORE_STATE_STANDARDS %></h3>
+		<%=lessonData[2].keyValue%>
+		<% } %>
+	</div>
+	<div class="clear"></div>
+</script>
+
+<script type="text/template" id="gradeContentTemplate">
+	<div class="middle">
+		<%
+		if(Object.keys(gradeData).length > 0){
+			var borderNone = 'style="border-bottom: none;"';
+		%>
+		<div class="unitView" <%=borderNone%> >
+			<div class="content_left left"></div>
+			<div class="content_middle left"><%= gradeData.introTitle %></div>
+			<div class="content_right middle"><%= gradeData.introText %></div>
+			<div class="clear"></div>
+		</div>
+		<% 
+		}else{
+		%>
+		<div class="unitView"></div>
+		<% }%>
+	</div>
+	<div class="clear"></div>
+</script>
+
+<script type="text/template" id="dropDownTemplate">
+	<%
+	var sAllTxt = (dropDownType == "unit") ? PLANNER.c_s_UNITS_TXT : ((dropDownType == "slweek") ? PLANNER.c_s_SUPPLEMENTAL_LESSONS_TXT : PLANNER.c_s_LESSONS_TXT);
+	%>
+	<div data-idx="<%= dropDownType %>_all" id="selected<%= dropDownType %>" class="select_bg left margin_none"><%= PLANNER.c_s_ALL_TXT %> <%= sAllTxt %> <span class="caret"></span></div>
+	<div class="clear"></div>
+	<div class="dp_select_bg_option" style="">
+		<div data-idx="<%= dropDownType %>_all" class="dp_select_option"><%= PLANNER.c_s_ALL_TXT %> <%= sAllTxt %></div>
+	<%
+	$.each(data, function(Idx, Val){
+	%>
+		<div data-idx="<%= dropDownType %>_<%= Idx %>" class="dp_select_option <%= Val.sLessonClass %>"><%= Val.dropDownTxt %></div>
+	<%
+	});
+	%>
+	</div>
+</script>
+
+<script type="text/template" id="messagePopUpTemplate">
+	<%
+		var popupInnerClass = (msgdata.MessageType == MESSAGE_INSTRUCTOR.c_s_MESSAGE_APP_TYPE) ? "popup_red_inner" : "";
+	%>
+	<div class="popup_yellow">
+		<div class="overley"></div> 
+		<div class="popup_yellow_content">
+			<div class="popup_yellow_inner <%= popupInnerClass %>">
+				<div id="messagePopUpCloseBtn" class="close_yew sprite3"></div>
+				<div class="pop_title"><div class="pop_title_inn"><%= (msgdata.MessageType == MESSAGE_INSTRUCTOR.c_s_MESSAGE_APP_TYPE) ? PLANNER.c_s_APP_UPDATE : PLANNER.c_s_DID_YOU_KNOW %></div></div>
+				<div class="popup_content_yellow"><%= decodeURIComponent(msgdata.MessageText)  %></div>
+			</div>
+		</div>
+	</div>
+</script>
+
+<script type="text/template" id="normalPopUpTemplate">
+	<div class="popup_yellow">
+		<div class="overley"></div> 
+		<div class="popup_yellow_content normalPopup">
+			<div class="popup_yellow_inner">
+				<!--<div id="normalPopUpCloseBtn" class="close_yew sprite3"></div>-->
+				<!--<div class="pop_title"><div class="pop_title_inn">&nbsp;</div></div>-->
+				<div class="popup_content_yellow"><%= msgdata %></div>
+				<div style="text-align:center"><button class="button7 btn" id="normalPopUpCloseBtn">close</button></div>
+			</div>
+		</div>
+	</div>
+</script>
+
+</html>

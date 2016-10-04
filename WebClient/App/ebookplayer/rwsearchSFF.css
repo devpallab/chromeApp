@@ -1,0 +1,355 @@
+/*common*/
+.rwPopupOutline
+{
+	cursor:			default;
+	font-family:		Verdana,inherit;
+	font-size:		12px;
+	color:			#000000;
+	padding:		0;
+	width:			300px;
+}
+
+.rwPopupContent
+{
+    background-color:	#ece9d8;
+    vertical-align:		top;
+    padding:			6px;
+    cursor:				default;
+    font-family:		Verdana,inherit;
+    font-weight:        normal;
+    color:				#000000;
+    text-align:         left;
+    height:				200px;
+    overflow:           auto;
+    border-top:			1px solid #0218af;
+    border-left:		2px solid #0218af;
+    border-right:		2px solid #0218af;
+    border-bottom:		2px solid #0218af;
+}
+
+.rwPopupContent500
+{
+	background-color:	#ece9d8;
+	vertical-align:		top;
+	cursor:				default;
+	font-family:		Verdana,inherit;
+	font-weight:        normal;
+	color:				#000000;
+	text-align:         left;
+
+	height:				200px;
+    	overflow:            auto;
+
+
+	padding-left:			6px;
+	padding-top:			6px;
+	padding-bottom:			6px;
+	border-top:		    1px solid #EE333E;
+	border-left:		2px solid #EE333E;
+	border-right:		2px solid #EE333E;
+	border-bottom:		2px solid #EE333E;
+}
+
+/*Display screen*/
+#rwDisplay
+{
+    z-index: 500;
+    left: 0;
+    position: absolute;
+    top: 0;
+    overflow:auto;
+    visibility:hidden;
+}
+
+.rwToolbarCaptionDisplay
+{
+	height:				21px;
+	background-image:   url(rwimgs/rwtexthelp.gif);
+	padding:			0;
+	font-family:		Verdana,inherit;
+	color:				#ffffff;
+	font-weight:		bold;
+	font-size:			10px;
+	cursor:				default;
+}
+
+
+/*Translator screen*/
+#rwTrans
+{
+    z-index: 500;
+    left: 0;
+    position: absolute;
+    top: 0;
+    visibility:hidden;
+}
+
+.rwTransMean
+{
+	font-size:15px;
+
+}
+
+  .rwTransMean tr td
+{
+	padding-bottom: 10px;
+    padding-left: 5px;
+}
+
+.rwToolbarCaptionTrans
+{
+	height:				21px;
+	background-image:   url(rwimgs/rwTransCaption.gif);
+	padding:			0;
+	padding-left:		0;
+	font-family:		Verdana,inherit;
+	color:				#ffffff;
+	font-weight:		bold;
+	font-size:			10px;
+	cursor:				default;
+}
+
+.rwToolbarSpanCaptionTrans
+{
+	height:				21px;
+	background-image:   url(rwimgs/rwTransSpanCaption.gif);
+	padding:			0;
+	padding-left:		0;
+	font-family:		Verdana,inherit;
+	color:				#ffffff;
+	font-weight:		bold;
+	font-size:			10px;
+	cursor:				default;
+}
+
+.rwToolbar500CaptionTrans
+{
+	height:				21px;
+	background-image:   url(rwimgs500/rwTrans500Caption.gif);
+	padding:			0;
+	padding-left:		0;
+	font-family:		Verdana,inherit;
+	color:				#ffffff;
+	font-weight:		bold;
+	font-size:			10px;
+	cursor:				default;
+}
+
+/*Fact finder*/
+#rwFF
+{
+    z-index: 500;
+    left: 0;
+    position: absolute;
+    top: 0;
+    visibility:hidden;
+}
+
+.rwToolbarCaptionFF
+{
+	height:				21px;
+	background-image:   url(rwimgs/rwFFcaption.gif);
+	padding:			0;
+	padding-left:		0;
+	font-family:		Verdana,inherit;
+	color:				#ffffff;
+	font-weight:		bold;
+	font-size:			10px;
+	cursor:				default;
+}
+
+
+/* Dictionary*/
+#rwDict
+{
+    z-index: 500;
+    left: 0;
+    position: absolute;
+    top: 0;
+    visibility:hidden;
+}
+
+
+.rwToolbarCaptionDict
+{
+	height:				21px;
+	background-image:   url(rwimgs/rwDictCaption.gif);
+	padding:			0;
+	font-family:		Verdana,inherit;
+	color:				#ffffff;
+	font-weight:		bold;
+	font-size:			10px;
+	cursor:				default;
+}
+
+.rwToolbarSpanCaptionDict
+{
+	height:				21px;
+	background-image:   url(rwimgs/rwDictSpanCaption.gif);
+	padding:			0;
+	padding-left:		0;
+	padding-right:		0;
+	font-family:		Verdana,inherit;
+	color:				#ffffff;
+	font-weight:		bold;
+	font-size:			10px;
+	cursor:				default;
+}
+
+.rwToolbar500CaptionDict
+{
+	height:				21px;
+	background-image:   url(rwimgs500/rwDict500Caption.gif);
+	padding:			0;
+	padding-left:		0;
+	padding-right:		0;
+	font-family:		Verdana,inherit;
+	color:				#ffffff;
+	font-weight:		bold;
+	font-size:			10px;
+	cursor:				default;
+}
+
+.rwDictWordHeader
+{
+	font-size:150%;
+	font-weight: bold;
+	padding-bottom: 3px;
+	border-bottom: 1px solid #666666;
+	margin-bottom: 10px;
+}
+  .rwDictDefin
+{
+	font-size:100%;
+
+}
+
+  .rwDictDefin tr td
+{
+	padding-bottom: 10px;
+    padding-left: 5px;
+}
+
+.rwMeaning
+{
+	padding-right: 10px;
+}
+
+.thExpression
+{
+	padding-right: 10px;
+	font-style: italic;
+}
+
+
+.rwMeaningNum
+{
+	padding-left: 10px;
+	padding-right: 10px;
+	font-weight: bold;
+}
+     
+
+/*PictureDictionary screen*/
+#rwPictureDictionary
+{
+    z-index: 500;
+    left: 0;
+    position: absolute;
+    top: 0;
+    visibility:hidden;
+}
+
+
+.rwToolbarCaptionPictureDictionary
+{
+	height:				21px;
+	background-image:   url(rwimgs/rwPictureDictionaryCaption.gif);
+	padding:			0;
+	padding-left:		0;
+	font-family:		Verdana,inherit;
+	color:				#ffffff;
+	font-weight:		bold;
+	font-size:			10px;
+	cursor:				default;
+}
+
+.rwToolbarSpanCaptionPictureDictionary
+{
+	height:				21px;
+	background-image:   url(rwimgs/rwPictureDictionarySpanCaption.gif);
+	padding:			0;
+	padding-left:		0;
+	font-family:		Verdana,inherit;
+	color:				#ffffff;
+	font-weight:		bold;
+	font-size:			10px;
+	cursor:				default;
+}
+
+.rwToolbar500CaptionPictureDictionary
+{
+	height:				21px;
+	background-image:   url(rwimgs500/rwTrans500Caption.gif);
+	padding:			0;
+	padding-left:		0;
+	font-family:		Verdana,inherit;
+	color:				#ffffff;
+	font-weight:		bold;
+	font-size:			10px;
+	cursor:				default;
+}
+
+.rwPictureDictionaryOutline
+{
+	cursor:			default;
+	font-family:		Verdana,inherit;
+	font-size:		12px;
+	color:			#000000;
+	padding:		0;
+	width:			auto;
+}
+
+
+.rwPictureDictionaryContent
+{
+	background-color:	#ece9d8;
+	vertical-align:		top;
+	cursor:				default;
+	font-family:		Verdana,inherit;
+	font-weight:        normal;
+	color:				#000000;
+	text-align:         left;
+
+	height:				auto;
+    	overflow:            auto;
+
+
+	padding:			6px;
+
+	border-top:		    1px solid #0218af;
+	border-left:		2px solid #0218af;
+	border-right:		2px solid #0218af;
+	border-bottom:		2px solid #0218af;
+}
+
+.rwPictureDictionaryContent500
+{
+	background-color:	#ece9d8;
+	vertical-align:		top;
+	cursor:				default;
+	font-family:		Verdana,inherit;
+	font-weight:        normal;
+	color:				#000000;
+	text-align:         left;
+
+	height:				200px;
+    	overflow:            auto;
+
+
+	padding:			6px;
+	border-top:		    1px solid #EE333E;
+	border-left:		2px solid #EE333E;
+	border-right:		2px solid #EE333E;
+	border-bottom:		2px solid #EE333E;
+}

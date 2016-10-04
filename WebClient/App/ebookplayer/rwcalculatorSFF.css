@@ -1,0 +1,129 @@
+/* Calculator*/
+#rwCal
+{
+    z-index: 500;
+    left: 0;
+    position: absolute;
+    top: 0;
+    visibility:hidden;
+}
+
+
+.rwToolbarCaptionCal
+{
+	height:				21px;
+	background-image:   url(rwimgs/rwCalCaption.gif);
+	padding:			0px;
+    margin:             0px;
+	font-family:		Verdana,inherit;
+	color:				#ffffff;
+	font-weight:		bold;
+	font-size:			10px;
+	cursor:				default;
+}
+
+.rwToolbarSpanCaptionCal
+{
+	height:				21px;
+	background-image:   url(rwimgs/rwCalSpanCaption.gif);
+	padding:			0px;
+    margin:             0px;
+	font-family:		Verdana,inherit;
+	color:				#ffffff;
+	font-weight:		bold;
+	font-size:			10px;
+	cursor:				default;
+}
+
+
+.rwcaldisplay
+{
+    margin:         0px;
+	padding:		0px;
+    border:         0px;
+	height:			32px;
+    width:			215px;
+    font-weight:	bold;
+	font-size:		18px;
+    text-align:     right;
+    padding-right:  2px;
+}
+.rwcalbutton
+{
+    margin:         0px;
+	padding:		0px;
+	width:			40px;
+    height:         30px;
+
+}
+.rwcalEqbutton
+{
+    margin:         0px;
+	padding:		0px;
+	width:			82px;
+    height:         30px;
+
+}
+.rwCalPopupOutline
+{
+	cursor:				default;
+	font-family:		Verdana,inherit;
+	font-size:			12px;
+	color:				#000000;
+	padding:			0;
+    margin:             0;
+	width:				225px;
+}
+
+
+.rwCalPopupContent
+{
+	background-color:	#ece9d8;
+	vertical-align:		top;
+	cursor:				default;
+	font-family:		Verdana,inherit;
+	font-weight:        normal;
+	color:				#000000;
+	text-align:         left;
+    height:				205px;
+    overflow:           auto;
+    padding:            0px;
+    margin:             0px;
+	border-top:		    1px solid #0218af;
+	border-left:		2px solid #0218af;
+	border-right:		2px solid #0218af;
+	border-bottom:		2px solid #0218af;
+}
+
+.rwcalspeechbutton
+{
+    margin:         0;
+    padding:        0;
+    padding-top: 4px;
+    border:         0;
+    font-weight:	bold;
+	font-size:		10px;
+    text-align:     right;
+    color:		    #000000;
+
+}
+
+.rw_calTable
+{
+    margin:         0;
+    padding:        0;
+    border-collapse:seperate !important;
+    border-spacing:2px !important;
+}
+
+.rw_calTable td
+{
+    margin:         0;
+    padding:        0px;
+}
+
+.rw_calTable td tr
+{
+    margin:         0;
+    padding:        0;
+}

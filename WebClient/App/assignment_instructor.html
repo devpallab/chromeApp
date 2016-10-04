@@ -1,0 +1,1904 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=0, minimum-scale=1.0, maximum-scale=1.0">
+        <title>iLiT</title>
+        <link href="css/assignments_instructor.css" media="all" rel="stylesheet"/>
+        <link href="css/assignments_instructor_dev.css" media="all" rel="stylesheet"/>
+        <link href="css/jquery-ui.css" media="all" rel="stylesheet"/>        
+        <link href="css/fonts/fonts.css" media="all" rel="stylesheet"/>
+        <link href="css/idangerous.swiper.css" media="all" rel="stylesheet"/>
+        <link href="css/assignment.swiper.css" media="all" rel="stylesheet"/>
+
+
+        <script type="text/javascript" src="js/jquery-1.10.2.js"></script>
+        <script type="text/javascript" src="js/jquery-ui.js"></script>
+        <script type="text/javascript" src="js/underscore-min.js"></script>
+        <script type="text/javascript" src="js/jquery.ui.touch-punch.min.js"></script> 
+        
+        <script type="text/javascript" src="js/util.js"></script> 
+        <script type="text/javascript" src="js/idangerous.swiper-2.1.min.js"></script>
+		<script type="text/javascript" src="js/jquery.monitor.js"></script>
+        <script type="text/javascript" src="js/constants.js"></script>
+        <script type="text/javascript" src="js/message_handler.js"></script>
+        <script type="text/javascript" src="js/application.js"></script>         
+        <script type="text/javascript" src="js/assignment_category.js"></script>         
+        <script type="text/javascript" src="js/client_native_communication.js"></script>
+        <script type="text/javascript" src="js/jquery.tooltipster.min.js"></script>
+		
+		<script type="text/javascript" src="js/assignments_instructor_v2.js"></script>
+		<script type="text/javascript" src="js/assignments_instructor_helper.js"></script>
+        
+		<script type="text/javascript">
+			/**
+			 * Check Platform
+			 */
+
+			var objPlatform = {
+				isAndroid: function() {
+					return navigator.userAgent.match(/Android/i);
+				},
+				isBlackBerry: function() {
+					return navigator.userAgent.match(/BlackBerry/i);
+				},
+				isIOS: function() {
+					return navigator.userAgent.match(/iPhone|iPad|iPod/i);
+				},
+				isWindows: function() {
+			//        return navigator.userAgent.match(/IEMobile|Windows|WebView/i);
+					return navigator.userAgent.match(/Windows.*WebView/i);
+				},
+				isBrowser: function () {
+					return !this.isDevice();
+				},
+				isDevice: function() {
+					return (this.isAndroid() || this.isBlackBerry() || this.isIOS() || this.isWindows());
+				}
+			};
+		</script>  
+
+        <!--[if gte IE 9]>
+          <style type="text/css">
+            .gradient {
+               filter: none !important;
+            }
+          </style>
+        <![endif]-->
+
+        <script type="text/javascript">						
+			var oAttemptInfo = null;	//	Variable To Store Updated Assignment Information
+			
+            $(document).ready(function () {
+				$('.wrapper').hide();
+                
+                if (objPlatform.isIOS()) {
+                    loadJS('js/NativeBridge.js', GetUnitDetails);
+                }
+				else {
+                    GetUnitDetails();
+                }
+                setTimeout(CheckUnitDetails, 200);
+                
+				var loaderImg = '<div style=" font-size: 13px;"><img src="media/loader.gif" style="margin-bottom: 15px;"><br />LOADING</div>';
+				$("#loaderContainer").html(loaderImg).addClass('loaderContainer');
+				$("#loaderContainer").show();
+				$(".loaderContainerOverlay").show();
+			});
+        </script>
+
+
+    </head>
+    <body style="overflow: hidden;">
+        <div id="loaderContainer"></div>
+        <div class="loaderContainerOverlay"></div>
+        <div class="wrapper">
+            <header></header>
+            <script type="text/template" id="headerAssignment">            
+                <%
+				var selectedUnitId    =   ASSIGNMENT_INSTRUCTOR.c_i_DEFAULT_SELECTED_UNIT_ID;
+                var selectedUnitText  =   ASSIGNMENT_INSTRUCTOR.c_i_DEFAULT_SELECTED_UNIT;
+                
+                selectedWeekId  =   ASSIGNMENT_INSTRUCTOR.c_i_DEFAULT_SELECTED_LESSON_ID;
+                selectedWeekText=   ASSIGNMENT_INSTRUCTOR.c_i_DEFAULT_SELECTED_LESSON;
+                
+                if(defaultSelection != null) {
+                    selectedUnitId    =   defaultSelection.UnitNumber;
+                    selectedUnitText  =   "Unit "+selectedUnitId;
+					
+					selectedWeekId  =   parseInt(defaultSelection.WeekNumber);
+					selectedWeekText=   "Lessons " + ((selectedWeekId * 5) - 4) + "-" + (selectedWeekId * 5);
+                } else {
+                    /*lastUnit    =   objInstructorState == null ? 1 : objInstructorState.lastUnit;                 
+                    lastWeek    =   objInstructorState == null ? 1 : objInstructorState.lastLesson;*/
+					
+					lastUnit    =   objInstructorState['ADB']['POS'][ABBREVIATION[AssignmentInstructorView.ActiveTab]]['U'];
+					lastWeek    =   objInstructorState['ADB']['POS'][ABBREVIATION[AssignmentInstructorView.ActiveTab]]['L'];
+                    
+                    selectedUnitId    =   lastUnit;
+                    selectedUnitText  =   "Unit "+selectedUnitId;
+                    selectedWeekId  =   parseInt(lastWeek);
+                    selectedWeekText=   "Lessons " + ((selectedWeekId * 5) - 4) + "-" + (selectedWeekId * 5);
+                }
+                %>
+                <div class="header_inner assignment_header">
+                <nav class="top_navbar">
+                <div class="select">    <!-- active -->
+                <div class="select_bg left margin_none" id="selectedUnit" data-id="<%= selectedUnitId %>"><%= selectedUnitText %></div>
+                <div class="dp_select_bg_option">               
+
+                <%  for(var i = 1; i <= objUnitDetails.totalUnits ; i++) { %>
+                <div class="dp_select_option" data-id="<%= i %>" data-type="unit">Unit <%= i %></div>                
+                <% } %>                
+                </div>
+                </div>	
+				<% if(activeTab === "assignment") { %>
+                <div class="select lessonSelect">    <!-- active -->
+                <div class="select_bg select_bg1 left margin_none" id="selectedLesson" data-id="<%= selectedWeekId %>"><%= selectedWeekText %></div>
+                <div class="dp_select_bg_option dp_select_bg1_option">
+                <%  
+					// var maxWeekNum      =   Math.max.apply(Math, arrLessonSet);
+					var maxWeekNum      =   UnitWeekDetails[selectedUnitId + ""] || 5;
+                    // for(keyArrLessonSet in arrLessonSet) { arrLessonSet[keyArrLessonSet]
+                    for(var i = 1; i <= maxWeekNum; i++) { 
+                %>
+                <div class="dp_select_option" data-id="<%=i%>" data-type="lessonset">Lessons <%=(i * 5) - 4%>-<%=(i * 5)%></div>                    
+                <% } %>
+                </div>
+                </div>
+				<% }%>
+                <div class="actionButton">
+                    <button class="button9 right margin_none" type="button" id="sendOrCancelSelection"><%=ASSIGNMENT_INSTRUCTOR.c_i_SEND_ALL%></button>	
+                    <button class="button9 right" type="button" id="activateSelection"><%=ASSIGNMENT_INSTRUCTOR.c_i_SELECT_BUTTON%></button>	
+                </div>
+                
+                <%
+                    var gradeImage  =   'media/grade_inactive.png';
+                    if(activeTab == "grade") {
+                        gradeImage  =   'media/grade.png';
+                    }
+                %>
+                
+                <div class="tabbing">
+                <button class="button8 <% if(activeTab == "assignment") { %>active<% } %> left" data-text="assignment">Assignments</button>
+                <button class="button8 <% if(activeTab == "assessment") { %>active<% } %> left" data-text="assessment">Assessments</button>
+                <button class="button8 <% if(activeTab == "grade") { %>active<% } %> left gradeBtn" data-text="grade"><img src="<%=gradeImage%>" /></button>
+                </div> 
+                <div class="clear"></div>
+                </nav>
+                </div>
+
+                <div class="clear"></div>                
+            </script>
+
+
+            <script type="text/template" id="bodyAssignment">
+                <%                     
+                var objAssignmentList     = {};
+                var arrTemp =   [];
+                var arrTemp =   [];      
+                var isDataExists    =   0;
+				var aGradeBOYList = [];
+                
+                objAssignmentCategoryIndex  =   (activeTab == "assignment") ? 0 : (activeTab == 'grade' ? 2 : 1);
+                objAssignmentCategoryList = objAssignmentCategory.content[objAssignmentCategoryIndex];
+                objAssignmentCategoryLen  = Object.keys(objAssignmentCategoryList).length; 
+
+				aGradeBOYList = gradeList;
+
+                for(var cnt = 0; cnt < objAssignmentCategoryLen; cnt++) {
+                    arrTemp =   [];      
+                    if(typeof objAssignmentCategoryList[cnt].alias == "string") {                           
+                        objAssignmentList[objAssignmentCategoryList[cnt].name]    =   _.where(data.AssignmentData, {ItemSubType: objAssignmentCategoryList[cnt].alias, ExtraPractice: "No"});                        
+                    }
+
+                    if(typeof objAssignmentCategoryList[cnt].alias == "object") {                           
+                        for(var i = 0; i < Object.keys(objAssignmentCategoryList[cnt].alias).length; i++) {                            
+                            arrDataFilter  =   _.where(data.AssignmentData, {ItemSubType: objAssignmentCategoryList[cnt].alias[i], ExtraPractice: "No"});                                                                  
+                            if(arrDataFilter.length > 0) {
+                                arrTemp = $.merge(arrTemp, arrDataFilter);
+                            }                                  
+                        }
+
+                        if(arrTemp.length) {
+                            objAssignmentList[objAssignmentCategoryList[cnt].name]  =   arrTemp;
+                        } else {
+                            objAssignmentList[objAssignmentCategoryList[cnt].name]  =   [];
+                        }
+                    }
+					
+					if(objAssignmentCategoryList[cnt].alias == "ExtraPractice") {
+                        objAssignmentList[objAssignmentCategoryList[cnt].name] =  _.where(data.AssignmentData, {ExtraPractice: "Yes"});
+                    }
+
+                    if(
+						objAssignmentList[objAssignmentCategoryList[cnt].name].length > 0 
+					) {
+                        if(objAssignmentCategoryList[cnt].name == ASSIGNMENT_INSTRUCTOR.c_i_INTERACTIVE_READING) {                            
+                            objAssignmentList[objAssignmentCategoryList[cnt].name]  =   _.sortBy(objAssignmentList[objAssignmentCategoryList[cnt].name], function (obj){return obj.ReadingLevel * -1});                            
+                        }
+                        isDataExists    =   1;
+                    }
+                }
+                %>
+                <div class="assignment_slider_wrapper gradient">
+					<div class="slider_wrapper_inr">
+						<div class="unit_lesson_set left">
+							<div class="unit_lesson_set_inr" id="headingText"></div>
+							<div class="clear"></div>
+						</div>
+
+                <%
+                if(isDataExists == 1) {
+                %>
+						<div class="slider_container_wrapper">
+							<button class="left_arrow sprite btn" id="prevPagingBtn"></button>
+							<button class="right_arrow sprite btn" id="nextPagingBtn"></button>
+							<div class="pagination_for_slider"></div>
+							<div class="headerSliderWrapper">
+								<div class="headerSliderContainer">
+									<div class="slider_container_wrapper_inner">                    
+<% 
+					var objIRHeader =   [];
+					
+					for(listKey in objAssignmentList) {
+						var objAssignmentItemList   =   objAssignmentList[listKey];
+						var gradeExpandTabClass = (activeTab == "grade") ? "grade_cnt" : "";
+%>
+										<div class="slider_boxes_cnt <%=gradeExpandTabClass%>">
+<% 
+						if(objAssignmentItemList.length) {
+%>
+											<div class="slider_boxes_title" data-title="<%=listKey %>"><span><%=listKey %></span></div>
+<%
+						}
+						var countItemBox = 1;
+						var sLastItemBoxClass = '';
+						for(keyItemList in objAssignmentItemList) {
+							sLastItemBoxClass = (objAssignmentItemList.length == countItemBox) ? "lastBox" : "";
+							countItemBox++;
+							if(objAssignmentItemList[keyItemList].ItemSubType == "iwt") {
+								objIRHeader.push(objAssignmentItemList[keyItemList].ReadingLevel);
+							}
+%>
+											<div class="slider_boxes_ct <%=sLastItemBoxClass%>">                
+				
+												<div class="qst_content" data-title="<%= objAssignmentItemList[keyItemList].ItemName %>"><%= objAssignmentItemList[keyItemList].ItemName %></div>	
+
+												<div class="qst_no_box">
+<%
+							var isHide	=	1;
+							if(activeTab == "grade" && isHide != 0) {
+%>
+													<div class="toggleGleView gradeExpand"></div>
+													<div class="totGle">Total GLE</div>
+<%
+							}
+%>
+                <!--
+					<div class="qs_num left">
+						<% //= objAssignmentItemList[keyItemList].UnitNumber %>.<% //= objAssignmentItemList[keyItemList].WeekNumber %>
+					</div>
+				-->
+													<div class="qs_ans right" item-level="<%=objAssignmentItemList[keyItemList].ReadingLevel%>" data-headerType="<%= objAssignmentItemList[keyItemList].ItemSubType %>"  data-item="<%= objAssignmentItemList[keyItemList].ItemID %>" data-extrapractice="<%= objAssignmentItemList[keyItemList].ExtraPractice%>"></div>
+													<div class="clear"></div>
+												</div>				
+												<div class="clear"></div>
+											</div>
+                <%
+						} 
+				%>                                    
+											<div class="clear"></div>
+										</div>
+                <%
+					} 
+				%>                                
+									</div>
+								</div>
+							</div>
+							<div class="clear"></div>
+						</div>
+				<%
+					}
+                %>
+                <div class="clear"></div>
+                </div>
+                <div class="clear"></div>
+                </div>
+
+
+
+                <div class="table_container_assignment"> 
+
+                <%		
+				var GradeData		=	[];
+				var oJsonKeys		=	null;
+				if((typeof objUnitDetails.serviceVersion != "undefined" && objUnitDetails.serviceVersion !=null) || objPlatform.isBrowser() == true) {	//	VERSION V2					
+					oJsonKeys		=	ASSIGNMENT_KEYS.V2;
+					if(objPlatform.isBrowser()) {
+						GradeData	=	data.GradeData;
+					} else {
+						for(var GradeDataKey = 0; GradeDataKey < data.GradeData.length; GradeDataKey++) {	
+							if(typeof data.GradeData[GradeDataKey] == "string") {
+								GradeData.push(JSON.parse(data.GradeData[GradeDataKey]));
+							} else {
+								GradeData.push(data.GradeData[GradeDataKey]);
+							}
+						}					
+					}
+				} else {	// PRE V2 VERSION
+					oJsonKeys		=	ASSIGNMENT_KEYS.PREV2;
+					GradeData	=	data.GradeData;
+				}
+				
+                var sClassWrapper   =   'odd';
+                var arrStudentList  =   _.sortBy(_.where(data.StudentList, {UserRole: 'S'}), function (obj) {
+                    arrName     =   (obj.UserDisplayName || "").split(" ");
+                    lastName    =   (arrName[arrName.length - 1]).toLowerCase();
+                    return lastName;
+                });
+                
+                if(arrStudentList.length) {
+                for(studentListKey in arrStudentList) {
+                objStudentItem  =   arrStudentList[studentListKey];				
+                sClassWrapper   =   (sClassWrapper == 'odd') ? '' : 'odd';  
+                arrUserDisplayName  =   (objStudentItem.UserDisplayName || "").split(" ");
+                //UserDisplayName  =   arrUserDisplayName[arrUserDisplayName.length - 1] + ", " + arrUserDisplayName[0];
+                UserDisplayName  =   arrUserDisplayName[arrUserDisplayName.length - 1];
+                arrUserDisplayName.pop(arrUserDisplayName.length - 1);
+                UserDisplayName += " " + arrUserDisplayName.join(" ");
+				
+				// ILIT-985 : Check Student's BOY Score
+				for (var i=0; i < aGradeBOYList.length; i++) {					
+					var aGradeData = _.where(GradeData, {IID: aGradeBOYList[i].ItemID, SID: objStudentItem.UserID, ICS: 'scored'});
+					if (aGradeData.length) {						
+						try {
+							var sItemAttemptSummary =   decodeURIComponent(aGradeData[0][oJsonKeys.IAS]); 
+							var oSummary         =   $.trim(sItemAttemptSummary) == '' ? null : JSON.parse(sItemAttemptSummary);							
+							var sDisplayTextStatus    =   (oSummary == null) ? aGradeData[0][oJsonKeys.FS] : oSummary[ASSIGNMENTS.c_s_ASSESSMENT_TOTAL_TEST][ASSIGNMENTS.c_s_ASSESSMENT_GRADE_EQUIVALENT];							
+							
+						} catch (exp) {							
+							sDisplayTextStatus	=   (typeof oSummary[ASSIGNMENTS.c_s_ASSESSMENT_GRADE_EQUIVALENT] == "undefined") ? aGradeData[0][oJsonKeys.FS] : oSummary[ASSIGNMENTS.c_s_ASSESSMENT_GRADE_EQUIVALENT];						
+						}						
+						sDisplayTextStatus	=   sDisplayTextStatus.toString().replace('<', '').replace('>', '');
+					
+						if (typeof AssignmentContainerView.oGradeDataPerStudent[currentUnit] == 'undefined') { 
+							AssignmentContainerView.oGradeDataPerStudent[currentUnit] = []; 
+						}
+						if (typeof AssignmentContainerView.oGradeDataPerStudent[currentUnit][objStudentItem.UserID] == 'undefined') {
+							AssignmentContainerView.oGradeDataPerStudent[currentUnit][objStudentItem.UserID] = sDisplayTextStatus;
+						}
+					}					
+				}
+				
+                %>
+                <div class="assignment_slider_wrapper2 <%=sClassWrapper%>">
+					<div class="slider_wrapper_inr">
+						<div class="unit_lesson_set left studentCell">
+							<div class="table_inner_box">
+								<div class="table_inner_box_img left"><img alt="" src="media/student_img3.png"> </div>
+								<div class="middle studentName" data-id="<%=objStudentItem.UserID%>"><%=UserDisplayName%></div>
+								<div class="clear"></div>
+							</div>
+							<div class="clear"></div>
+						</div>
+
+                <div class="bodySliderWrapper">
+                <div class="bodySliderContainer">
+
+                <div class="slider_container_wrapper">
+                <div class="slider_container_wrapper_inner">
+
+                <%
+                arrLength   =   Object.keys(objAssignmentList).length;
+                mainCnt =   1;
+                for(keyArr in objAssignmentList) {
+                sMainDividerClass = (mainCnt == arrLength) ? 'last_box' : '';
+                mainCnt++;
+				var gradeExpandTabClass = (activeTab == 'grade') ? 'grade_cnt' : '';
+                %>
+                <div class="slider_boxes_cnt <%=gradeExpandTabClass%> <%=sMainDividerClass%>">
+
+                <%
+                subArr  =   objAssignmentList[keyArr];
+                subArrLength    =   subArr.length;
+                subCnt = 1;
+                var iCountIwt   =   0;
+                for(subKey in subArr){
+                
+                sDividerClass = (subCnt == subArrLength) ? 'mar_none' : '';
+                sDividerStyle = (subCnt == subArrLength) ? 'style="border-right:3px solid #48C3D8!important"' : '';
+                subCnt++;    
+
+				var osearchFilter=	{};
+				osearchFilter[oJsonKeys['IID']]	=	subArr[subKey].ItemID;
+				osearchFilter[oJsonKeys['SID']]	=	objStudentItem.UserID;
+				
+                var objStatus    = _.where(GradeData, osearchFilter);   				
+                var textStatus   = typeof objStatus[0] == "undefined" ? '' : objStatus[0][oJsonKeys.ICS];
+                var sIAIDStatus   = typeof objStatus[0] == "undefined" ? '' : objStatus[0][oJsonKeys.IAID];
+                var displayTextStatus   =   '';
+                var sClass      = '';
+                var noShowClass = '';
+                var noPointerClass = 'nopointer';
+                var reAssignCnt = '';
+                var _finalScoreStatus   =   null;
+                var styleTagStart   =   '';
+                var styleTagEnd   =   '';                
+                
+                if(textStatus != '') {
+                    reAssignCnt = (objStatus[0][oJsonKeys.RAC] == 0 || objStatus[0][oJsonKeys.RAC] == null) ? '' : objStatus[0][oJsonKeys.RAC];
+                }
+                
+                if(textStatus == ASSIGNMENT_INSTRUCTOR.c_i_ASSIGN_STATUS) {  
+                    noPointerClass  =   '';
+                    textStatus = ASSIGNMENT_INSTRUCTOR.c_s_SENT_ASSIGNMENT_TXT;
+                    textStatus+= (reAssignCnt == '') ? '' : ' (' + reAssignCnt + ')' ;
+                    displayTextStatus   =   textStatus;
+                    sClass     = 'gray_col';
+                    noShowClass= 'noDisplay';
+                } 
+                else if(textStatus == ASSIGNMENT_INSTRUCTOR.c_i_SCORED_STATUS) {             
+                     /*noPointerClass  =   'nopointer';*/
+					noPointerClass  =   ''; 
+                    _finalScoreStatus   = objStatus[0][oJsonKeys.FS];
+                    textStatus = _finalScoreStatus;//ASSIGNMENT_INSTRUCTOR.c_s_SCORE_ASSIGNMENT_TXT;
+					_itemSubType    =   _.where(data.AssignmentData, {ItemID: objStatus[0][oJsonKeys.IID]})[0].ItemSubType;				
+					_itemSubject    =   _.where(data.AssignmentData, {ItemID: objStatus[0][oJsonKeys.IID]})[0].ItemSubject;				
+                    
+                    if(_itemSubType == "dailyassignment" || _itemSubType == "iwt") {
+                        displayTextStatus   =   _finalScoreStatus + "/" + objStatus[0][oJsonKeys.IMS];
+						//((100 * _finalScoreStatus)/objStatus[0][oJsonKeys.IMS]).toFixed(0) + "%";
+                    } else if (_itemSubType == ASSIGNMENTS.c_s_ASSESSMENT_SUBTYPE_GRADE) {
+                        try {
+                            var _ItemAttemptSummary =   decodeURIComponent(objStatus[0][oJsonKeys.IAS]); 
+                            var _objSummary         =   $.trim(_ItemAttemptSummary) == '' ? null : JSON.parse(_ItemAttemptSummary);							
+                            displayTextStatus       =   (_objSummary == null) ? objStatus[0][oJsonKeys.FS] : _objSummary[ASSIGNMENTS.c_s_ASSESSMENT_TOTAL_TEST][ASSIGNMENTS.c_s_ASSESSMENT_GRADE_EQUIVALENT];
+                        } catch (exp) {
+                            displayTextStatus       =   (typeof _objSummary[ASSIGNMENTS.c_s_ASSESSMENT_GRADE_EQUIVALENT] == "undefined") ? objStatus[0][oJsonKeys.FS] : _objSummary[ASSIGNMENTS.c_s_ASSESSMENT_GRADE_EQUIVALENT];						
+                        }						
+						displayTextStatus       =   displayTextStatus.toString().replace('<', '&lt;').replace('>', '&gt;');
+                        textStatus              =   displayTextStatus.toString().replace('&lt;', '<').replace('&gt;', '>');
+                    } 
+					
+					else if(_itemSubType == "nsa") {
+                        textStatus       = _finalScoreStatus;
+                        displayTextStatus   =   ASSIGNMENT_INSTRUCTOR.c_s_FINISHED_STATUS;
+						styleTagStart       = '<strong class="classGreen" style="color: green;">';
+                        styleTagEnd         = '</strong>';
+                        sClass           = 'gray_col';
+                        noShowClass      = 'noDisplay';
+                    } 
+					
+					else if(
+						_itemSubType == "phonictextbasedslide" || 
+						_itemSubType == "extendedphonic" || 
+						_itemSubType == "frs"  
+					) {
+						//displayTextStatus   =   _finalScoreStatus + "/100";
+						if(_itemSubject == "pktof"){
+							displayTextStatus   =   _finalScoreStatus + "/100";
+						}
+						else {
+							displayTextStatus   = _finalScoreStatus + "/" + objStatus[0][oJsonKeys.IMS];
+						}
+					}
+					else {                        
+                        displayTextStatus   =   _finalScoreStatus + "/" + objStatus[0][oJsonKeys.IMS];
+                    }
+                    
+                    sClass      = 'gray_col';
+                    noShowClass = 'noDisplay';
+                }
+                else if(textStatus == ASSIGNMENT_INSTRUCTOR.c_i_COMPLETE_STATUS) {    					
+                    _itemType       =   objStatus[0].ItemType;					
+					_itemSubType    =   _.where(data.AssignmentData, {ItemID: objStatus[0][oJsonKeys.IID]})[0].ItemSubType;					
+                    _finalScoreStatus   = objStatus[0][oJsonKeys.FS];                       
+                    
+                    if(_itemSubType == "studyplan" || _itemType == "assessment") {                        
+                        textStatus       = _finalScoreStatus;
+                        displayTextStatus   =   textStatus + "/" + objStatus[0].ItemMaxScore;;
+                        sClass           = 'gray_col';
+                        noShowClass      = 'noDisplay';
+                    } 
+					else {
+                        noPointerClass  =   '';
+                        _finalScoreStatus   =   0;
+                        textStatus          = ASSIGNMENT_INSTRUCTOR.c_s_SENT_COMPLETED_TXT;
+                        displayTextStatus   =   textStatus;
+                        styleTagStart       = '<strong class="classRed">';
+                        styleTagEnd         = '</strong>';
+                        sClass              = 'gray_col';
+                        noShowClass         = 'noDisplay';
+                    }                    
+                } 
+                else if(textStatus == ASSIGNMENT_INSTRUCTOR.c_i_PROGRESS_STATUS  || textStatus == 'in+progress') {       
+                    noPointerClass  =   '';
+                    textStatus = ASSIGNMENT_INSTRUCTOR.c_s_PROGRESS_ASSIGNMENT_TXT;
+                    displayTextStatus   =   textStatus;
+                    sClass      = 'gray_col';
+                    noShowClass = 'noDisplay';
+                }
+				else if(textStatus == ASSIGNMENT_INSTRUCTOR.c_s_DELETED_STATUS) {
+                    noPointerClass  =   'nopointer';
+                    textStatus = '';
+                    displayTextStatus   =   '';
+                    sClass      = '';
+                    noShowClass = '';
+                }
+				
+                
+                _finalScoreStatus   =   (_finalScoreStatus == null) ? 0 : _finalScoreStatus;                
+                _UserCurrentReadingLevel    =   (objStudentItem.UserCurrentReadingLevel == null) ? 0 : objStudentItem.UserCurrentReadingLevel;
+				
+				var _BoyScore = false;
+				if (AssignmentContainerView.oGradeDataPerStudent[currentUnit] && 
+					AssignmentContainerView.oGradeDataPerStudent[currentUnit][objStudentItem.UserID] && 
+					(
+						AssignmentContainerView.oGradeDataPerStudent[currentUnit][objStudentItem.UserID].match(/k/i) || 
+						AssignmentContainerView.oGradeDataPerStudent[currentUnit][objStudentItem.UserID] < GENERAL.c_s_GRADE_SCORE_LEVEL						
+					)
+				) {
+					_BoyScore = true;
+                }
+				var bAutoSend =  _BoyScore && subArr[subKey].ExtraPractice=='Yes' && subArr[subKey].ItemSubType=='frs' ? true : false;
+				%>
+                <div class="slider_boxes_ct <%=sDividerClass%>" <%=sDividerStyle%>>
+                <div class="table_inner_box_out <%=noPointerClass%>">
+	                <div class="statusText <%=sClass%>" data-text="<%=textStatus%>"><%=styleTagStart%><%=displayTextStatus%><%=styleTagEnd%></div>
+	                <div
+						class="qs_ans <%= noShowClass %> <%= bAutoSend ? 'disabled' : '' %>"
+						header-level="<%= objIRHeader[iCountIwt] %>"
+						student-level="<%= _UserCurrentReadingLevel %>"
+						data-itemType="<%= subArr[subKey].ItemSubType %>"
+						data-student="<%= objStudentItem.UserID %>"
+						data-item="<%= subArr[subKey].ItemID %>"
+						data-itemattemptid="<%= sIAIDStatus %>"
+						data-reassign="<%= reAssignCnt %>"
+						data-finalscore="<%= _finalScoreStatus %>"
+						data-extrapractice="<%= subArr[subKey].ExtraPractice %>"
+						data-auto-send="<%= bAutoSend %>"
+					>
+					</div>
+                </div>
+                <div class="clear"></div>
+                </div>
+                <%
+                if(subArr[subKey].ItemSubType == "iwt") {
+                    iCountIwt++
+                }
+                
+                }
+                %>                                        
+                <div class="clear"></div>
+                </div>
+
+                <%
+                }
+                %>
+                </div>
+                <div class="clear"></div>
+                </div>
+                </div>
+                </div>
+                <div class="clear"></div>
+                </div>
+                <div class="clear"></div>
+                </div>
+
+                <%
+                }
+                } else {
+                %>
+                <div class="assignment_slider_wrapper2 <%=sClassWrapper%>">
+                <div class="slider_wrapper_inr">                
+                <div class="assignment_toc_blank_msg"> <div class="polls_icons  sprite"></div> No Student Available. </div>
+                </div>
+                </div>
+                <%
+                }
+                %>
+
+                </div>
+            </script>
+
+            <div id="contentArea"></div>
+            <div id="scorePopupArea"></div>
+            
+        </div>
+        
+        <script type="text/template" id="viewAssignment">
+            <iframe src="" id="viewAssignmentFrame" frameborder="0" width="100%" height="100%" allowfullscreen="true" webkitallowfullscreen="true" mozallowfullscreen="true">
+                <p>Your browser does not support iframes.</p>
+            </iframe>
+        </script>    
+        <script type="text/template" id="infoBubble">
+<%
+			if (typeof finalScore == "undefined") {
+				finalScore = '';
+			}
+			
+			var readingLevelContent = "";
+			if(readingLevel != 0 ){
+				readingLevelContent = "[" + readingLevel + "]";
+			}
+%>		
+            <div class="lesson_toolls active" id="itemBubble" data-item="<%=itemId%>" data-student="<%=studentId%>">
+				<div class="lesson_tooltip" style="display: block;">
+					<div class="page_arrow sprite"></div>
+					<div class="Tooltip_title_wrap"><%=title%> <%=readingLevelContent%></div>
+					<div class="Tooltip_menu_wrap">
+						<div class="Tooltip_menu_wrap_inn">                            
+							<ul>
+<%        
+							buttonObjLen = Object.keys(buttonObj).length;
+							for (var cnt = 0; cnt < buttonObjLen; cnt++) {
+%>
+							<li class="<%=buttonObj[cnt].class%>" data-item="<%=itemId%>" data-itemattemptid="<%= itemAttemptId %>" data-student="<%=studentId%>" data-finalscore="<%= finalScore %>" data-status="<%= status %>">
+								<%=buttonObj[cnt].text%>
+							</li>
+<%
+								if (buttonObjLen > cnt + 1) {
+%>
+							<li class="devider_m"></li>                          
+<%
+								}
+							}
+%>
+							</ul>
+						</div>
+					</div>
+				<!-- <div class="Tooltip_wrap">
+									   <div class="Tooltip_log">LOG</div>
+				<p>In Progress: 01-21-2014 10:05 AM</p>
+				<p>Sent: 01-21-2014 10:04 AM</p>
+				</div>-->
+				</div>
+            </div>
+        </script>
+
+        <script type="text/template" id="categoryDetailsBubble">
+            <div class="lesson_toolls active" id="catInfoBubble">
+            <div class="lesson_tooltip" style="display: block;">
+            <div class="page_arrow sprite"></div>
+            <div class="Tooltip_title_wrap"><%=data.popup_name%></div>
+            <div class="Tooltip_wrap"><%=data.description%></div>
+            </div>
+            </div>
+        </script>
+
+
+<script type="text/template" id="scoreTemplate">
+<%
+	/*==== IPP-5024 ====*/
+	var sAssignmentType = objModel.assignmentType,
+		aRubricHeaderLabels = [];
+	/*== End IPP-5024 ==*/
+	try{
+		var objStudentDetails = _.where(objStudentListJsonData.Content, {UserID : objModel.studentId}),
+			sStudentName = objStudentDetails[0].UserDisplayName;
+	}
+	catch(exp){
+		var sStudentName = $(".studentName[data-id='"+objModel.studentId+"']").text();
+	}
+	var studentRubricSelection = null,
+		objQuestions = (objModel.rubric == null) ? null : objModel.rubric.questions;
+
+	if(objQuestions != null) {
+		var objQuestionsLen =   Object.keys(objModel.rubric.questions).length,
+			choiceLength = 0;
+
+		for(var i = 1; i <= Object.keys(objQuestions).length; i++) {
+			if(Object.keys(objQuestions[i].choices).length >= choiceLength) {
+				choiceLength = Object.keys(objQuestions[i].choices).length;
+				if (sAssignmentType === "dailyassignment") {
+					if (aRubricHeaderLabels.length === 0) {
+						for (var j in objQuestions[i].choices) {
+							aRubricHeaderLabels.splice(0, 0, objQuestions[i].choices[j].text); // IPP-5024
+						}
+					}
+				}
+			}
+		}
+		studentRubricSelection  =   objModel.rubricSelection;
+	}
+%>
+	<div class="score-modal" id="scoreContainer" data-item="<%= objModel.itemId %>" data-itemattemptid="<%= objModel.itemAttemptId %>" data-student="<%= objModel.studentId %>" data-itemtype="<%= objModel.assignmentType %>">
+		<div class="scoreModalContainer">
+			<div class="wrapper">
+				<div class="header">
+					<div class="header_inner assignment_header">
+						<nav class="top_navbar">
+							<button class="button9 left margin_none" id="btnCloseModal" type="button">Close</button>
+							<div class="middle center" style="padding: 3px 0 0 0; line-height:24px;">
+								<%=sStudentName%> - <%=objModel.displayText%>
+							</div>
+							<div class="clear"></div>
+						</nav>
+					</div>
+					<div class="clear"></div>
+				</div>
+				<div class="assignment_slider_wrapper gradient grading_page_container" id="scoreContentWrapper">
+					<div class="scoreColumnContainer">
+						<div class="grading_page_container_rght right">
+							<div class="grading_page_btn_box">
+								<button class="btn button7" type="button">
+									<%= ASSIGNMENT_INSTRUCTOR_SCORE.buttons.c_s_LABEL_REASSIGN_TO_STUDENT %>
+								</button>
+							<%
+								if(
+									objModel.assignmentType == "essay" || 
+									objModel.assignmentType == "paragraph" || 
+									objModel.assignmentType == "dailyassignment" || 
+									objModel.assignmentType == "iwt" || 
+									objModel.assignmentType == "phonictextbasedslide" || 
+									objModel.assignmentType == "extendedphonic" || 
+									objModel.assignmentType == "frs"
+								){
+									if(
+										objModel.assignmentType != "phonictextbasedslide" && 
+										objModel.assignmentType != "extendedphonic" && 
+										objModel.assignmentType != "frs"
+									){
+										var scoreLevel  =   (
+																objModel.assignmentType == "dailyassignment" || 
+																objModel.assignmentType == "iwt"
+															) 
+															? ASSIGNMENT_INSTRUCTOR_SCORE.buttons.c_s_LABEL_SCORE 
+															: ASSIGNMENT_INSTRUCTOR_SCORE.buttons.c_s_LABEL_RESCORE;
+							%>
+								<button class="btn button7" type="button"><%= scoreLevel %></button>
+							<%
+									}
+									if(
+										objModel.assignmentType != "dailyassignment" && 
+										objModel.assignmentType != "iwt"
+									){
+							%>
+								<button class="btn button7" type="button" id="acceptScore">
+									<%= ASSIGNMENT_INSTRUCTOR_SCORE.buttons.c_s_LABEL_ACCEPT_SCORE %>
+								</button>
+							<% 
+									}
+								}
+							%>
+								<div class="clear"></div>
+                            </div>
+
+                            <div class="grading_page_pop_box">
+                                <div class="right_grading_title">
+									<span class="light_box_close sprite"></span>
+									<div class="middle"><%= ASSIGNMENT_INSTRUCTOR.c_i_CANCEL_BUTTON %></div>
+                                </div>
+                                <div class="right_grading_title second_title">                                    
+									<div class="center"><%= ASSIGNMENT_INSTRUCTOR_SCORE.headings.c_s_LABEL_REASSIGN_TO_STUDENT %></div>
+                                </div>
+                                <div class="grading_page_content">
+                                    <div class="grading_text_area">
+                                        <p><%= ASSIGNMENT_INSTRUCTOR_SCORE.labels.c_s_LABEL_ADD_COMMENTS %></p>
+                                        <div class="textarea_drading textAreaL">
+                                            <textarea class="" id="comments"></textarea>
+                                        </div>
+                                        <div class="clear"></div>
+                                    </div>
+                                    <div class="btnReassignWrap">
+                                        <button class="btn button7 right margin_right_none" id="btnReassign" type="button">
+                                            <%= ASSIGNMENT_INSTRUCTOR_SCORE.buttons.c_s_LABEL_REASSIGN %>
+                                        </button>
+                                        <div class="clear"></div>
+                                    </div>                                                                
+                                    <div class="clear"></div>
+                                </div>
+                                <div class="clear"></div>
+                            </div>
+                            
+							<div class="grading_page_pop_box grading_score_pop_box">
+								<div class="right_grading_title cancel_area">
+									<%=ASSIGNMENT_INSTRUCTOR.c_i_CANCEL_BUTTON%>
+									<span class="light_box_close sprite" id="light_box_close"></span>
+									<div class="clear"></div>
+								</div>
+                                <!--<div class="right_grading_title second_title">                                    
+                                    <div class="middle center">Rubric: 10 out of 24</div>
+                                </div>-->
+								<div class="verify_grid_cont updateRubric-content">
+									<div class="verify_content">
+										<div class="updateRubric">
+											Rubric <span id="calculateRubric">0</span> out of <span id="maxRubric"></span>
+										</div>
+										<div class="clear"></div>
+									</div>
+								</div>                               
+								<div class="verify_grid_cont"<% if (["essay", "paragraph"].indexOf(sAssignmentType) !== -1) { %> style="text-align:center;"<% } %>>
+									<% if (["essay", "paragraph"].indexOf(sAssignmentType) !== -1) { %>
+									<button class="btn button7" id="btnShowRubricCriteria" type="button">
+										<%= ASSIGNMENT_INSTRUCTOR_SCORE.buttons.c_s_LABEL_SCORING_RUBRIC_CRITERIA %>
+									</button>
+<%
+									}
+									else if (sAssignmentType === "dailyassignment") {									
+										for (var j = 0; j < aRubricHeaderLabels.length; j++) {
+											sCls = ((j + 1 === aRubricHeaderLabels.length)? "right": "left");
+											if (j === 0) {
+%>
+									<div id="da-rubric-label">
+<%
+											}
+%>
+										<div class="<%= sCls %> da-rubric-label-box" style="width:<%= Math.floor(100 / aRubricHeaderLabels.length) %>%; text-align:center;">
+											<%= aRubricHeaderLabels[j] %>
+										</div>
+<%
+											if ((j + 1) === aRubricHeaderLabels.length) {
+%>
+										<div class="clear"></div>
+									</div>
+<%
+											}
+										}
+									}
+									else {
+%>
+									<div class="left"><%= ASSIGNMENT_INSTRUCTOR_SCORE.labels.c_s_LABEL_INEFFECTIVE %></div>
+									<div class="right"><%= ASSIGNMENT_INSTRUCTOR_SCORE.labels.c_s_LABEL_VERY_EFFECTIVE %></div>
+<%									
+									}
+%>
+									<div class="clear"></div>
+									<% if (["essay", "paragraph"].indexOf(sAssignmentType) === -1) { %>
+									<div class="verify_content" id="rubric-header-cont">
+										<table width="100%" border="0" cellspacing="0" cellpadding="0">
+											<tr>
+												<% if (sAssignmentType !== "dailyassignment") { %>
+												<td align="center"> &nbsp; </td>
+												<% } %>
+										<% for(var i = 1; i <= choiceLength; i++) { %>
+												<td align="center" valign="middle"><%=i%></td>
+										<% } %>
+											</tr>
+										</table>
+										<div class="clear"></div>
+									</div>
+									<% } %>
+								</div>
+                                <div class="grading_page_content" id="scoreBoxScroll">
+								<%
+								if(objQuestions != null) {
+								%>
+                                    <ul>
+								<%                            
+									var objChoices 	    = null,
+										objChoicesLen   = 0,
+										sClassLi        = "",
+										sClassCircle    = "",
+										objSelection    = null, 
+										objRubricSelect =   null;
+
+									for (var i = 1; i <= objQuestionsLen; i++) {
+										if(i == objQuestionsLen) {
+											sClassLi = "last";
+										}
+										objChoices    = objQuestions[i].choices;
+										objChoicesLen = Object.keys(objQuestions[i].choices).length;
+                                                
+										if(studentRubricSelection != null) {
+											objSelection    = _.where(studentRubricSelection, {name: objQuestions[i].trait});
+											objRubricSelect = (typeof objSelection[0] == "undefined") ? null : objSelection[0];
+										}
+								%>
+                                        <li class="param <%=sClassLi%>" data-trait="<%=objQuestions[i].trait%>">
+                                            <p><%=objQuestions[i].text%></p>
+                                            <div class="circle_area_container">
+<%
+										if (["essay", "paragraph"].indexOf(sAssignmentType) !== -1) {
+%>
+												<div class="circle_page sprite scoring-guide-info left" data-scoring-guide-id="<%= i %>"></div>
+<%
+										}
+										for(var j = 1; j <= objChoicesLen; j++) {
+											sActiveClassCircle = "";
+											if(j == objChoicesLen) {
+												sClassCircle = "margin_right_none";
+											}
+											if(
+												objRubricSelect != null && 
+												j == objRubricSelect.score
+											){
+												sActiveClassCircle = "active";
+											}
+											if (sAssignmentType === "dailyassignment") {
+								%>
+												<div class="left da-score-column-<%= j %>">
+											<% } %>
+													<div class="circle_page sprite <%= sClassCircle %> <%= sActiveClassCircle %>" data-value="<%= j %>">
+														<%=j%>
+													</div>
+								<%
+											if (sAssignmentType === "dailyassignment") {
+%>
+												</div>
+<%											
+											}
+										}
+								%>                                                
+												<div class="clear"></div>
+											</div>
+										</li>
+								<% 
+									}
+								%>
+                                    </ul>
+								<%
+								}
+								%>
+                                    <div class="grading_text_area" style="display:none;">
+                                        <p>Add Comments</p>
+                                        <div class="textarea_drading">
+                                            <textarea id="commentScore"></textarea>
+                                        </div>
+                                        <!--<button class="btn button7 right margin_right_none" type="button">Submit</button>
+                                        <div class="clear"></div>-->
+                                    </div>
+                                    
+                                    <div class="btnScoreWrap">
+                                        <button class="btn button7 right" id="btnScore" type="button">
+                                            <%= ASSIGNMENT_INSTRUCTOR_SCORE.buttons.c_s_LABEL_SUBMIT %>
+                                        </button>
+                                        <div class="clear"></div>
+                                    </div>
+                                    <div class="clear"></div>
+                                </div>
+                                <div class="clear"></div>
+                            </div>
+                            <div class="grading_page_pop_box"></div>
+                            <div class="grading_page_pop_box"></div>
+                            <div class="clear"></div>
+                        </div>                   
+						<div class="middle">
+							<div class="grading_page_container_lft left">
+								
+								<div class="grading_page_content" id="scoreContentInterWrapper">
+									<!-- score inner content wrapper -->
+									<%
+									if(
+										objModel.assignmentType == "essay" || 
+										objModel.assignmentType == "paragraph" || 
+										objModel.assignmentType == "dailyassignment" || 
+										objModel.assignmentType == "iwt"
+									){
+									%>
+									
+									<%= _.template($("#scoreInnerContentTemplate").html())({"objModel": objModel}) %>
+									<%
+									}
+									else if(
+										objModel.assignmentType == "phonictextbasedslide" || 
+										objModel.assignmentType == "extendedphonic" || 
+										objModel.assignmentType == "frs"
+									){
+									%>
+									<%= _.template($("#scoreOFInnerContentTemplate").html())({"objModel": objModel}) %>	
+									<%
+									} else {
+									
+									}
+									%>
+								</div>
+								<div class="clear"></div> 
+							</div>
+							<div class="clear"></div>
+							<div>
+								<div class="clear"></div>
+							</div>
+							<div class="clear"></div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+		<!-- <div class="md-overlay"></div> -->
+</script>
+
+<script type="text/template" id="scoreInnerContentTemplate">
+	<%
+	var studentRubricSelection = null,
+			objQuestions = (objModel.rubric == null) ? null : objModel.rubric.questions;
+
+	if(objQuestions != null) {
+		var objQuestionsLen =   Object.keys(objModel.rubric.questions).length,
+			choiceLength = 0;
+
+		for(var i = 1; i <= Object.keys(objQuestions).length; i++) {
+			if(Object.keys(objQuestions[i].choices).length >= choiceLength) {
+				choiceLength = Object.keys(objQuestions[i].choices).length;
+			}
+		}
+		studentRubricSelection  =   objModel.rubricSelection;
+	}	
+	%>
+	<h2><%=objModel.displayText%></h2>
+	<h4><%= ASSIGNMENT_INSTRUCTOR_SCORE.headings.c_s_LABEL_PROMPT %></h4>
+	<p><%=objModel.prompt%></p>
+	<% 
+	if(objQuestions != null && objModel.showScore == true) {
+	%>
+	<div class="Scores_content">
+		<h4>Scores</h4>
+		<ul>
+	<%
+		var $length =   Object.keys(ASSIGNMENT_INSTRUCTOR_SCORE.scoreLevel).length;
+		for(var cnt = 0; cnt < $length - 1; cnt++) {
+			objSelectionRight = _.where(studentRubricSelection, {
+									name: ASSIGNMENT_INSTRUCTOR_SCORE.scoreLevel[cnt].c_s_RUBRIC_LABEL
+									}
+								);
+			objRubricSelectRight = (typeof objSelectionRight[0] == "undefined") ? null : objSelectionRight[0];
+			if(objRubricSelectRight != null) {
+				if(cnt < $length - 1) {
+					prevScore = objRubricSelectRight.score;
+				}
+	%>
+			<li>
+				<%= ASSIGNMENT_INSTRUCTOR_SCORE.scoreLevel[cnt].c_s_RUBRIC_TEXT %> 
+				<%= prevScore %> / <%= Object.keys(objQuestions[cnt + 1].choices).length %>
+			</li>
+	<% 
+			}
+		}
+		if(objModel.overAllScore != null) {
+	%>
+			<li>
+				<%= ASSIGNMENT_INSTRUCTOR_SCORE.scoreLevel[6].c_s_RUBRIC_TEXT %> 
+				<%= objModel.overAllScore %> / <%= choiceLength %>
+			</li>
+	<% 
+		}
+	%>
+		</ul>
+		<div class="clear"></div>
+	</div>
+	<% 
+	}
+	%>
+	<div class="middle_devider"></div>
+	<%
+	if(objModel.studentResponse != "") {
+	%>
+		<h2><%= ASSIGNMENT_INSTRUCTOR_SCORE.headings.c_s_LABEL_STUDENT_RESPONSE %></h2>                  
+		<div class="studentResponse">
+			<%= objModel.studentResponse.replace("\n", "<br />").replace("&#10;", "<br />") %>
+		</div>
+	<%  
+	} 
+	%>
+</script>
+
+<!-- Strat: Oral Fluency Scoring Template -->
+<script type="text/template" id="scoreOFInnerContentTemplate">
+	<div class="of_title-main"><%= objModel.displayText %></div>
+	<%
+	if(
+		(objModel.assignmentType == "phonictextbasedslide" || 
+		objModel.assignmentType == "extendedphonic")
+	){
+	%>
+	<div class="clear"></div>
+	<div style="padding: 15px 0 5px;"><p>You can listen to the student's recording by clicking on the icon below.</p></div>
+	<div class="clear"></div>
+	<div class="singlePKTAudioPanel">
+		<div class="audio-body">
+			<div class="pktResponeConteainer">
+				<div class="pktScoreResult">
+					<div class="pkt-score">Scores</div>
+					<div class="clear"></div>
+					<div id="pkt_<%= objModel.studentResponse[0].question_id %>_<%= objModel.studentResponse[0].testInstanceId %>"  data-prompt-id="<%= objModel.studentResponse[0].promptid %>">
+						<div class="oralFluencyLoader">
+							<img src="media/loader.gif" style="margin-bottom: 15px; ">
+						</div>
+					</div>
+					<div class="clear"></div>
+					<div class="clear"></div>
+				</div>
+			</div>
+			<div class="clear"></div>
+			<div class="of_title-main">Student's Recording</div>
+			<div class="clear"></div>
+			<div class="pktAudioContainer">
+				<img src="media/speaker-on.png" alt="" border="0" data-audiopath="<%= objModel.studentResponse[0].audiopath %>" class="audioButton" />
+				<div class="clear"></div>
+			</div>
+			<div class="clear"></div>
+		</div>
+		<div class="clear"></div>
+	</div>
+	<%
+	}
+	else {
+	%>
+	<div class="audio-main">
+	<%
+	if (Object.keys(objModel.studentResponse).length) {
+		$.each(objModel.studentResponse, function (Idx, Val) {
+	%>
+		<div class="audio-panel">
+			<div class="audio-header">Part <%= Idx %></div>
+	<%
+			$.each(Val, function(iIdx, vVal) {			
+	%>
+			<div class="audio-body">
+				<div class="pktheader-accordian"><%= vVal.displayText %></div>
+				<div class="pktResponeConteainer">
+					<div class="pktScoreResult">
+						<div class="pkt-score">Scores</div>
+						<div class="clear"></div>
+						<div id="pkt_<%= vVal.question_id %>_<%= vVal.testInstanceId %>" data-prompt-id="<%= vVal.promptid %>">
+							<div class="oralFluencyLoader">
+								<img src="media/loader.gif" style="margin-bottom: 15px; ">
+							</div>
+						</div>
+						<div class="clear"></div>
+					</div>
+				</div>
+				<div class="clear"></div>
+				<div class="pktAudioContainer">
+					<img src="media/speaker-on.png" alt="" border="0" data-audiopath="<%= vVal.audiopath %>" class="audioButton" />
+					<div class="clear"></div>
+				</div>
+				<div class="clear"></div>
+			</div>
+	<%
+			});
+	%>
+			<div class="clear"></div>
+		</div>
+		
+	<%
+		});
+	}
+	%>
+		<div class="clear"></div>
+	</div>
+	<%
+	}
+	%>
+	<div class="clear"></div>
+	<div style="padding: 15px 0 5px;"><p><strong>NOTE:</strong> You can listen to the student’s recording and decide whether or not to reassign. If you reassign, students will re-do the fluency portion of the assignment only. The fluency score for accuracy (percentage of words correct) makes up one half of the student's overall score on the activity, with the other half being composed of student responses on the comprehension and word study items.</p></div>
+	<div class="clear"></div>
+	<div style="display:none;">
+		<audio id="audioPlayer" controls="false" autoplay="false" preload="true"></audio>
+	</div>
+</script>
+<!-- End: Oral Fluency Scoring Template -->
+
+
+<!-- Start: Oral Fluency PKT Score Content -->
+<script type="text/template" id="oralFluencyPKTScoreTemplate">	
+	<%
+	if (
+		pktVerified
+	) {
+		var nAccuracy = objScoreData.AC,
+			nWordsCorrect = objScoreData.WC,
+			nWCPM = objScoreData.WCPM,
+			nEXP = objScoreData.EX,
+			attrDisable = '';
+		if (assignmentType == "frs") {
+			attrDisable = 'disabled="disabled"';
+		}
+	} else {
+		var nAccuracy = objScoreData[0].scoreValue,
+			nWordsCorrect = objScoreData[2].scoreValue,
+			nWCPM = objScoreData[1].scoreValue,
+			nEXP = objScoreData[3].scoreValue,
+			attrDisable = '';
+	}
+	%>
+	<div class="ply-list">
+		<ul>
+			<li>
+				<b>Accuracy: </b> <%= nAccuracy %> <br />
+				<label>(percentage of words correct)</label>
+			</li>
+		</ul>
+		<div class="clear"></div>
+	</div>
+	<div class="ply-list">
+		<ul>
+			<li>
+				<b>Expressiveness: </b> <%= nEXP %> <br />
+				<label>(1= lowest; 4 = highest)</label>
+			</li>
+		</ul>
+		<div class="clear"></div>
+	</div>
+	<div class="ply-list">
+		<ul>
+			<li><b>WCPM: </b> <%= nWCPM %></li>
+		</ul>
+		<div class="clear"></div>
+	</div>
+	<div class="clear"></div>
+	<%
+	if(assignmentType == "frs"){
+	%>
+	<div class="radio-list">
+		<div>
+			<label>
+				<input 
+					type="radio" 
+					name="radio_<%= questionId %>" 
+					data-question="<%= questionId %>" 
+					data-assignmenttype="<%= assignmentType %>" 
+					data-accuracy="<%= nAccuracy %>" 
+					data-wordscorrect="<%= nWordsCorrect %>" 
+					data-wpcm="<%= nWCPM %>" 
+					data-expressiveness="<%= nEXP %>" 
+					value="APPROVE" 
+					<% if(pktVerified) { %>
+					checked	
+					<% }%> 
+					<%= attrDisable %> 
+				/>
+				Approve
+			</label>
+			
+			<label>
+				<input 
+					type="radio" 
+					name="radio_<%= questionId %>" 
+					data-question="<%= questionId %>" 
+					data-assignmenttype="<%= assignmentType %>" 
+					data-accuracy="<%= nAccuracy %>" 
+					data-wordscorrect="<%= nWordsCorrect %>" 
+					data-wpcm="<%= nWCPM %>" 
+					data-expressiveness="<%= nEXP %>" 
+					value="REASSIGN" 
+					<% if(!pktVerified) { %>
+					checked 
+					<% }%>
+					<%= attrDisable %> 
+				/>
+				Reassign
+			</label>
+			<br />
+		</div>
+		<div class="clear"></div>
+	</div>
+	<div class="clear"></div>
+	<%
+	}
+	%>
+</script>
+<!-- End: Oral Fluency PKT Score Content -->
+
+<script type="text/template" id="confirmationTemplate">
+	<div id="dialog" title=""></div>
+</script>
+
+<script type="text/template" id="detailGradeInfoHeader">		
+		<div style="position: absolute; border-bottom:0px; opacity:0; width: 756px; height: auto; background:#fff; z-index: 1;" id="detailGradeInfoContainerHeader">	
+			<table style="width: 100%">
+				<tr style="height: 50px; ">
+					<td style="width:84px; border:1px solid; font-size:12px; text-align:center; vertical-align:middle; padding:0; margin:0; ">
+						<%=ASSIGNMENT_INSTRUCTOR.GLE.SENTENCE_COMP_STANINE%><%=CHARACTERS.c_s_BLANK%>
+					</td>
+					<td style="width:84px; border:1px solid; font-size:12px; text-align:center; vertical-align:middle; padding:0; margin:0; ">
+						<%=ASSIGNMENT_INSTRUCTOR.GLE.PASSAGE_COMP_STANINE%><%=CHARACTERS.c_s_BLANK%>
+					</td>
+					<td style="width:82px; border:1px solid; font-size:12px; text-align:center; vertical-align:middle; padding:0; margin:0; ">
+						<%=ASSIGNMENT_INSTRUCTOR.GLE.COMP_COMP_STANINE%><%=CHARACTERS.c_s_BLANK%>
+					</td>
+					<td style="width:84px; border:1px solid; font-size:12px; text-align:center; vertical-align:middle; padding:0; margin:0; ">
+						<%=ASSIGNMENT_INSTRUCTOR.GLE.COMP_COMP_GLE%><%=CHARACTERS.c_s_BLANK%>
+					</td>
+					<td style="width:84px; border:1px solid; font-size:13px; text-align:center; vertical-align:middle; padding:0; margin:0; ">
+						<%=ASSIGNMENT_INSTRUCTOR.GLE.VOCAB_STANINE%><%=CHARACTERS.c_s_BLANK%>
+					</td>
+					<td style="width:84px; border:1px solid; font-size:12px; text-align:center; vertical-align:middle; padding:0; margin:0; ">
+						<%=ASSIGNMENT_INSTRUCTOR.GLE.VOCAB_GLE%><%=CHARACTERS.c_s_BLANK%>
+					</td>
+					<td style="width:84px; border:1px solid; font-size:13px; text-align:center; vertical-align:middle; padding:0; margin:0; ">
+						<%=ASSIGNMENT_INSTRUCTOR.GLE.TOT_STANINE%><%=CHARACTERS.c_s_BLANK%>
+					</td>
+					<td style="width:84px; border:1px solid; font-size:12px; text-align:center; vertical-align:middle; padding:0; margin:0; ">
+						<%=ASSIGNMENT_INSTRUCTOR.GLE.TOT_GLE%><%=CHARACTERS.c_s_BLANK%>
+					</td>
+					<td style="width:84px; border:1px solid; font-size:12px; text-align:center; vertical-align:middle; padding:0; margin:0; ">
+						<%=ASSIGNMENT_INSTRUCTOR.GLE.LIST_COMP%><%=CHARACTERS.c_s_BLANK%>
+					</td>
+				</tr>
+			</table>
+		</div>
+	</script>
+	
+	<script type="text/template" id="detailGradeInfo">			
+            <div class="ga-score-table-cont" id="detailGradeInfoContainer">												
+                <table style="width: 100%">	
+<%
+	var tot_assessment_sentence_comprehension_grade_assessment_stanine_score = 0.0,
+		tot_assessment_passage_comprehension_grade_assessment_stanine_score = 0.0,
+		tot_assessment_comprehension_composite_grade_assessment_stanine_score = 0.0,
+		tot_assessment_comprehension_composite_grade_assessment_grade_equivalent_score = 0.0,
+		tot_assessment_vocabulary_grade_assessment_stanine_score = 0.0,
+		tot_assessment_vocabulary_grade_assessment_grade_equivalent_score = 0.0,
+		tot_assessment_total_test_grade_assessment_stanine_score = 0.0,
+		tot_assessment_total_test_grade_assessment_grade_equivalent_score = 0.0,
+		tot_assessment_listening_comprehension_grade_assessment_stanine_score = 0.0,
+		
+		num_assessment_sentence_comprehension_grade_assessment_stanine_score = 0,
+		num_assessment_passage_comprehension_grade_assessment_stanine_score = 0,
+		num_assessment_comprehension_composite_grade_assessment_stanine_score = 0,
+		num_assessment_comprehension_composite_grade_assessment_grade_equivalent_score = 0,
+		num_assessment_vocabulary_grade_assessment_stanine_score = 0,
+		num_assessment_vocabulary_grade_assessment_grade_equivalent_score = 0,
+		num_assessment_total_test_grade_assessment_stanine_score = 0,
+		num_assessment_total_test_grade_assessment_grade_equivalent_score = 0,
+		num_assessment_listening_comprehension_grade_assessment_stanine_score = 0,
+		
+		entry_assessment_sentence_comprehension_grade_assessment_stanine_score = 0,
+		entry_assessment_passage_comprehension_grade_assessment_stanine_score = 0,
+		entry_assessment_comprehension_composite_grade_assessment_stanine_score = 0,
+		entry_assessment_comprehension_composite_grade_assessment_grade_equivalent_score = 0,
+		entry_assessment_vocabulary_grade_assessment_stanine_score = 0,
+		entry_assessment_vocabulary_grade_assessment_grade_equivalent_score = 0,
+		entry_assessment_total_test_grade_assessment_stanine_score = 0,
+		entry_assessment_total_test_grade_assessment_grade_equivalent_score = 0,
+		entry_assessment_listening_comprehension_grade_assessment_stanine_score = 0,
+		
+		value_assessment_sentence_comprehension_grade_assessment_stanine_score = 0,
+		value_assessment_passage_comprehension_grade_assessment_stanine_score = 0,
+		value_assessment_comprehension_composite_grade_assessment_stanine_score = 0,
+		value_assessment_comprehension_composite_grade_assessment_grade_equivalent_score = 0,
+		value_assessment_vocabulary_grade_assessment_stanine_score = 0,
+		value_assessment_vocabulary_grade_assessment_grade_equivalent_score = 0,
+		value_assessment_total_test_grade_assessment_stanine_score = 0,
+		value_assessment_total_test_grade_assessment_grade_equivalent_score = 0,
+		value_assessment_listening_comprehension_grade_assessment_stanine_score = 0,
+		
+		last_assessment_sentence_comprehension_grade_assessment_stanine_score = CHARACTERS.c_s_BLANK,
+		last_assessment_passage_comprehension_grade_assessment_stanine_score = CHARACTERS.c_s_BLANK,
+		last_assessment_comprehension_composite_grade_assessment_stanine_score = CHARACTERS.c_s_BLANK,
+		last_assessment_comprehension_composite_grade_assessment_grade_equivalent_score = CHARACTERS.c_s_BLANK,
+		last_assessment_vocabulary_grade_assessment_stanine_score = CHARACTERS.c_s_BLANK,
+		last_assessment_vocabulary_grade_assessment_grade_equivalent_score = CHARACTERS.c_s_BLANK,
+		last_assessment_total_test_grade_assessment_stanine_score = CHARACTERS.c_s_BLANK,
+		last_assessment_total_test_grade_assessment_grade_equivalent_score = CHARACTERS.c_s_BLANK,
+		last_assessment_listening_comprehension_grade_assessment_stanine_score = CHARACTERS.c_s_BLANK,
+		
+		is_same_assessment_sentence_comprehension_grade_assessment_stanine_score = true,
+		is_same_assessment_passage_comprehension_grade_assessment_stanine_score = true,
+		is_same_assessment_comprehension_composite_grade_assessment_stanine_score = true,
+		is_same_assessment_comprehension_composite_grade_assessment_grade_equivalent_score = true,
+		is_same_assessment_vocabulary_grade_assessment_stanine_score = true,
+		is_same_assessment_vocabulary_grade_assessment_grade_equivalent_score = true,
+		is_same_assessment_total_test_grade_assessment_stanine_score = true,
+		is_same_assessment_total_test_grade_assessment_grade_equivalent_score = true,
+		is_same_assessment_listening_comprehension_grade_assessment_stanine_score = true;
+							
+		for(var key = 0; key < data.length; key++) {
+		
+			var obj = data[key];							
+			
+			assessment_sentence_comprehension_grade_assessment_stanine_score = CHARACTERS.c_s_BLANK;
+			assessment_passage_comprehension_grade_assessment_stanine_score = CHARACTERS.c_s_BLANK;
+			assessment_comprehension_composite_grade_assessment_stanine_score = CHARACTERS.c_s_BLANK;
+			assessment_comprehension_composite_grade_assessment_grade_equivalent_score = CHARACTERS.c_s_BLANK;
+			assessment_vocabulary_grade_assessment_stanine_score = CHARACTERS.c_s_BLANK;
+			assessment_vocabulary_grade_assessment_grade_equivalent_score = CHARACTERS.c_s_BLANK;
+			assessment_total_test_grade_assessment_stanine_score = CHARACTERS.c_s_BLANK;
+			assessment_total_test_grade_assessment_grade_equivalent_score = CHARACTERS.c_s_BLANK;
+			assessment_listening_comprehension_grade_assessment_stanine_score = CHARACTERS.c_s_BLANK;
+			
+			if(typeof obj != "object" || obj == null || Object.keys(obj).length == 0) {										
+				// Invalid data
+			} else {
+				try {
+					// Total Test: GLE
+					entry_assessment_total_test_grade_assessment_grade_equivalent_score = obj[ASSIGNMENTS.c_s_ASSESSMENT_TOTAL_TEST][ASSIGNMENTS.c_s_ASSESSMENT_GRADE_EQUIVALENT];
+					if (!isNaN(value_assessment_total_test_grade_assessment_grade_equivalent_score = getActualValue(entry_assessment_total_test_grade_assessment_grade_equivalent_score))) {
+						num_assessment_sentence_comprehension_grade_assessment_stanine_score++;
+						num_assessment_passage_comprehension_grade_assessment_stanine_score++;
+						num_assessment_comprehension_composite_grade_assessment_stanine_score++;
+						num_assessment_comprehension_composite_grade_assessment_grade_equivalent_score++;
+						num_assessment_vocabulary_grade_assessment_stanine_score++;
+						num_assessment_vocabulary_grade_assessment_grade_equivalent_score++;
+						num_assessment_total_test_grade_assessment_stanine_score++;
+						num_assessment_total_test_grade_assessment_grade_equivalent_score++;
+						num_assessment_listening_comprehension_grade_assessment_stanine_score++;
+						
+						tot_assessment_total_test_grade_assessment_grade_equivalent_score += value_assessment_total_test_grade_assessment_grade_equivalent_score;
+						
+						if (last_assessment_total_test_grade_assessment_grade_equivalent_score !== CHARACTERS.c_s_BLANK) {
+							if (last_assessment_total_test_grade_assessment_grade_equivalent_score !== entry_assessment_total_test_grade_assessment_grade_equivalent_score) {
+								is_same_assessment_total_test_grade_assessment_grade_equivalent_score = false;
+							}
+						}
+						else {
+							last_assessment_total_test_grade_assessment_grade_equivalent_score = entry_assessment_total_test_grade_assessment_grade_equivalent_score;
+						}
+					}
+					// Sentence Comprehension: Stanine
+					entry_assessment_sentence_comprehension_grade_assessment_stanine_score = obj[ASSIGNMENTS.c_s_ASSESSMENT_SENTENCE_COMPREHENSION][ASSIGNMENTS.c_s_ASSESSMENT_STANINE];
+					if (!isNaN(value_assessment_sentence_comprehension_grade_assessment_stanine_score = getActualValue(entry_assessment_sentence_comprehension_grade_assessment_stanine_score))) {
+						tot_assessment_sentence_comprehension_grade_assessment_stanine_score += value_assessment_sentence_comprehension_grade_assessment_stanine_score;
+						
+						if (last_assessment_sentence_comprehension_grade_assessment_stanine_score !== CHARACTERS.c_s_BLANK) {
+							if (last_assessment_sentence_comprehension_grade_assessment_stanine_score !== entry_assessment_sentence_comprehension_grade_assessment_stanine_score) {
+								is_same_assessment_sentence_comprehension_grade_assessment_stanine_score = false;
+							}
+						}
+						else {
+							last_assessment_sentence_comprehension_grade_assessment_stanine_score = entry_assessment_sentence_comprehension_grade_assessment_stanine_score;
+						}
+					}
+					// Passage Comprehension: Stanine
+					entry_assessment_passage_comprehension_grade_assessment_stanine_score = obj[ASSIGNMENTS.c_s_ASSESSMENT_PASSAGE_COMPREHENSION][ASSIGNMENTS.c_s_ASSESSMENT_STANINE];
+					if (!isNaN(value_assessment_passage_comprehension_grade_assessment_stanine_score = getActualValue(entry_assessment_passage_comprehension_grade_assessment_stanine_score))) {
+						tot_assessment_passage_comprehension_grade_assessment_stanine_score += value_assessment_passage_comprehension_grade_assessment_stanine_score;
+						
+						if (last_assessment_passage_comprehension_grade_assessment_stanine_score !== CHARACTERS.c_s_BLANK) {
+							if (last_assessment_passage_comprehension_grade_assessment_stanine_score !== entry_assessment_passage_comprehension_grade_assessment_stanine_score) {
+								is_same_assessment_passage_comprehension_grade_assessment_stanine_score = false;
+							}
+						}
+						else {
+							last_assessment_passage_comprehension_grade_assessment_stanine_score = entry_assessment_passage_comprehension_grade_assessment_stanine_score;
+						}
+					}
+					// Comprehension Composite: Stanine
+					entry_assessment_comprehension_composite_grade_assessment_stanine_score = obj[ASSIGNMENTS.c_s_ASSESSMENT_COMPREHENSION_COMPOSITE][ASSIGNMENTS.c_s_ASSESSMENT_STANINE];
+					if (!isNaN(value_assessment_comprehension_composite_grade_assessment_stanine_score = getActualValue(entry_assessment_comprehension_composite_grade_assessment_stanine_score))) {
+						tot_assessment_comprehension_composite_grade_assessment_stanine_score += value_assessment_comprehension_composite_grade_assessment_stanine_score;
+						
+						if (last_assessment_comprehension_composite_grade_assessment_stanine_score !== CHARACTERS.c_s_BLANK) {
+							if (last_assessment_comprehension_composite_grade_assessment_stanine_score !== entry_assessment_comprehension_composite_grade_assessment_stanine_score) {
+								is_same_assessment_comprehension_composite_grade_assessment_stanine_score = false;
+							}
+						}
+						else {
+							last_assessment_comprehension_composite_grade_assessment_stanine_score = entry_assessment_comprehension_composite_grade_assessment_stanine_score;
+						}
+					}
+					// Comprehension Composite: GLE
+					entry_assessment_comprehension_composite_grade_assessment_grade_equivalent_score = obj[ASSIGNMENTS.c_s_ASSESSMENT_COMPREHENSION_COMPOSITE][ASSIGNMENTS.c_s_ASSESSMENT_GRADE_EQUIVALENT];
+					if (!isNaN(value_assessment_comprehension_composite_grade_assessment_grade_equivalent_score = getActualValue(entry_assessment_comprehension_composite_grade_assessment_grade_equivalent_score))) {
+						tot_assessment_comprehension_composite_grade_assessment_grade_equivalent_score += value_assessment_comprehension_composite_grade_assessment_grade_equivalent_score;
+						
+						if (last_assessment_comprehension_composite_grade_assessment_grade_equivalent_score !== CHARACTERS.c_s_BLANK) {
+							if (last_assessment_comprehension_composite_grade_assessment_grade_equivalent_score !== entry_assessment_comprehension_composite_grade_assessment_grade_equivalent_score) {
+								is_same_assessment_comprehension_composite_grade_assessment_grade_equivalent_score = false;
+							}
+						}
+						else {
+							last_assessment_comprehension_composite_grade_assessment_grade_equivalent_score = entry_assessment_comprehension_composite_grade_assessment_grade_equivalent_score;
+						}
+					}
+					// Vocabulary: Stanine
+					entry_assessment_vocabulary_grade_assessment_stanine_score = obj[ASSIGNMENTS.c_s_ASSESSMENT_VOCABULARY][ASSIGNMENTS.c_s_ASSESSMENT_STANINE];
+					if (!isNaN(value_assessment_vocabulary_grade_assessment_stanine_score = getActualValue(entry_assessment_vocabulary_grade_assessment_stanine_score))) {
+						tot_assessment_vocabulary_grade_assessment_stanine_score += value_assessment_vocabulary_grade_assessment_stanine_score;
+						
+						if (last_assessment_vocabulary_grade_assessment_stanine_score !== CHARACTERS.c_s_BLANK) {
+							if (last_assessment_vocabulary_grade_assessment_stanine_score !== entry_assessment_vocabulary_grade_assessment_stanine_score) {
+								is_same_assessment_vocabulary_grade_assessment_stanine_score = false;
+							}
+						}
+						else {
+							last_assessment_vocabulary_grade_assessment_stanine_score = entry_assessment_vocabulary_grade_assessment_stanine_score;
+						}
+					}
+					// Vocabulary: GLE
+					entry_assessment_vocabulary_grade_assessment_grade_equivalent_score = obj[ASSIGNMENTS.c_s_ASSESSMENT_VOCABULARY][ASSIGNMENTS.c_s_ASSESSMENT_GRADE_EQUIVALENT];
+					if (!isNaN(value_assessment_vocabulary_grade_assessment_grade_equivalent_score = getActualValue(entry_assessment_vocabulary_grade_assessment_grade_equivalent_score))) {
+						tot_assessment_vocabulary_grade_assessment_grade_equivalent_score += value_assessment_vocabulary_grade_assessment_grade_equivalent_score;
+						
+						if (last_assessment_vocabulary_grade_assessment_grade_equivalent_score !== CHARACTERS.c_s_BLANK) {
+							if (last_assessment_vocabulary_grade_assessment_grade_equivalent_score !== entry_assessment_vocabulary_grade_assessment_grade_equivalent_score) {
+								is_same_assessment_vocabulary_grade_assessment_grade_equivalent_score = false;
+							}
+						}
+						else {
+							last_assessment_vocabulary_grade_assessment_grade_equivalent_score = entry_assessment_vocabulary_grade_assessment_grade_equivalent_score;
+						}
+					}
+					// Total Test: Stanine
+					entry_assessment_total_test_grade_assessment_stanine_score = obj[ASSIGNMENTS.c_s_ASSESSMENT_TOTAL_TEST][ASSIGNMENTS.c_s_ASSESSMENT_STANINE];
+					if (!isNaN(value_assessment_total_test_grade_assessment_stanine_score = getActualValue(entry_assessment_total_test_grade_assessment_stanine_score))) {
+						tot_assessment_total_test_grade_assessment_stanine_score += value_assessment_total_test_grade_assessment_stanine_score;
+						
+						if (last_assessment_total_test_grade_assessment_stanine_score !== CHARACTERS.c_s_BLANK) {
+							if (last_assessment_total_test_grade_assessment_stanine_score !== entry_assessment_total_test_grade_assessment_stanine_score) {
+								is_same_assessment_total_test_grade_assessment_stanine_score = false;
+							}
+						}
+						else {
+							last_assessment_total_test_grade_assessment_stanine_score = entry_assessment_total_test_grade_assessment_stanine_score;
+						}
+					}
+					// Listening Comprehension: Stanine
+					entry_assessment_listening_comprehension_grade_assessment_stanine_score = obj[ASSIGNMENTS.c_s_ASSESSMENT_LISTENING_COMPREHENSION][ASSIGNMENTS.c_s_ASSESSMENT_STANINE];
+					if (!isNaN(value_assessment_listening_comprehension_grade_assessment_stanine_score = getActualValue(entry_assessment_listening_comprehension_grade_assessment_stanine_score))) {
+						tot_assessment_listening_comprehension_grade_assessment_stanine_score += value_assessment_listening_comprehension_grade_assessment_stanine_score;
+						
+						if (last_assessment_listening_comprehension_grade_assessment_stanine_score !== CHARACTERS.c_s_BLANK) {
+							if (last_assessment_listening_comprehension_grade_assessment_stanine_score !== entry_assessment_listening_comprehension_grade_assessment_stanine_score) {
+								is_same_assessment_listening_comprehension_grade_assessment_stanine_score = false;
+							}
+						}
+						else {
+							last_assessment_listening_comprehension_grade_assessment_stanine_score = entry_assessment_listening_comprehension_grade_assessment_stanine_score;
+						}
+					}
+					
+					assessment_sentence_comprehension_grade_assessment_stanine_score = (entry_assessment_sentence_comprehension_grade_assessment_stanine_score + CHARACTERS.c_s_BLANK).replace("<", "&lt;").replace(">", "&gt;");
+					assessment_passage_comprehension_grade_assessment_stanine_score = (entry_assessment_passage_comprehension_grade_assessment_stanine_score + CHARACTERS.c_s_BLANK).replace("<", "&lt;").replace(">", "&gt;");
+					assessment_comprehension_composite_grade_assessment_stanine_score = (entry_assessment_comprehension_composite_grade_assessment_stanine_score + CHARACTERS.c_s_BLANK).replace("<", "&lt;").replace(">", "&gt;");
+					assessment_comprehension_composite_grade_assessment_grade_equivalent_score = (entry_assessment_comprehension_composite_grade_assessment_grade_equivalent_score + CHARACTERS.c_s_BLANK).replace("<", "&lt;").replace(">", "&gt;");
+					assessment_vocabulary_grade_assessment_stanine_score = (entry_assessment_vocabulary_grade_assessment_stanine_score + CHARACTERS.c_s_BLANK).replace("<", "&lt;").replace(">", "&gt;");
+					assessment_vocabulary_grade_assessment_grade_equivalent_score = (entry_assessment_vocabulary_grade_assessment_grade_equivalent_score + CHARACTERS.c_s_BLANK).replace("<", "&lt;").replace(">", "&gt;");
+					assessment_total_test_grade_assessment_stanine_score = (entry_assessment_total_test_grade_assessment_stanine_score + CHARACTERS.c_s_BLANK).replace("<", "&lt;").replace(">", "&gt;");
+					assessment_total_test_grade_assessment_grade_equivalent_score = (entry_assessment_total_test_grade_assessment_grade_equivalent_score + CHARACTERS.c_s_BLANK).replace("<", "&lt;").replace(">", "&gt;");
+					assessment_listening_comprehension_grade_assessment_stanine_score = (entry_assessment_listening_comprehension_grade_assessment_stanine_score + CHARACTERS.c_s_BLANK).replace("<", "&lt;").replace(">", "&gt;");
+				}
+				catch (exp) {
+					console.log("Data Error Occured: " + exp)
+				}
+			}
+%>
+                    <tr class="ga-score-row">
+                        <td class="ga-score-cell column-1"> <%= assessment_sentence_comprehension_grade_assessment_stanine_score %> </td>
+                        <td class="ga-score-cell column-2"> <%= assessment_passage_comprehension_grade_assessment_stanine_score %> </td>
+						<td class="ga-score-cell column-3"> <%= assessment_comprehension_composite_grade_assessment_stanine_score %> </td>
+						<td class="ga-score-cell column-4"> <%= assessment_comprehension_composite_grade_assessment_grade_equivalent_score %> </td>
+						<td class="ga-score-cell column-5"> <%= assessment_vocabulary_grade_assessment_stanine_score %> </td>
+						<td class="ga-score-cell column-6"> <%= assessment_vocabulary_grade_assessment_grade_equivalent_score %> </td>
+                        <td class="ga-score-cell column-7"> <%= assessment_total_test_grade_assessment_stanine_score %> </td>
+						<td class="ga-score-cell column-8"> <%= assessment_total_test_grade_assessment_grade_equivalent_score %> </td>
+						<td class="ga-score-cell column-9"> <%= assessment_listening_comprehension_grade_assessment_stanine_score %> </td>
+                    </tr>     
+<%
+		}
+%>
+					<tr class="ga-score-row">
+                        <td class="ga-score-cell">
+							<%=
+								(
+									is_same_assessment_sentence_comprehension_grade_assessment_stanine_score === false?
+									(tot_assessment_sentence_comprehension_grade_assessment_stanine_score/num_assessment_sentence_comprehension_grade_assessment_stanine_score).toFixed(1):
+									last_assessment_sentence_comprehension_grade_assessment_stanine_score
+								)
+							%>
+						</td>
+                        <td class="ga-score-cell">
+							<%=
+								(
+									is_same_assessment_passage_comprehension_grade_assessment_stanine_score === false?
+									(tot_assessment_passage_comprehension_grade_assessment_stanine_score/num_assessment_passage_comprehension_grade_assessment_stanine_score).toFixed(1):
+									last_assessment_passage_comprehension_grade_assessment_stanine_score
+								)
+							%>
+						</td>
+                        <td class="ga-score-cell">
+							<%=
+								(
+									is_same_assessment_comprehension_composite_grade_assessment_stanine_score === false?
+									(tot_assessment_comprehension_composite_grade_assessment_stanine_score/num_assessment_comprehension_composite_grade_assessment_stanine_score).toFixed(1):
+									last_assessment_comprehension_composite_grade_assessment_stanine_score
+								)
+							%>
+						</td>
+						<td class="ga-score-cell">
+							<%=
+								(
+									is_same_assessment_comprehension_composite_grade_assessment_grade_equivalent_score === false?
+									(tot_assessment_comprehension_composite_grade_assessment_grade_equivalent_score/num_assessment_comprehension_composite_grade_assessment_grade_equivalent_score).toFixed(1):
+									last_assessment_comprehension_composite_grade_assessment_grade_equivalent_score
+								)
+							%>
+						</td>
+						<td class="ga-score-cell">
+							<%=
+								(
+									is_same_assessment_vocabulary_grade_assessment_stanine_score === false?
+									(tot_assessment_vocabulary_grade_assessment_stanine_score/num_assessment_vocabulary_grade_assessment_stanine_score).toFixed(1):
+									last_assessment_vocabulary_grade_assessment_stanine_score
+								)
+							%>
+						</td>
+						<td class="ga-score-cell">
+							<%=
+								(
+									is_same_assessment_vocabulary_grade_assessment_grade_equivalent_score === false?
+									(tot_assessment_vocabulary_grade_assessment_grade_equivalent_score/num_assessment_vocabulary_grade_assessment_grade_equivalent_score).toFixed(1):
+									last_assessment_vocabulary_grade_assessment_grade_equivalent_score
+								)
+							%>
+						</td>
+						<td class="ga-score-cell">
+							<%=
+								(
+									is_same_assessment_total_test_grade_assessment_stanine_score === false?
+									(tot_assessment_total_test_grade_assessment_stanine_score/num_assessment_total_test_grade_assessment_stanine_score).toFixed(1):
+									last_assessment_total_test_grade_assessment_stanine_score
+								)
+							%>
+						</td>
+						<td class="ga-score-cell">
+							<%=
+								(
+									is_same_assessment_total_test_grade_assessment_grade_equivalent_score === false?
+									(tot_assessment_total_test_grade_assessment_grade_equivalent_score/num_assessment_total_test_grade_assessment_grade_equivalent_score).toFixed(1):
+									last_assessment_total_test_grade_assessment_grade_equivalent_score
+								)
+							%>
+						</td>
+						<td class="ga-score-cell">
+							<%=
+								(
+									is_same_assessment_listening_comprehension_grade_assessment_stanine_score === false?
+									(tot_assessment_listening_comprehension_grade_assessment_stanine_score/num_assessment_listening_comprehension_grade_assessment_stanine_score).toFixed(1):
+									last_assessment_listening_comprehension_grade_assessment_stanine_score
+								)
+							%>
+						</td>
+                    </tr>
+                </table>
+            </div>
+	</script>
+	<script type="text/template" id="classAverageTemplate">
+	<%
+	var objAssignmentList     = {};
+	var arrTemp =   [];
+	var isDataExists    =   0;
+
+	objAssignmentCategoryIndex  =   (activeTab == "assignment") ? 0 : (activeTab == 'grade' ? 2 : 1);
+	objAssignmentCategoryList = objAssignmentCategory.content[objAssignmentCategoryIndex];
+	objAssignmentCategoryLen  = Object.keys(objAssignmentCategoryList).length;                                
+
+	for(var cnt = 0; cnt < objAssignmentCategoryLen; cnt++) {
+		arrTemp =   [];      
+		if(typeof objAssignmentCategoryList[cnt].alias == "string") {                           
+			objAssignmentList[objAssignmentCategoryList[cnt].name]    =   _.where(data.AssignmentData, {ItemSubType: objAssignmentCategoryList[cnt].alias, ExtraPractice: "No"});                        
+		}
+
+		if(typeof objAssignmentCategoryList[cnt].alias == "object") {                           
+			for(var i = 0; i < Object.keys(objAssignmentCategoryList[cnt].alias).length; i++) {                            
+				arrDataFilter  =   _.where(data.AssignmentData, {ItemSubType: objAssignmentCategoryList[cnt].alias[i], ExtraPractice: "No"});                                                                  
+				if(arrDataFilter.length > 0) {
+					arrTemp = $.merge(arrTemp, arrDataFilter);
+				}                                  
+			}
+
+			if(arrTemp.length) {
+				objAssignmentList[objAssignmentCategoryList[cnt].name]  =   arrTemp;
+			} else {
+				objAssignmentList[objAssignmentCategoryList[cnt].name]  =   [];
+			}
+		}
+		
+		if(objAssignmentCategoryList[cnt].alias == "ExtraPractice") {
+			objAssignmentList[objAssignmentCategoryList[cnt].name] =  _.where(data.AssignmentData, {ExtraPractice: "Yes"});
+		}
+
+		if(
+			objAssignmentList[objAssignmentCategoryList[cnt].name].length > 0 
+		) {
+			if(objAssignmentCategoryList[cnt].name == ASSIGNMENT_INSTRUCTOR.c_i_INTERACTIVE_READING) {                            
+				objAssignmentList[objAssignmentCategoryList[cnt].name]  =   _.sortBy(objAssignmentList[objAssignmentCategoryList[cnt].name], function (obj){return obj.ReadingLevel * -1});                            
+			}
+			isDataExists    =   1;
+		}
+	}
+			
+	var GradeData = [],
+		oJsonKeys =	ASSIGNMENT_KEYS.V2;
+		
+	if(objPlatform.isBrowser()) {
+		GradeData = data.GradeData;
+	} 
+	else{
+		for(var GradeDataKey = 0; GradeDataKey < data.GradeData.length; GradeDataKey++) {
+			if(typeof data.GradeData[GradeDataKey] == "string") {
+				GradeData.push(JSON.parse(data.GradeData[GradeDataKey]));
+			} 
+			else {
+				GradeData.push(data.GradeData[GradeDataKey]);
+			}
+		}					
+	}
+
+
+	var arrStudentList = _.sortBy(_.where(data.StudentList, {UserRole: "S"}), function (obj) {
+								arrName  = (obj.UserDisplayName || "").split(" ");
+								lastName = (arrName[arrName.length - 1]).toLowerCase();
+								return lastName;
+							}
+						),
+		sClassWrapper = (arrStudentList.length % 2 == 0) ? "odd" : "";
+		
+	if(arrStudentList.length) {	
+	%>
+		<div class="assignment_slider_wrapper2 <%=sClassWrapper%>">
+			<div class="slider_wrapper_inr">
+				<div class="unit_lesson_set left studentCell">
+					<div class="table_inner_box">
+						<div class="table_inner_box_img left"></div>
+						<div class="middle studentName" data-id="0">Class Average</div>
+						<div class="clear"></div>
+					</div>
+					<div class="clear"></div>
+				</div>
+
+				<div class="bodySliderWrapper">
+					<div class="bodySliderContainer">
+						<div class="slider_container_wrapper">
+							<div class="slider_container_wrapper_inner">
+							<%
+							var arrLength = Object.keys(objAssignmentList).length,
+								mainCnt   =   1;
+								
+							for(keyArr in objAssignmentList) {
+								var sMainDividerClass = (mainCnt == arrLength) ? "last_box" : "";
+								mainCnt++;
+								var gradeExpandTabClass = (activeTab == "grade") ? "grade_cnt" : "";
+							%>
+								<div class="slider_boxes_cnt <%=gradeExpandTabClass%> <%=sMainDividerClass%>">
+
+							<%
+									subArr        = objAssignmentList[keyArr];
+									subArrLength  = subArr.length;
+									subCnt        = 1;
+									var iCountIwt = 0;
+									
+									for(subKey in subArr){
+										sDividerClass = (subCnt == subArrLength) ? "mar_none" : "";
+										sDividerStyle = (subCnt == subArrLength) ? "style='border-right:3px solid #48C3D8!important'" : "";
+										subCnt++;
+										
+										for(studentListKey in arrStudentList) {
+											var objStudentItem = arrStudentList[studentListKey];
+											
+											var osearchFilter=	{};
+											osearchFilter[oJsonKeys["IID"]]	=	subArr[subKey].ItemID;
+											osearchFilter[oJsonKeys["SID"]]	=	objStudentItem.UserID;											
+											
+											var objStatus         = _.where(GradeData, osearchFilter),
+												textStatus        = typeof objStatus[0] == "undefined" ? "" : objStatus[0][oJsonKeys.ICS],
+												
+												displayTextStatus = "",
+												noShowClass       = "",
+												reAssignCnt       = "",
+												_finalScoreStatus = null;
+
+											if(textStatus != "") {
+												reAssignCnt = (
+																objStatus[0][oJsonKeys.RAC] == 0 || 
+																objStatus[0][oJsonKeys.RAC] == null
+															) ? "" : objStatus[0][oJsonKeys.RAC];
+											}
+
+											if(textStatus == ASSIGNMENT_INSTRUCTOR.c_i_ASSIGN_STATUS) {
+												textStatus        = ASSIGNMENT_INSTRUCTOR.c_s_SENT_ASSIGNMENT_TXT;
+												textStatus       += (reAssignCnt == "") ? "" : " (" + reAssignCnt + ")" ;
+												displayTextStatus = textStatus;
+												noShowClass 	  = "noDisplay";
+											}
+											else if(textStatus == ASSIGNMENT_INSTRUCTOR.c_i_SCORED_STATUS) {
+												_finalScoreStatus   = objStatus[0][oJsonKeys.FS];
+												textStatus = _finalScoreStatus;
+												_itemSubType    =   _.where(data.AssignmentData, {ItemID: objStatus[0][oJsonKeys.IID]})[0].ItemSubType;
+												_itemSubject    =   _.where(data.AssignmentData, {ItemID: objStatus[0][oJsonKeys.IID]})[0].ItemSubject;
+												if(_itemSubType == "dailyassignment" || _itemSubType == "iwt") {
+													displayTextStatus   =   _finalScoreStatus + "/" + objStatus[0][oJsonKeys.IMS];
+												} 
+												else if (_itemSubType == ASSIGNMENTS.c_s_ASSESSMENT_SUBTYPE_GRADE) {
+													try {
+														var _ItemAttemptSummary =   decodeURIComponent(objStatus[0][oJsonKeys.IAS]);
+														var _objSummary         = ($.trim(_ItemAttemptSummary) == "") ? null : JSON.parse(_ItemAttemptSummary);
+														displayTextStatus       =   (_objSummary == null) ? objStatus[0][oJsonKeys.FS] : _objSummary[ASSIGNMENTS.c_s_ASSESSMENT_TOTAL_TEST][ASSIGNMENTS.c_s_ASSESSMENT_GRADE_EQUIVALENT];
+													}
+													catch (exp) {
+														displayTextStatus       =   (typeof _objSummary[ASSIGNMENTS.c_s_ASSESSMENT_GRADE_EQUIVALENT] == "undefined") ? objStatus[0][oJsonKeys.FS] : _objSummary[ASSIGNMENTS.c_s_ASSESSMENT_GRADE_EQUIVALENT];
+													}						
+													displayTextStatus       =   displayTextStatus.toString().replace("<", "&lt;").replace(">", "&gt;");
+													textStatus              =   displayTextStatus.toString().replace("&lt;", "<").replace("&gt;", ">");
+												}
+												else if(_itemSubType == "nsa") {
+													textStatus        = _finalScoreStatus;
+													displayTextStatus =   ASSIGNMENT_INSTRUCTOR.c_s_FINISHED_STATUS;
+													noShowClass       = "noDisplay";
+												}
+												else if(
+													_itemSubType == "phonictextbasedslide" || 
+													_itemSubType == "extendedphonic" || 
+													_itemSubType == "frs"  
+												) {
+													//displayTextStatus   =   _finalScoreStatus + "/100";
+													if(_itemSubject == "pktof"){
+														displayTextStatus   =   _finalScoreStatus + "/100";
+													}
+													else {
+														displayTextStatus   = _finalScoreStatus + "/" + objStatus[0][oJsonKeys.IMS];
+													}
+												}
+												else {
+													displayTextStatus   =   _finalScoreStatus + "/" + objStatus[0][oJsonKeys.IMS];
+												}
+												
+												noShowClass = "noDisplay";
+											}
+											else if(textStatus == ASSIGNMENT_INSTRUCTOR.c_i_COMPLETE_STATUS) {
+												_itemType       =   objStatus[0].ItemType;
+												_itemSubType    =   _.where(data.AssignmentData, {ItemID: objStatus[0][oJsonKeys.IID]})[0].ItemSubType;
+												_finalScoreStatus   = objStatus[0][oJsonKeys.FS];
+												if(_itemSubType == "studyplan" || _itemType == "assessment") {
+													textStatus       = _finalScoreStatus;
+													displayTextStatus   =   textStatus + "/" + objStatus[0].ItemMaxScore;
+													noShowClass      = "noDisplay";
+												} 
+												else {
+													_finalScoreStatus   =   0;
+													textStatus          = ASSIGNMENT_INSTRUCTOR.c_s_SENT_COMPLETED_TXT;
+													displayTextStatus   =   textStatus;
+													noShowClass         = "noDisplay";
+												}
+											}
+											else if(textStatus == ASSIGNMENT_INSTRUCTOR.c_i_PROGRESS_STATUS  || textStatus == "in+progress") {
+												textStatus = ASSIGNMENT_INSTRUCTOR.c_s_PROGRESS_ASSIGNMENT_TXT;
+												displayTextStatus   =   textStatus;
+												noShowClass = "noDisplay";
+											}
+											else if(textStatus == ASSIGNMENT_INSTRUCTOR.c_s_DELETED_STATUS) {
+												textStatus = "";
+												displayTextStatus   =   "";
+												noShowClass = "";
+											}
+											else{
+											}
+											_finalScoreStatus   =   (_finalScoreStatus == null) ? 0 : _finalScoreStatus;
+											_UserCurrentReadingLevel    =   (objStudentItem.UserCurrentReadingLevel == null) ? 0 : objStudentItem.UserCurrentReadingLevel;
+										}
+							%>
+									<div class="slider_boxes_ct <%=sDividerClass%>" <%=sDividerStyle%>>
+										<div class="table_inner_box_out nopointer">
+											<div class="statusText gray_col" data-text="<%=textStatus%>">
+												<%=displayTextStatus%>
+											</div>
+											
+										</div>
+										<div class="clear"></div>
+									</div>
+							<%
+										if(subArr[subKey].ItemSubType == "iwt") {
+											iCountIwt++;
+										}
+									
+							%>                                        
+								<div class="clear"></div>
+							</div>
+							<%
+								}
+							}
+							%>
+							</div>
+							<div class="clear"></div>
+						</div>
+					</div>
+				</div>
+				<div class="clear"></div>
+			</div>
+			<div class="clear"></div>
+		</div>
+	<%
+	}
+	%>
+	</script>
+	<div id="viewNotebookPopupArea">
+	<iframe src="" frameborder="0" width="100%" height="100%" allowfullscreen="true" webkitallowfullscreen="true" mozallowfullscreen="true">
+		<p>Your browser does not support iframes.</p>
+	</iframe>
+	</div>
+
+    </body>    
+</html>

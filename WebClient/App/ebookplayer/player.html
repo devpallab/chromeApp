@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<title>iLiT</title>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+	<meta name="viewport" content="width=device-width; initial-scale=1.0; maximum-scale=1.0;">
+	<link href="style/style.css" media="all" rel="stylesheet"/>
+	<!--[if gte IE 9]>
+	  <style type="text/css">
+		.gradient {
+		   filter: none !important;
+		}
+	  </style>
+	<![endif]-->
+	<link href="style/ui-lightness/jquery-ui-1.10.4.custom.css" rel="stylesheet" />
+</head>
+<body class="t2">
+    <div id="msTextHelp" style="position:absolute;top:-9999px;left:-9999px;"></div>
+	<header style="-webkit-user-select:none">
+		<div class="header_inner ebook">
+			<div class="header_innerin gradient">
+				<button type="button" class="sld_lft sprite left" onClick="setLibraryProgress();"></button>
+				<button id="btnTOC" class="toc_icn left sprite"></button>
+				<div class="right language active">
+					<button id="btnLanguage" class="button9 margin_none" type="button">Translate</button>
+					<div id="menuLanguage" class="tooltip_tools" style="display:none;">
+						<div class="tools_tooltip">
+							<div class="tooltip_arrow sprite"></div>
+							<div class="tooltip_wrap">
+								<div class="tooltip_wrap_inner">Select Language</div>
+							</div>
+							<div id = 'languagesList' class="tooltip_wrap_language languagesList">
+								<ul>
+									<li lang="Spanish" class="active">Spanish <span class="sprite signal"></span></li>
+									<li lang="Arabic">Arabic <span class="sprite signal"></span></li>
+									<li lang="Chinese Simplified">Chinese Simplified <span class="sprite signal"></span></li>
+									<li lang="Chinese Traditional">Chinese Traditional <span class="sprite signal"></span></li>
+									<li lang="Czech">Czech <span class="sprite signal"></span></li>
+									<li lang="French">French <span class="sprite signal"></span></li>
+									<li lang="German">German <span class="sprite signal"></span></li>
+									<li lang="Greek">Greek <span class="sprite signal"></span></li>
+									<li lang="Hindi">Hindi <span class="sprite signal"></span></li>
+									<li lang="Hungarian">Hungarian <span class="sprite signal"></span></li>
+									<li lang="Indonesian">Indonesian <span class="sprite signal"></span></li>
+									<li lang="Italian">Italian <span class="sprite signal"></span></li>
+									<li lang="Japanese">Japanese <span class="sprite signal"></span></li>
+									<li lang="Korean">Korean <span class="sprite signal"></span></li>
+									<li lang="Polish">Polish <span class="sprite signal"></span></li>
+									<li lang="Portuguese">Portuguese <span class="sprite signal"></span></li>
+									<li lang="Romanian">Romanian <span class="sprite signal"></span></li>
+									<li lang="Russian">Russian <span class="sprite signal"></span></li>
+									<li lang="Thai">Thai <span class="sprite signal"></span></li>
+									<li lang="Albanian">Albanian <span class="sprite signal"></span></li>
+									<li lang="Azerbaijani">Azerbaijani <span class="sprite signal"></span></li>
+									<li lang="Bengali">Bengali <span class="sprite signal"></span></li>
+									<li lang="Belarusian">Belarusian <span class="sprite signal"></span></li>
+									<li lang="Bulgarian">Bulgarian <span class="sprite signal"></span></li>
+									<li lang="Croatian">Croatian <span class="sprite signal"></span></li>
+									<li lang="Estonian">Estonian <span class="sprite signal"></span></li>
+									<li lang="Filipino">Filipino <span class="sprite signal"></span></li>
+									<li lang="Georgian">Georgian <span class="sprite signal"></span></li>
+									<li lang="Gujarati">Gujarati <span class="sprite signal"></span></li>
+									<li lang="Haitian Creole">Haitian Creole <span class="sprite signal"></span></li>
+									<li lang="Kannada">Kannada <span class="sprite signal"></span></li>
+									<li lang="Lithuanian">Lithuanian <span class="sprite signal"></span></li>
+									<li lang="Latvian">Latvian <span class="sprite signal"></span></li>
+									<li lang="Malay">Malay <span class="sprite signal"></span></li>
+									<li lang="Persian">Persian <span class="sprite signal"></span></li>
+									<li lang="Serbian">Serbian <span class="sprite signal"></span></li>
+									<li lang="Slovak">Slovak <span class="sprite signal"></span></li>
+									<li lang="Slovenian">Slovenian <span class="sprite signal"></span></li>
+									<li lang="Swahili">Swahili <span class="sprite signal"></span></li>
+									<li lang="Tamil">Tamil <span class="sprite signal"></span></li>
+									<li lang="Telugu">Telugu <span class="sprite signal"></span></li>
+									<li lang="Ukrainian">Ukrainian <span class="sprite signal"></span></li>
+									<li lang="Urdu">Urdu <span class="sprite signal"></span></li>
+									<li lang="Vietnamese">Vietnamese <span class="sprite signal"></span></li>
+								</ul>
+							</div>
+						</div>
+					</div>
+					<div class="clear"></div>
+				</div>
+				<div class="right pagezoom active">
+					<button id="btnFontResize" class="button9 right" type="button">Aa</button>
+					<div id="menuFontResize" class="tooltip_tools" style="display:none;">
+						<div class="tools_tooltip">
+							<div class="tooltip_arrow sprite"></div>
+							<div class="tooltip_wrap_language">
+								<div class="zoom_container">
+									<div class="zoom1 zooms" cssPath="t1">A</div>
+									<div class="zoom2 zooms active" cssPath="t2">A</div>
+									<div class="zoom3 zooms" cssPath="t3">A</div>
+								</div>
+							</div>
+						</div>
+					</div>
+					<div class="clear"></div>
+				</div>
+				<div class="middle"></div>
+				<div class="clear"></div>
+			</div>
+			<div class="clear"></div>
+		</div>
+		<div class="clear"></div>
+	</header>
+	<div id="wrapper" class="ebook_container_content" style="-webkit-user-select:none">
+		<div id="viewArea" class="ebook_box_notes">
+			<div class="ebook_box_notes_grid">
+				<div class="ebook_box_notes_grid2">
+					<div class="ebook_box_notes_grid3">
+						<div class="ebook_box_notes_grid4">
+							<div class="ebook_content_block_middle">
+								<div class="ebook_content_block">
+									<div class="ebook_container_block left_ebook">
+										<div class="ebook_text_content">
+											<div class="notes_content_bl" style="position:relative;">
+												<div id="imgNotes" class="notesIcon" onclick="listNotes();"></div>
+												<div id="leftPageWrap" class="Book_Notes_content"></div>
+												<div id="leftAudioStop" class="audio_block" onclick="$rw_stopSpeech();">
+													<div class="audio_button">
+														<img src="media/audio_img.png" alt="">
+													</div>
+												</div>
+												<div class="clear"></div>
+											</div>
+											<div class="clear"></div>
+										</div>
+										<div class="clear"></div>
+									</div>
+									<div class="ebook_container_block right_ebook">
+										<div class="ebook_text_content">
+											<div class="notes_content_bl">
+												<div id="rightPageWrap" class="Book_Notes_content"></div>
+												<div id="rightPageWrapTOC" class="Book_Notes_content"></div>
+												<div id="rightAudioStop" class="audio_block" onclick="$rw_stopSpeech();">
+													<div class="audio_button">
+														<img src="media/audio_img.png" alt="">
+													</div>
+												</div>
+												<div class="clear"></div>
+											</div>
+											<div class="clear"></div>
+										</div>
+										<div class="clear"></div>
+									</div>
+									<div class="clear"></div>
+								</div>
+								<div class="clear"></div>
+							</div>
+							<div class="clear"></div>
+						</div>
+					</div>
+				</div>
+			</div>
+			<div class="clear"></div>
+		</div>
+		<div class="pages_slider_conts" style="-webkit-user-select:none">
+			<div id="slider-range-min"></div>
+		</div>
+		<div class="clear"></div>
+		<div id="textToHelpMenu" style="position:absolute;display:none;background:#000;">
+			<div id="tthSpeak" class="textToHelpMenuButtons" onMouseDown="playText();$('#textToHelpMenu').hide(); SetGoogleAnalytic('THS-TTS',bookid);" unselectable="on">Speak</div>
+			<div id="tthTransSep" class="sep" unselectable="on"></div>
+			<div id="tthDict" class="textToHelpMenuButtons" onMouseDown="$('#msTextHelp').selectText();$rw_event_dict();$('#textToHelpMenu').hide();SetGoogleAnalytic('THS-D',bookid);" unselectable="on">Dictionary</div>
+			<div id="tthDictSep" class="sep" unselectable="on"></div>
+			<div id="tthPicDict" class="textToHelpMenuButtons" onMouseDown="$('#msTextHelp').selectText();$rw_event_picturedictionary();$('#textToHelpMenu').hide();SetGoogleAnalytic('THS-PD',bookid);" unselectable="on">Picture Dictionary</div>
+			<div id="tthPicDictSep" class="sep" unselectable="on"></div>
+			<div id="tthTrans" class="textToHelpMenuButtons" onMouseDown="$('#msTextHelp').selectText();$rw_event_trans();$('#textToHelpMenu').hide();SetGoogleAnalytic('THS-TR',bookid);" unselectable="on">Translate</div>
+			<div id="tthNotesSep" class="sep" unselectable="on"></div>
+			<div id="tthNotes" class="textToHelpMenuButtons" onMouseDown="createNote(event);$('#textToHelpMenu').hide();" unselectable="on">Notes</div>
+            <div id="tthCopySep" class="sep" unselectable="on"></div>
+			<div id="tthCopy" class="textToHelpMenuButtons" onMouseDown="copyText(event);$('#textToHelpMenu').hide();" unselectable="on">Copy</div>
+			<div class="arrow-down"></div>
+		</div>
+	</div>
+
+	<!-- LOADER STARTS -->
+	<div id="popup-overlay3"></div>
+	<div id="loaderWrap">
+		<div id="loaderWrapIn">LOADING...</div>
+	</div>
+	<!-- LOADER ENDS -->
+
+	<!-- MODAL STARTS -->
+	<div id="overlay" class="overley"></div>
+	<div id="notesModal" class="modal">
+		<div class="actiavtion_wrapper">
+			<div class="acces_top_nav">
+				Notes
+				<div class="clear"></div>
+			</div>
+
+			<div class="inside_access">
+				<div class="textarea_content">
+					<textarea id="txtAreaCreateNote" autocorrect="off" name="" maxlength="1500"></textarea>
+					<div id="txtAreaListNote" name="" style="display:none;"></div>
+				</div>
+				<div class="clear"></div>
+			</div>
+
+			<div class="btm_navs">
+				<button id="btnSaveNote" class="button7 btn right" onClick="saveNewNotes();">Save Note</button>
+				<button class="button7 btn  right margin_gap_right" onClick="hideAddNotes();">Cancel</button>
+				<div class="clear"></div>
+			</div>
+			<div class="clear"></div>
+		</div>
+		<div class="clear"></div>
+	</div>
+	<!-- MODAL ENDS -->
+
+	<script type="text/javascript" src="script/lib.js"></script>
+	<script type="text/javascript" src="script/jquery-ui-1.10.4.custom.js"></script>
+	<script type="text/javascript" src="script/jquery.ui.touch-punch.js"></script> 
+	<script type="text/javascript" src="script/modernizr.js"></script>
+	<script type="text/javascript" src="script/speechstreamtoolbar.js"></script>
+	<script type="text/javascript" src="script/jquery.nicescroll.min.js"></script>
+	<script type="text/javascript" src="script/jquery.hammer-full.min.js"></script>
+	<script type="text/javascript" src="script/common.js"></script>
+	<script type="text/javascript" src="../js/iSeriesBase.js"></script>
+	<script type="text/javascript" src="../js/util.js"></script>
+	<script type="text/javascript" src="../js/client_native_communication.js"></script>
+	<script type="text/javascript">
+		var bookid, IS_KITKAT = true, bookTitle = '', bookType = '', totalWordInBook = 0, bookReadEnd = false, isWinRT = false, source='', context='',isBroadcast=false;
+        
+		function loadJS (path, func) {
+		    var scriptBooklist;
+		    scriptBooklist = document.createElement('script');
+		    scriptBooklist.type = "text/javascript";
+		    scriptBooklist.src = path;
+		    if(func != undefined) scriptBooklist.onload = func;
+		    window.document.head.appendChild(scriptBooklist);
+		}
+    
+        function addNativeBridge () {
+            if(navigator.userAgent.match(/iPhone|iPad|iPod/i)) {
+                //$("#nativebridge").attr("src", "js/NativeBridge.js");
+                loadJS('../js/NativeBridge.js', function(){
+                       GetEbookInfo(bookid, isBroadcast);
+                })
+            } else {
+                GetEbookInfo(bookid, isBroadcast);
+                HasKitkat();
+                fnIsWinRT();
+            }
+        }
+    
+		function scheduleCheck () {
+	        if (objEbookJsonData != null) {		
+				//onPageLoadComplete("Ebook");
+				loadJS(objEbookJsonData.bookPath + bookid + ".js", function(){
+					GetLibraryProgress(undefined, bookid);
+				});		// bookid + ".js"
+				
+	        } else {
+	            setTimeout(scheduleCheck, 100);
+	        }
+	    };
+	    
+		window.onload = function(){
+			var hash = window.location.hash.replace("#", "").split('|||');
+            bookid = hash[0];
+			bookTitle = (hash[1] == undefined ? '' : decodeURI(hash[1]));
+			bookType = (hash[2] == 'rata' ? 'RATA' : 'Time To Read' );
+			totalWordInBook = parseInt(hash[3]);
+			if(hash[4] == false || hash[4] == '')
+				source = 'library';
+			else if(hash[4] == 'broadcast'){
+				source = 'broadcast';
+				isBroadcast=true;
+			}
+			else if(hash[4] == 'assignment')
+				source = 'assignment';	
+			else if(hash[4] == 'notebook')
+				source = 'notebook';	
+			else{
+			}
+			if (isBroadcast) $('button.sld_lft').addClass('disabled');
+			bookFormat = hash[5]; 
+			totalPages = ((hash[6] == undefined || hash[6] == '') ? 0 :  parseInt(hash[6])); 
+			context = ((hash[7] == undefined || hash[7] == '') ? '' : hash[7].split("context=")[1]);
+			productCode = (hash[8] == undefined || hash[8] == '') ? '' : hash[8];			
+			bookLexileLevel = (hash[9] == undefined || hash[9] == '') ? '' : hash[9];			
+			classStartDate = (hash[10] == undefined || hash[10] == '') ? '' : hash[10];			
+			dBookCompletePercent = productCode.match(/^ilit20/) ? 70 : 50;
+		   // Adding native bridge
+            addNativeBridge();
+            
+            setTimeout(scheduleCheck, 100);
+			
+			/* 
+			   ILIT-657
+			 * save previous frame  
+			*/
+			$('button.sld_lft').on("click", function(){
+				sessionStorage.removeItem('EBookPlayerSrc');
+			})
+		}
+	</script>
+</body>
+</html>

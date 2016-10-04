@@ -1,0 +1,1065 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=0, minimum-scale=1.0, maximum-scale=1.0">
+        <title>iLiT</title>
+        <link href="css/performance_20.css" media="all" rel="stylesheet"/>
+        <link href="css/jquery-ui.css" media="all" rel="stylesheet"/>
+        <link href="css/performance_dev_20.css" media="all" rel="stylesheet"/>
+        <link href="css/fonts/fonts.css" media="all" rel="stylesheet"/>        
+        
+        <!--[if gte IE 9]>
+        <style type="text/css">
+            .gradient {
+				filter: none !important;
+			}
+        </style>
+        <![endif]-->
+
+        <script type="text/javascript" src="js/jquery-1.10.2.js"></script>
+        <script type="text/javascript" src="js/jquery-ui.js"></script>
+        <script type="text/javascript" src="js/underscore-min.js"></script>
+        <script type="text/javascript" src="js/jquery.ui.touch-punch.min.js"></script>
+        <script type="text/javascript" src="js/highcharts.js"></script>
+        <script type="text/javascript" src="js/exporting.js"></script>
+
+        <script type="text/javascript" src="js/util.js"></script>
+		<script type="text/javascript" src="js/globals.js"></script>
+        <script type="text/javascript" src="js/constants.js"></script>
+        <script type="text/javascript" src="js/message_handler.js"></script>
+        <script type="text/javascript" src="js/application.js"></script>
+		<script type="text/javascript" src="js/iSeriesBase.js"></script>
+		
+        <script type="text/javascript" src="js/performance_20.js"></script>
+        <script type="text/javascript" src="js/performance_skill_report_20.js"></script>
+        <script type="text/javascript" src="js/client_native_communication.js"></script>
+
+        <script type="text/javascript">			
+			/**
+			* Get PerformanceInfo Js File Path
+			* @returns void
+			*/
+			window.performanceInfoCheck = function() {
+				if (objPerformanceInfoJsonData != null) { 
+					
+					// performance_info.js is loading from app directory instead of grade_info_detail.zip
+					// just need to add below line @ performance.html. Also need to add grade wise performance_info.js @ js directory.
+					//var sPerformanceInfoJsPath = 'js/' + fetchGradeCode(objPerformanceInfoJsonData.gradeId) + '_performance_info.js';
+					//var sPerformanceInfoJsPath = 'js/gr4'  + '_performance_info.js';
+					var sPerformanceInfoJsPath = 'js/performance_info_20.js';
+					// Feed in Unit, Week Details 
+					$GLOBALS.set('UnitWeekDetails', new UnitWeekInfo(
+						parseInt(objPerformanceInfoJsonData.totalUnits) || 0, // IPP-4191
+						JSON.parse(objPerformanceInfoJsonData.unitsWeeksDetails))
+					);
+					// End Feed in Unit, Week Details
+					loadJS(sPerformanceInfoJsPath, performanceInfoJsLoaded);
+				}
+				else {
+					setTimeout(performanceInfoCheck, 500);
+				}
+			};
+			
+			/**
+			* Check PerformanceInfo Js Content loaded or not 
+			* @returns void
+			*/
+			window.performanceInfoJsLoaded =  function () {
+				if (objPerformanceInfoData != null) {
+					GetStudentListInfo();
+					setTimeout(scheduleCheck, 200);
+				}
+				else {
+					setTimeout(function() {
+						performanceInfoCheck();
+					}, 500);
+				}
+			};
+						
+			/**
+			* Get Student List
+			* @returns Void
+			*/
+			window.scheduleCheck = function() {
+				if (objStudentListJsonData != null) {
+					try{
+						if (objStudentListJsonData.Status == "200" || objStudentListJsonData.Status == 200) {
+							if (objStudentListJsonData.Content.length > 0) {
+								var studId = [],
+									studentId = "";
+								for(i=0; i < objStudentListJsonData.Content.length-1; i++) {
+									if(objStudentListJsonData.Content[i].UserRole == "S") {
+										studId.push(objStudentListJsonData.Content[i].UserID);
+									}
+								};
+								studentId = studId.join(",");
+								GetLibraryProgressDetailForClass();
+								setTimeout(function() {
+									libraryProgressCheck();
+								}, 200);
+							}
+							else{
+								throw({"ErrorCode":"","ErrorUserDescription":"No student exist in this class."});
+							}
+						} else {
+							throw(objStudentListJsonData.Error);
+						}
+					}
+					catch (err){
+						if (err.ErrorCode != "U1065") {
+							PerformanceView._alert({
+								divId:		'dialog-message',
+								title:		'Alert!',
+								message:	err.ErrorUserDescription
+							});
+						}
+					}
+				} else {
+					setTimeout(scheduleCheck, 100);
+				}
+			};
+			
+			/**
+			* Check Library Progress data
+			* @returns Void
+			*/
+			window.libraryProgressCheck = function() {
+				if (objLibraryProgressDetailForClass != 0) {
+					
+					try{ 
+						if (objLibraryProgressDetailForClass.Status == "200" || objLibraryProgressDetailForClass.Status == 200) {
+							var unitRange = _.range(1, parseInt(objPerformanceInfoJsonData.totalUnits) + 1, 1);
+							GetAssignmentListInfo(unitRange);
+							setTimeout(function() {
+								assignmentListCheck();
+							}, 200);
+						} else {
+							throw(objLibraryProgressDetailForClass.Error);
+						}
+					}
+					catch (err){
+						if (err.ErrorCode != "U1065") {
+							PerformanceView._alert({
+								divId:		'dialog-message',
+								title:		'Alert!',
+								message:	err.ErrorUserDescription
+							});
+						}
+					}
+				} else {
+					setTimeout(libraryProgressCheck, 200);
+				}
+			};
+                        
+            /**
+			* Get Assignment List from GetGradableItemForInstructor
+			* @returns Void
+			*/            
+			window.assignmentListCheck = function() {
+				if (objAssignmentListJsonData != null) {
+				
+					try {
+						if (objAssignmentListJsonData.Status == "200" || objAssignmentListJsonData.Status == 200) {						
+							GetGradebookForInstructorV2("Unit", "all", false, null);
+							setTimeout(gradeBookInstructorV2Check, 200);							
+						}
+						else {
+							throw(objAssignmentListJsonData.Error);
+						}	
+					} 
+					catch (err) {
+						if (err.ErrorCode != "U1065") {
+							PerformanceView._alert({
+								divId:		'dialog-message',
+								title:		'Alert!',
+								message:	err.ErrorUserDescription
+							});
+						}
+					}
+				} else {
+					setTimeout(function() {
+						assignmentListCheck();
+					}, 500);
+				}
+			};
+			
+			/**
+			 * Check GradeBookInstructorV2 Data 
+			 * @returns Void
+			 */
+			window.gradeBookInstructorV2Check = function() {
+				if (objGradeBookV2JsonData != 0) {
+					try {
+						if (objGradeBookV2JsonData.Status == "200" || objGradeBookV2JsonData.Status == 200) {
+							var aItemAttemptIds = _.map(objGradeBookV2JsonData.Content.GradeBookData, function (obj) {
+														return {
+															IAID: obj.IAID,
+															ARID: obj.ARID
+														};
+													});
+							GetGradebookAttemptData(aItemAttemptIds);
+							setTimeout(gradebookAttemptDataCheck, 200);
+						}
+						else{
+							throw(objGradeBookV2JsonData.Error);
+						}
+					}
+					catch(err){
+						if (err.ErrorCode != "U1065") {
+							PerformanceView._alert({
+								divId:		'dialog-message',
+								title:		'Alert!',
+								message:	err.ErrorUserDescription
+							});
+						}
+					}
+				} else {
+					setTimeout(gradeBookInstructorV2Check, 100);
+				}
+			};
+			
+			/**
+			* Check GradeBookAttemptData Data 
+			* @returns Void
+			*/
+			window.gradebookAttemptDataCheck = function() {
+				if (objGradeBookJsonData != 0) {
+					//GetClassUserLevel();
+					GetClassSettings();
+					//setTimeout(classUserLevelCheck, 200);	
+					setTimeout(getClassSettingsDataCheck, 1000);	
+					//alert(1);
+				} else {
+					setTimeout(gradebookAttemptDataCheck, 100);
+					//setTimeout(gradebookAttemptDataCheck, 100);
+				}
+			};
+			
+			/**
+			* Check GetClassSettings Data 
+			* @returns Void
+			*/
+			window.getClassSettingsDataCheck = function() { 
+				if (objSettingsData != 0) { 
+					GetClassUserLevel();
+					setTimeout(classUserLevelCheck, 1000);	
+				} else {
+					setTimeout(getClassSettingsDataCheck, 1000);
+				}
+			};
+			
+			
+			/**
+			* Check ClassUserLevel Data 
+			* @returns Void
+			*/
+			window.classUserLevelCheck = function() {
+				if (objGetClassUserLevel != 0) {
+					try {
+						if (objGetClassUserLevel.Status == "200" || objGetClassUserLevel.Status == 200) {
+							GetCurrentWeekForClass();
+							setTimeout(currentWeekCheck, 100);	
+						}
+						else{
+							throw(objGetClassUserLevel.Error);
+						}
+					}
+					catch(err){
+						if (err.ErrorCode != "U1065") {
+							PerformanceView._alert({
+								divId:		'dialog-message',
+								title:		'Alert!',
+								message:	err.ErrorUserDescription
+							});
+						}
+					}
+				} else {
+					setTimeout(classUserLevelCheck, 100);
+				}
+			};
+			/** 
+				* check current week data
+				* @returns Void
+				
+			*/
+			window.currentWeekCheck  = function() {
+				if(objCurrentWeekJsonData != null){
+					try {   
+							if (objCurrentWeekJsonData.Status == "200" || objCurrentWeekJsonData.Status == 200) {
+								onPageLoadComplete(VIEWTYPE.c_s_PERFORMANCE);
+								$("#loaderContainer").hide();
+								$('.wrapper').show();
+								Application.init(VIEWTYPE.c_s_PERFORMANCE);
+								$(".dp_select_option:first").trigger("click");
+								$('.wrapper').animate({'opacity' : '1'}, 800);
+							}
+							else{
+								throw(objCurrentWeekJsonData.Error);
+							}
+						}
+						catch(err){
+							if (err.ErrorCode != "U1065") {
+								PerformanceView._alert({
+									divId:		'dialog-message',
+									title:		'Alert!',
+									message:	err.ErrorUserDescription
+								});
+							}
+						}
+				}else {
+					setTimeout(currentWeekCheck, 100);
+				}
+			};
+			$(document).ready(function () {
+                $('.wrapper').hide();
+                
+				// Loader Image
+				var loaderImg = '<div style=" font-size: 13px;"><img src="media/loader.gif" style="margin-bottom: 15px;"><br />LOADING</div>';
+				$('body').css({'background-color': '#FFF'});
+				$('.wrapper').hide();
+				$("#loaderContainer").css({'background-color': '#FFF', 'text-align':'center', 'top' : '45%', 'left': '50%', 'position' : 'absolute'}).html(loaderImg);
+				
+				objPlatform = oPlatform;
+				if(objPlatform.isIOS()) {
+					loadJS('js/NativeBridge.js', GetPerformanceInfo);
+				}
+				else {
+					GetPerformanceInfo();
+				}
+				
+				// Start: IPP-3008
+				if(oPlatform.isAndroid ()){
+					$("html").css({"-webkit-overflow-scrolling": "touch"});
+				}
+				// End: IPP-3008
+				
+				setTimeout(performanceInfoCheck, 200);
+				
+				// bind click event for hiding the performance info popup on body
+				$(".wrapper").off("click tap").on("click tap", function(e) {
+					// for removing performance info pop up
+					if($("#" + PERFORMANCE.c_s_PERFORMANCE_INFO_BUBBLE).length) {
+						$("#" + PERFORMANCE.c_s_PERFORMANCE_INFO_BUBBLE).remove();
+					}
+					// for removing skill score pop up
+					if($("#skillInfoBubble").length) {
+						$("#skillInfoBubble").remove();
+					}
+				});
+            });
+			
+            $(window).resize(function () {
+                PerformanceView.resize();
+            });
+
+            window.onorientationchange = function () {
+                PerformanceView.resize();
+            };
+        </script>
+	</head>
+	<body class="performance_body">
+		<div id="loaderContainer"></div>
+		<div class="wrapper">
+			<header>
+				<div class="header_inner">
+					<div class="header_innerin gradient">
+						<button id="buttonTabDesc" type="button" class="right instructor_icon sprite"></button>
+						<button id="buttonTabRefresh" type="button" class="right refresh_icon sprite"></button>
+						<div class="tabs_wrap">
+							<div class="p_tabbing">
+								<!-- <button data-view-mode="modePieChart" class="p_button8 left buttonTopMenu">Pie Chart</button> -->
+								<button data-view-mode="modeLineGraph" class="p_button8 active left buttonTopMenu">Assignment</button>
+								<button data-view-mode="modeSkillReport" class="p_button8 left buttonTopMenu">Skill</button>
+								<button data-view-mode="modeDetailedView" class="p_button8 left buttonTopMenu">Detailed View</button>
+							</div>
+						</div>
+						<div class="clear"></div>
+					</div>
+					<div class="clear"></div>
+				</div>
+				<div class="clear"></div>
+			</header>
+			<div class="performance_wrap">
+				<div class="performance_wrap_container">
+					<div class="performance_left_wrap left">
+						<div id="containerLeftPanel">
+							<!-- Left Panel Conatiner for Performance Tab -->
+						</div>
+						<div class="clear"></div>
+					</div>
+					<div class="perf_wrap_content middle">
+						<div class="perf_wrap_content_inner">
+							<div id="containerRightPanelHeader" class="title_content">
+								<!--  Right Panel Header COntainer for Performance Tab -->
+							</div>
+							<div class="performance_content_area">
+								<div id="containerRightPanelInner">
+									<!-- Right Panel Main Conatiner for Performance Tab -->
+								</div>
+								<div id="containerSlider" class="slider_range_content">
+									<!-- Right Panel Slider Conatiner for Performance Tab -->
+								</div>
+								<div class="clear"></div>
+							</div>
+							<div class="clear"></div>
+						</div>
+						<div class="clear"></div>
+					</div>
+					<div class="clear"></div>
+				</div>
+				<div class="clear"></div>
+			</div>
+		</div>
+		<div id="viewAssignmentPopupArea" style="display: none;">
+			<iframe src="" frameborder="0" width="100%" height="100%" allowfullscreen="true" webkitallowfullscreen="true" mozallowfullscreen="true">
+			<p>Your browser does not support iframes.</p>
+			</iframe>
+		</div>
+		<!-- DIALOG BOX --->
+		<div id="dialog-message" title="Alert!" class="Ilit_alert_box"></div>
+	</body>
+	<!-- Templates Definition -->
+	
+	<!-- Templating for Left Panel -->
+	<script type="text/template" id="templateLeftPanel">
+		<div class="overley" style="display:none;"></div>
+		<div class="student_shorting_popup" style="display:none;">
+			<div class="student_shorting_content">
+				<p>Would you like to save this selection as a new group ?</p>
+			</div>
+			<div class="student_shorting_footer">
+				<button class="button7 btn left" type="button">No Thanks</button>
+				<button class="button7 btn right" type="button">Save</button>
+				<div class="clear"></div>
+			</div>
+		</div>
+		
+		<!-- html for creating Student list -->
+		<div id="<%= PERFORMANCE.c_s_CONTAINER_STUDENT_LIST %>" class="performance_student_shorting_list" style="display:none;">
+			<div class="shorting_button_area">
+				<button id="<%= PERFORMANCE.c_s_ID_BTN_CANCEL %>" class="button7 btn left" type="button"><%= PERFORMANCE.c_s_LBL_BTN_CANCEL %></button>
+				<button id="<%= PERFORMANCE.c_s_ID_BTN_FILTER %>" class="button7 btn right" type="button"><%= PERFORMANCE.c_s_LBL_BTN_FILTER %></button>
+				<div class="clear"></div>
+			</div>          
+			<div class="student_shorting">
+				<div class="Popup_student_inner">
+					<div class="option-student">
+						<a id="<%= PERFORMANCE.c_s_ID_LINK_SELECT_ALL %>" class="selc left"><%= PERFORMANCE.c_s_LBL_LINK_SELECT_ALL %></a>  
+						<span class="left devi">|</span> 
+						<a id="<%= PERFORMANCE.c_s_ID_LINK_DESELECT_ALL %>" class="de-selc left"><%= PERFORMANCE.c_s_LBL_LINK_DESELECT_ALL %></a>
+						<div class="clear"></div>
+					</div>
+					<ul>
+						<%
+						$.each(studentData, function (idx, val){
+							if(val.UserRole.toLowerCase() == 's'){
+						%>	
+						<li data-student-id="<%=val.UserID%>"><!--  class="active" -->
+							<div class="uicheck_icon sprite"></div> 
+							<div class="middle"><%=val.UserDisplayName%></div>
+							<div class="clear"></div>
+						</li>
+						<%
+							}
+						});
+						%>	
+					</ul>
+					<div class="clear"></div>
+				</div>
+				<div class="clear"></div>
+			</div>
+		</div>
+        <!-- End of html for creating Student list -->
+		<div class="performance_wrap_content">
+			<div class="list_wrap_title">
+				<div id="<%= PERFORMANCE.c_s_BTN_DISP_STUD_LIST %>" class="setting_student sprite right"></div>
+				<div id="<%= PERFORMANCE.c_s_BTN_ALL_STUD %>" class="middle"><%= PERFORMANCE.c_s_TXT_ALL_STUDENT %></div>
+				<div class="clear"></div>
+			</div>
+			<!-- container for creating left panel main drop down list -->
+			<div id="containerMainDropDown" class="list_navigation"></div>
+			<!-- End: container for creating left panel main drop down list -->
+			<div class="warnings" id="warningTab">
+				<div class="warnings_inner">
+					<div class="warnings_student right"></div>
+					<div class="middle"><%= PERFORMANCE.c_s_TXT_WARNINGS%></div>
+					<div class="clear"></div>
+				</div>
+				<div class="clear"></div>
+			</div>
+			<div class="clear"></div>
+		</div>
+		<div class="clear"></div>		
+	</script>
+	
+	<script type="text/template" id="templateLGTypeDropDown">
+		<ul class="menuclass">
+		<%
+		if( performanceData.groups != null && performanceData.groups != undefined) {
+			var performanceGroupData = _.sortBy(performanceData.groups, "displayOrder");
+			$.each(performanceData.groups, function(idx, val) {
+			//if(classSettingData. AcceptOralFluencyScore == 0 && (val.title == "Oral Fluency")) return false;
+		%>
+			<li>  <!-- class="active" -->
+				<a href="#" data-benchmark="<%= idx %>" data-pgraph-type="<%= val.type %>"><span class="navigation_arrow sprite"></span><%= val.title %></a>
+				<% 
+				if(val.subgroup != undefined ){
+				%>
+				<ul class="list_dropdown parentclass">
+					<%
+					var firstChildArr = _.sortBy(val.subgroup, "displayOrder");
+					$.each(firstChildArr, function(idx_sub, val_sub) {
+					
+					%>
+					<li>
+						<a href="#" data-benchmark="<%= idx%>_<%= idx_sub%>" data-pgraph-type="<%= val_sub.type %>"><%= val_sub.title %></a>
+						<%
+						if(val_sub.subgroup != undefined ){
+						%>
+						<ul class="list_dropdown_inner subclass">
+							<%
+							var secondChildArr = _.sortBy(val_sub.subgroup, "displayOrder");
+							$.each(secondChildArr, function(idx_sub_sub, val_sub_sub) {
+								if(classSettingData.ShowCriticalResponse == 0 && (val_sub_sub.title == "Critical Response")) return false;
+							%>
+							<li><a href="#" data-benchmark="<%= idx%>_<%= idx_sub%>_<%= idx_sub_sub%>" data-pgraph-type="<%= val_sub_sub.type %>"><%= val_sub_sub.title%></a></li> <!-- class="active" -->
+							<%
+							});
+							%>
+						</ul>
+						<%
+						}
+						%>
+					</li>
+					<%
+					});
+					%>
+				</ul>
+				<%
+				}
+				%>
+			</li>
+		<%
+			});
+		}
+		%>
+		</ul>
+		<div class="clear"></div>
+	</script>
+	
+	<script type="text/template" id="templateSkillDropDown">
+		<ul class="menuclass">
+		<%
+		if( skillGroupData != null && skillGroupData != undefined) {
+			$.each(skillGroupData, function(idx, val) {
+		%>
+			<li>  <!-- class="active" <span class="navigation_arrow sprite">-->
+				<a href="#" data-parent-skill-id="<%= val.ParentSkillID %>" data-skill-group-idx="<%= idx %>"></span><%= val.GroupTitle %></a>
+			</li>
+		<%
+			});
+		}
+		%>
+		</ul>
+		<div class="clear"></div>
+	</script>
+	<!-- End of Templating for Left Panel -->
+	
+	<!-- Templating for Right Panel Header -->
+	<script type="text/template" id="templateRightPanelHeader">
+		<%
+		var tempArr = benchmarkIndex.toString().split("_"); 
+		var	headerTitle = "";
+		if(tempArr.length == 3) {
+			var idx1 = tempArr[0], 
+				idx2 = tempArr[1], 
+				idx3 = tempArr[2];
+			headerTitle = '<span style="font-size:24px;">' + data.performanceInfoData.groups[idx1].title + '</span><span style="font-size:18px;"> | ' + data.performanceInfoData.groups[idx1].subgroup[idx2].title + ' | ' + data.performanceInfoData.groups[idx1].subgroup[idx2].subgroup[idx3].title + '</span>';
+		} else if(tempArr.length == 2) {
+			var idx1 = tempArr[0], 
+				idx2 = tempArr[1];
+			headerTitle = '<span style="font-size:24px;">' + data.performanceInfoData.groups[idx1].title + ' </span><span style="font-size:18px;">| ' + data.performanceInfoData.groups[idx1].subgroup[idx2].title + '</span>';
+		} else {
+			var idx1 = tempArr[0];
+			headerTitle = '<span style="font-size:24px;">' + data.performanceInfoData.groups[idx1].title + '</span>';
+		}
+		%>
+		<div class="title_wrap"><%= headerTitle %></div>
+		<div id="<%= PERFORMANCE.c_s_RIGHT_PANEL_SUB_HEADER %>" class="unit_name"></div> <!-- 90 Minute Class | All Students | Unit 1.1–2.2 -->
+		<div class="clear"></div>
+	</script>
+	<!-- End of Templating for Right Panel Header -->
+	
+	<!-- Templating for Unit/Lesson Slider -->
+	<script type="text/template" id="templateSlider">
+		<div class="slider_range_content_inner">
+			<div id="slider-range">
+<%
+				var iLesson = 1,
+					lastClass = "",
+					iCnt = 1,
+					sOddEvenCls = "";
+				for (var iUnit in weeksPerUnit) {
+					iUnit = parseInt(iUnit);
+					lastClass = "";
+					if (iUnit == constUnit) {
+						lastClass = " last";
+					}
+					
+					var iMaxWeeks = parseInt(weeksPerUnit[iUnit.toString()]),
+						iBorderWidth = 1;
+						dWidth = ((width - iBorderWidth) / 2),
+						dMarginRight = width - dWidth - iBorderWidth;
+						
+					sOddEvenCls = (iCnt % 2 == 0? " even": " odd");
+                        
+                                        
+%>
+				<div class="unit <%= PERFORMANCE.c_s_UNIT_SCALE_CLASS %><%= lastClass %><%= sOddEvenCls %>" style="width:<%= (width * iMaxWeeks) %>px;">
+					<div class="div-stick"></div>
+					<% /* %>
+					<h2 style="position:abolute; top:-25px; color:red;">
+						weeksPerUnit[<%= iUnit %>.toString()]&nbsp;
+						<%= width %> * <%= iMaxWeeks %>
+					</h2>
+					<% */ %>
+					<!-- <div class="text_unit" id="unitId_<%//= iUnit %>" data-num-value="<%//= iUnit %>"> <span> UNIT <%//= iUnit %> </span> </div> -->
+					<div class="stick_place">
+<%
+						for (var iWeek = 1; iWeek <= iMaxWeeks; iWeek++, iLesson++) {
+%>
+						<div
+							class="stick"
+							id="lessonId_<%= iLesson %>"
+							data-num-value="<%= iLesson %>"
+							data-unit-number="<%= iUnit %>"
+							data-week-number="<%= iWeek %>"
+							style="width:<%= dWidth %>px; margin-right:<%= dMarginRight %>px;margin-left: -<%= (iWeek ==iMaxWeeks) ? dMarginRight/2 : "" %>px"
+						></div>
+<%
+						}
+%>
+					</div>
+				</div>
+<%
+					iCnt++;
+				}
+%>
+				<div class="clear"></div>
+			</div>
+		</div>
+	</script>
+	<!-- End of Templating for Unit/Lesson Slider -->
+	
+	<!-- Templating for Line Graph -->
+	<script type="text/template" id="templateLineGraph">		
+		<%
+		if(benchmarkIndex != null){
+		%>		
+		<div id="<%= PERFORMANCE.c_s_RIGHT_PANEL_FOR_NOTE_BENCHMARK %>" class="chart_tabs right">
+			<div class="chart_tabs_inner">
+				<div class="chart_tabs_listing">
+					<div class="tabs_arrow">
+						<div class="tabs_arrow_inn"></div>
+					</div>
+					<div class="chart_tabs_listing_inner">
+					<ul>
+						<%
+						var tempArr = benchmarkIndex.toString().split("_"); 
+						var	dataBenchmark = "";
+						if(tempArr.length == 3) {
+							var idx1 = tempArr[0], 
+								idx2 = tempArr[1], 
+								idx3 = tempArr[2];
+							dataBenchmark = data.performanceInfoData.groups[idx1].subgroup[idx2].subgroup[idx3].benchmark;
+						} else if(tempArr.length == 2) {
+							var idx1 = tempArr[0], 
+								idx2 = tempArr[1];
+							dataBenchmark = data.performanceInfoData.groups[idx1].subgroup[idx2].benchmark;
+						} else {
+							var idx1 = tempArr[0];
+							dataBenchmark = data.performanceInfoData.groups[idx1].benchmark;
+						}
+							
+						$.each(dataBenchmark, function (id, val) {
+						%>
+						<li class="benchmarkContainer"> <!--  class="active" -->
+							<div class="bullet_icon">
+								<span class="color"><span style="background: none repeat scroll 0 0 <%= val.colorCode %>;"></span></span>
+							</div>
+							<div class="chart_tabs_cont">
+								<p><strong><%= val.title %></strong></p>
+								<%
+								if(val.suggestion != "") { %>
+								<div class="suggestion"><strong><%= PERFORMANCE.c_s_TXT_SUGGESTIONS %></strong> <span class="suggest_icon sprite"></span></div>
+								<div class="suggestion_content"><%= val.suggestion %></div>
+								<% }%>
+							</div> 
+						</li>
+						<%
+						});
+						%>
+					</ul>
+					</div>
+					<div id="<%= PERFORMANCE.c_s_PERFORMANCE_NOTE_CONTENT %>" class="performance_note_content" style="display:block"><p><strong>Note: </strong><% /*= val.suggestion*/ %>Reading Checkpoint scores are low. The checkpoints require students to apply the reading skills you've modeled during Read Aloud Think Aloud and Whole Group Instruction. Remind students that the answers to each checkpoint question can always be found in the text of the Interactive Reader.</p></div>
+				</div>
+				<div class="clear"></div>
+			</div>
+			<div class="clear"></div>
+		</div>
+		<% }%>
+		<div class="chart_area middle">
+			<div class="chart_main_container">
+				<div id="<%= PERFORMANCE.c_s_CONTAINER_CHART %>" style=" height: 400px;"></div><!-- max-width: 505px; -->
+			</div>
+		</div>
+	</script>
+	<!-- End of Templating for Line Graph -->
+	
+	<!-- Start of Performance Warning Template -->
+	<script type="text/template" id="templateWarning">                        
+            <div class="performance_content_area">
+            <div class="assignments_container worningsnotes_acordian"> 
+                    <% 
+                        var iTeacherWarningLength   =   objTeacherWarningModel.length;                        
+                        if(iTeacherWarningLength > 0) {
+                            var sWarningTitle   =   objTeacherWarning.gradingpending.title;
+                            var sWarningMsg     =   objTeacherWarning.gradingpending.message;
+                            sWarningMsg         =   sWarningMsg.replace("#no#", iTeacherWarningLength);
+                            
+                            var objTeacherInfo  =   _.where(PerformanceView.model.studentListData, {UserRole : "I"})[0];
+                            var _sTeacherName   =   objTeacherInfo.UserDisplayName;
+                    %>
+                    <div class="teacher_assignment_performece">
+                    <div class="warning_head"><div class="warning_head_inner">Teacher Warnings </div></div>
+                    <ul>
+                    <li class="actionshowview ">
+                        <div class="actionshowview_inner">
+
+                            <div class="user_images left"> 
+                                    <img alt="" src="media/student_img3.png">
+                                </div>
+                            <span class="ar_rt right sprite"></span>
+                            <span class="right percent_score"><%=sWarningTitle%></span>
+                            <span class="cmt_number right"><%=iTeacherWarningLength%></span>
+                            <div class="middle"><%=_sTeacherName%></div>
+                            <div class="clear"></div>
+                        </div>
+                        <div class="warnings_notes_content">
+                                <p><%=sWarningMsg%></p>
+                            <div class="clear"></div>
+                        </div>
+
+                    </li>                                        
+                </ul>
+               </div>
+               <%
+                }
+               %>
+               
+               <% 
+               if(Object.keys(objStudentWarningModel).length > 0) {       
+               %>
+                <div class="student_assignment_performece">
+                    <div class="warning_head"><div class="warning_head_inner">Student Warnings </div></div>
+                    <ul>
+                        <% for(var key in objStudentWarningModel) {  %>
+                        <li class="actionshowview">
+                            <div class="actionshowview_inner">
+                                <div class="user_images left"> 
+                                    <img alt="" src="media/student_img3.png">
+                                </div>
+                                <span class="ar_rt right sprite"></span>
+                                <span class="right percent_score"><%=objStudentWarningModel[key].sWarningTitle%></span>
+                                <div class="middle"><%=objStudentWarningModel[key].StudentName%></div>
+                                <div class="clear"></div>
+                            </div>
+                            <div class="warnings_notes_content">
+                                <p><%=objStudentWarningModel[key].sWarningMsg%></p>
+                                <div class="clear"></div>
+                            </div>
+                        </li>     
+                        <% } %>
+                    </ul>
+                </div>
+                <% } %>
+            </div>
+            <div class="clear"></div>
+        </div>
+	</script>
+	<!-- End of Performance Warning Template -->
+	
+	<!--  Performance Tooltip -->
+	<script type="text/template" id="templatePerformanceInfoBubble">
+		<div id="<%= PERFORMANCE.c_s_PERFORMANCE_INFO_BUBBLE%>" class="lesson_toolls active">
+			<div style="display: block;" class="lesson_tooltip">
+				<div class="page_arrow sprite"></div>
+				<div class="Tooltip_title_wrap">Info</div>
+				<div class="Tooltip_wrap">
+					<p><%= infoTxt %></p>
+				</div>
+			</div>
+		</div>
+	</script>
+	<!--  End of Performance Tooltip -->
+	
+	<!-- Performance Detail View -->
+	<script type="text/template" id="templatePerformanceDetailView">
+		<div class="assignments_container">
+			<ul>
+			<%
+				$.each(obj, function (pIdx, pVal) {
+			%>
+				<li class="actionshowview active">
+					<div class="actionshowview_inner heading_content">
+						<div class="view_inner">
+							<span class="ar_rt right sprite"></span>
+							<span class="right percent_score"><%= (!isNaN(pVal.avgScore)) ? pVal.avgScore + '%' : '' %></span>
+							<div class="middle"><%= pVal.parentTitle %></div>
+							<div class="clear"></div>
+						</div>
+					</div>
+					<ul class="sub_menu mainmenuclass">
+					<%
+						$.each(pVal.childElements, function(cIdx, cVal) {
+					%>
+						<li class="red parentclass">
+							<div class="actionshowview_inner">
+								<!-- <span class="left_box_bullet left sprite"><span></span></span> -->
+								<span class="ar_rt right sprite"></span>
+								<span class="right percent_score"><%= cVal.avgScore %>%</span>
+								<div class="middle" style="padding-left:34px;"><%= cVal.title %></div>
+								<div class="clear"></div>
+							</div>
+							<ul class="sub_menu subclass">
+							<%
+								$.each(cVal.benchMarkColor, function (bIdx, bVal) {
+							%>
+									<li class="subclass">
+									<div class="actionshowview_inner">
+										<span class="left_box_bullet left sprite"><span style="background: none repeat scroll 0 0 <%= bVal.colorCode %>;"></span></span>
+										<span class="ar_rt right sprite"></span>
+										<span class="right percent_score"><%= bVal.title %></span>
+										<div class="middle" style="padding-left:55px;"><%= bVal.studentCounter %> <%=ASSIGNMENTS.c_s_USER_TYPE_STUDENT%></div>
+										<div class="clear"></div>
+									</div>
+									<ul class="sub_menu subsubclass">
+									<%
+										$.each(bVal.studentDetails, function (sIdx, sVal) {
+									%>
+										<li class="viewdetails1">
+											<div class="actionshowview_inner">
+												<span class="left_box_bullet left sprite"><span  style="background: none repeat scroll 0 0 <%= bVal.colorCode %>;"></span></span>
+												<span class="ar_rt right sprite" ></span>
+												<span class="right percent_score"><%= Math.round(sVal.percentage/Object.keys(sVal.assignment).length) %>%</span>
+												<div class="middle" style="padding-left:70px;"><%= sVal.studentName %></div>
+											</div>
+											<ul class="sub_menu subsubsubclass">
+											<%
+												$.each(sVal.assignment, function (aIdx, aVal) {
+											%>	
+												<li
+													class="viewdetails"
+													data-itemid="<%= aVal.ItemID %>"
+													data-itemattemptid="<%= aVal.ItemAttemptID %>"
+													data-itemname="<%= aVal.ItemName %>"
+													data-itemsubtype="<%= aVal.ItemSubType %>"
+													data-itemtype="<%= aVal.ItemType %>"
+													data-studentid="<%= sIdx %>"
+													data-itemattemptsummary="<%= aVal.ItemAttemptSummary %>"
+												>
+													<div class="actionshowview_inner">
+														<span class="left_box_bullet left sprite"><span  style="background: none repeat scroll 0 0 <%= bVal.colorCode %>;"></span></span>
+														<span class="ar_rt right sprite" ></span>
+														<span class="right percent_score"><%= Math.round((aVal.FinalScore/aVal.ItemMaxScore)*100) %>%</span>
+														<div class="middle"><%= aVal.ItemName %></div>
+													</div>
+												</li>
+											<%
+												});
+											%>
+											</ul>
+										</li>
+									<% 
+										});
+									%>
+									</ul>
+								</li>	
+							<%
+								});
+							%>
+							</ul>
+						</li>
+					<% 
+						});
+					%>
+					</ul>
+				</li>
+			<%
+				});
+			%>
+			</ul>
+		</div>
+		<div class="clear"></div>
+	</script>
+	<!-- End of Performance Detail View -->
+	
+	
+	
+	<!-- Templating for Skill Report Right Panel Header -->
+	<script type="text/template" id="templateSkillReportRightPanelHeader">
+		<div class="title_wrap"><span style="font-size:24px;"><%= headerTitle %></span></div>
+		<div id="<%= PERFORMANCE.c_s_RIGHT_PANEL_SUB_HEADER %>" class="unit_name"></div>
+		<div class="clear"></div>
+	</script>
+	<!-- End of Templating for Skill Report Right Panel Header -->
+	
+	<!-- Templating for Skill Based Report Content -->
+	<script type="text/template" id="templatePerformanceSkillReport">
+		<div class="chart_area middle">
+			<div class="chart_main_container">
+				<div id="" class="skill-wrapper">
+					<div class="skill-heading"><%= skillGroupTitle %> Skills</div>
+					<div class="clear"></div>
+					<div class="skill-body">
+						<div class="skill-unit-header">
+							<div class="blank-skill-title left"><span id="btnPrevSkillReport" class="right btn_prev_skill sprite">&lt;</span></div>
+						<%
+						var hIdx = 0,
+							dIdx = 1;
+						while(hIdx < headerRecords.length) {
+							if((hIdx%10) == 0) {
+						%>
+							<div id="skill_header_<%= dIdx %>" class="skill-unit-container">
+						<% dIdx++;}%>
+								<div class="skill-unit left"><%= headerRecords[hIdx].fIdx%></div>
+						<%
+						if((hIdx != 0) && ((hIdx%10) == 9)) {
+							
+						%>
+							</div>
+						<%
+							}
+							hIdx++;
+						}
+						%>
+						<% if((hIdx%10) != 0) {%>
+							</div>
+						<% }%>
+						
+						
+							<div class=""><span id="btnNextSkillReport" class="right btn_next_skill sprite">&gt;</span></div>
+						</div>
+						<div style="clear:both"></div>
+						<div class="skill-content">
+							<div class="skill-content-left left">
+								<%
+								$.each(skillRecords, function(skillIdx, skillVal){
+									var skillStyle = (skillIdx == 0) ? "padding-top:10px;" : "",
+										className = (skillVal.Description == "") ? "" : "showSkillToolTip",
+										infoIdx = "skill|"+SkillGroupIndex+"|"+skillIdx;
+								%>
+								<div data-info-idx="<%= infoIdx%>" data-subSkillID="<%= skillVal.SubSkillID %>" class="sub-skill-title <%= className %>" style="<%= skillStyle %>"><%= skillVal.Title %></div>
+								<%
+								});
+								%>
+							</div>
+							
+							
+							
+							<%
+							$.each(finalSkillBasedData, function (pIdx, pVal) {
+							%>
+								<div id="skill_container_<%= pIdx %>" class="skill-content-right left">
+								<%
+                                                                
+								$.each(pVal, function(sIdx, sVal) { 
+								%>
+									<div>
+									<%
+                                     
+									$.each(sVal.Results, function(hIdx, hVal) { 
+										var className = (hVal.avgSkillScore == -1) ? "" : "showSkillToolTip",
+											infoIdx = "assignment|"+pIdx+"|"+sIdx+"|"+hIdx;
+									%>
+										<div data-info-idx="<%= infoIdx%>" class="skill-box left <%= className %>" style="background-color:<%= hVal.colourCode%>"></div>
+									<%
+									});
+									%>
+								</div>
+								<%
+								});
+								%>
+								</div>
+							<%
+							});
+							%>
+
+							
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</script>
+	<!-- End: Templating for Skill Based Report Content -->
+	
+	<!-- Start: Templating for Skill Based Report Popup -->
+	<script type="text/template" id="infoBubble">
+	<div class="sbr_toolls active" id="skillInfoBubble">
+		<div class="sbr_tooltip" style="display: block;">
+			<div class="page_arrow sprite"></div>
+			<div class="main_sbr_tooltip">
+				<%
+				if(popupType == "skill") {
+				%>
+				<div class="sbr_Tooltip_wrap">
+					<%= infoContent %>
+				</div>
+				<%
+				}
+				else{
+					var objLength = Object.keys(infoContent).length,
+						iAssCount = 0;
+					$.each(infoContent, function (aIdx, aVal){
+						var iSkillScore = 0,
+							iSkillMaxScore = 0,
+							iStudCount = 0;
+						$.each(aVal.StudInfo, function(sIdx, sVal){
+							$.each(sVal, function(sIdx, sAVal){
+								iSkillScore += sAVal.SkillScore;
+								iSkillMaxScore += sAVal.SkillMaxScore;
+								iStudCount++;
+							});
+						});
+						
+						// Start: Solved IPP-3407 
+						iSkillScore 	= (iSkillScore/iStudCount).toFixed(2);
+						// End: Solved IPP-3407
+						iSkillMaxScore 	= Math.round(iSkillMaxScore/iStudCount);
+						
+						var atempSkillScore = iSkillScore.split(".");
+						
+				%>
+				<div class="sbr_Tooltip_wrap">
+					<div class="sbr_Tooltip_wrap_left"><%= aVal.ItemName %></div>
+					<div class="sbr_Tooltip_wrap_right"><%= (atempSkillScore[1] == 0) ? atempSkillScore[0] : iSkillScore %>/<%= iSkillMaxScore %></div>
+				</div>
+					
+					<% 
+					iAssCount++;
+					if(objLength != iAssCount) {
+					%>
+					<div class="skilltooldivider"></div>
+					<% } %>
+				<%
+					});
+				}
+				%>
+			</div>
+		</div>
+	</div>
+    </script>
+	<!-- End: Templating for Skill Based Report Popup -->
+</html>

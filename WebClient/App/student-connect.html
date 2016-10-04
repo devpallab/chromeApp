@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta name="viewport" content="width=device-width; initial-scale=1.0; maximum-scale=1.0;">
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+	<title>iLiT</title>
+	<link href="css/lesson.css" media="all" rel="stylesheet" />        
+	<link href="css/fonts/fonts.css" media="all" rel="stylesheet" />	
+	<link href="css/lesson.swiper.css" media="all" rel="stylesheet" />
+	<link href="css/tooltipster.css" media="all" rel="stylesheet" />
+	<link href="css/video-js.css" type="text/css" rel="stylesheet"/>        
+	<link href="css/lesson_dev.css" type="text/css" rel="stylesheet"/>
+	<link href="css/student_connect_dev.css" type="text/css" rel="stylesheet"/>
+	<link href="css/jquery-ui.css" media="all" rel="stylesheet"/>
+
+	<link href="css/buzz.css" media="all" rel="stylesheet" />
+    <link href="css/buzz_dev.css" media="all" rel="stylesheet" />	
+	
+	<script type="text/javascript" src="js/jquery-1.10.2.js"></script>
+	<script type="text/javascript" src="js/jquery-ui.js"></script>
+	<script type="text/javascript" src="js/underscore-min.js"></script>	
+	
+	<script type="text/javascript" src="js/jquery.tooltipster.min.js"></script>
+	<script type="text/javascript" src="js/jquery.ui.touch-punch.min.js"></script>
+	<script type="application/javascript" src="js/fastclick.js"></script>
+	<script src="js/video.js" type="text/javascript"></script>
+	<script type="text/javascript" src="js/iSeriesBase.js"></script>
+	<script type="text/javascript" src="js/util.js"></script>
+	<script type="text/javascript" src="js/constants.js"></script>
+	<script type="text/javascript" src="js/student_connect.js"></script>
+	<script type="text/javascript" src="js/message_handler.js"></script>
+	<script type="text/javascript" src="js/application.js"></script>
+	<script type="text/javascript" src="js/client_native_communication.js"></script>
+<!--[if gte IE 9]>
+        <style type="text/css">
+            .gradient {
+				filter: none !important;
+			}
+        </style>
+        <![endif]-->
+		
+		<script type="text/javascript">
+		
+		/* Buzz Info notes data*/
+		objBuzzCommentsJsonData = {
+			rootFolderPath:'/path/to/curricullam',
+			gradeId:8,
+			mediaPath:'',
+			jsPath:'js/buzz_info.js'
+		};
+		
+		window.CheckBuzzCommentsDetails = function() {
+			if (objBuzzCommentsJsonData != null) {
+				loadJS("js/buzz_info.js", buzzInfoJsLoaded);
+			}
+			else {
+				setTimeout(CheckBuzzCommentsDetails, 500);
+			}
+		};
+		
+		/**
+		* Check Buzz Info Js Content loaded or not 
+		* @returns void
+		*/
+		window.buzzInfoJsLoaded =  function () {
+			if (objBuzzCommentData != null) {
+				GetBuzzCmtDetails();
+				setTimeout(function() {
+				scheduleStudentBuzzDataCheck();
+				}, 200);
+			}
+			else {
+				setTimeout(function() {
+					buzzInfoJsLoaded();
+				}, 500);
+			}
+		};
+		
+		/**
+		* Get Buzz Details
+		* @method scheduleStudentBuzzDataCheck
+		* @return 
+		*/
+		window.scheduleStudentBuzzDataCheck = function() {
+
+		if (objBuzzListData != null) {
+			if (objBuzzListData.Status == "200") {
+				Application.init(VIEWTYPE.c_s_STUDENT_CONNECT);
+				$('.wrapper').animate({'opacity' : '1'}, 800);
+			} else {
+				if (objBuzzListData.Error.ErrorCode != 'U1065') {
+					//alert(objStudentListJsonData.Error.ErrorUserDescription);
+				}
+			}
+		} else {
+			setTimeout(scheduleStudentBuzzDataCheck, 100);
+		}
+		};
+		
+		$(document).ready(function () {
+				if(oPlatform.isIOS()) {
+				loadJS('js/NativeBridge.js', CheckBuzzCommentsDetails);
+				}else {
+				setTimeout(CheckBuzzCommentsDetails, 400);
+				}
+		});
+		</script>
+
+</head>
+<body >
+<div class="wrapper" style="display: block; opacity: 1;">
+
+  <div id="connectStudent" style="height: 500px;">
+    <div class="backgound_images bg13"></div>
+    <div class="main_wrapper" id="toc_inner_container">
+      <div class="buzz_wrapper" id="studentConnectWrapper">
+        
+      </div>
+    </div>
+    <div class="clear"></div>
+  </div>
+</div>
+</body>
+<script type="text/template" id="studentConnectTemplate">
+<div class="buzz_wrapper_inner">
+          <div style="height: 500px;" class="buzz_container">
+              <div class="inner_content">
+			   <div class="heading1 left" >Comments</div>
+			   <button id="buttonConnectRefresh" type="button" class="right refresh_icon rconnect sprite"></button>
+			   <div class="clear"></div>
+			   <div class="comment_show" id="cmtView">
+			        
+			   </div>
+			  </div>
+			  <div class="buzzDiv" id="starview">
+			   
+			  </div>
+   		  </div>
+        </div>
+</script>
+<script type="text/template" id="studentCmtTemplate">
+		<% if(buzzList.length > 0) {%>
+						<table>
+						<tbody>
+						<% $.each(buzzList, function (idx, val){ 
+							
+							var rId = val.RevisionID;
+								rId = rId.toString().substring(0, 8),
+								cmtMonth = rId.substring(4, 6),
+								cmtDate = rId.substring(6, 8),
+								cmtYear = rId.substring(2, 4),
+								insBuzzCmt = JSON.parse(val.CMT_BUZZ),
+								insCmt = "";
+								
+								if(insBuzzCmt.comments != ""){
+									 //_.each(insBuzzCmt.comments, function (listdata, idx) {
+									//		insCmt += buzzCommentNotes.comments[listdata].title +",";
+									//	});
+									insCmt += insBuzzCmt.comments;
+								}
+								else{
+									insCmt = insBuzzCmt.personalComments;
+								}
+						%>   
+						    <tr>
+							<td width="30%"><%=cmtMonth%>/<%=cmtDate%>/<%=cmtYear%>
+							</td>
+							<td  width="70%" class="comment" >
+							 <%=insCmt%>
+							</td>
+							</tr>
+						
+						<%  });
+						%>
+						</tbody>
+						</table>
+						
+						
+					<% } %>
+					</ul>
+</script>
+<script type="text/template" id="studentStarTemplate">
+		<div class="heading1" style="display:none;">Buzz</div>
+		<% starimg = (noOfStars == 0) ? "star_big_border.png" : "star_big_fill.png"; %>
+		<div class="star"><img src="media/<%=starimg%>" ></div>
+		<% if (noOfStars == 1 ) { %>
+			<div class="heading2">You have <b><%=noOfStars%></b> star !!!</div>
+		<% } else { %>
+			<div class="heading2">You have <b><%=noOfStars%></b> stars !!!</div>
+		<% } %>
+</script>
+</html>

@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=0, minimum-scale=1.0, maximum-scale=1.0">
+	<title>iLiT</title>
+	
+	<link href="css/jquery-ui.css" media="all" rel="stylesheet"/>
+	<link href="css/instructor_message.css" media="all" rel="stylesheet"/>
+	<link href="css/instructor_message_dev.css" media="all" rel="stylesheet"/>
+	<link href="css/fonts/fonts.css" media="all" rel="stylesheet"/>
+	<!--[if gte IE 9]>
+	<style type="text/css">
+		.gradient {filter: none !important;}
+	</style>
+	<![endif]-->
+	
+	<script type="text/javascript" src="js/jquery-1.10.2.js"></script>
+	<script type="text/javascript" src="js/jquery-ui.js"></script>
+	<script type="text/javascript" src="js/underscore-min.js"></script>
+	<script type="text/javascript" src="js/jquery.ui.touch-punch.min.js"></script>
+	<script type="text/javascript" src="js/util.js"></script>
+	<script type="text/javascript" src="js/constants.js"></script>
+	<script type="text/javascript" src="js/iSeriesBase.js"></script>
+	<script type="text/javascript" src="js/message_handler.js"></script>
+	<script type="text/javascript" src="js/application.js"></script>
+	<script type="text/javascript" src="js/instructor_message.js"></script>
+	<script type="text/javascript" src="js/client_native_communication.js"></script>
+	<script type="text/javascript">
+		//var objMessageJsonData = null;
+		var scheduleCheck = function () {
+			if(objMessageJsonData != null) {
+				try{
+					if(objMessageJsonData.Status == 200 || objMessageJsonData.Status == "200"){
+						$("#loaderContainer").hide();
+						$('body').css({'background-color': '#E0E1E1'});
+						$('.wrapper').show();
+						Application.init(VIEWTYPE.c_s_INSTRUCTOR_MESSAGE);
+						$('.wrapper').animate({'opacity' : '1'}, 800);
+					}else{
+						throw(objMessageJsonData.Error);
+					}
+				}catch(err){
+					if (err.ErrorCode != "U1065") {
+						InstructorMessageView._alert({
+							divId:		'dialog-message',
+							title:		'Alert!',
+							message:	err.ErrorUserDescription
+						});
+					}
+				}
+			} else {
+				setTimeout(scheduleCheck, 100);
+			}
+		};
+			
+			
+		/* function GetMessageList__TEMP () {
+			objMessageJsonData = {"Status":"200","Error":null,"Content":[{"MessageID":"ea977ea6-de70-47dc-ab6e-ef555da2eb21","MessageType":"Didyouknow","MessageTitle":"Sample Did You Know 1","MessageText":"This is a did you know for a sample entry.","MessageDate":"3/13/2014 8:49:31 AM"},{"MessageID":"ea977ea6-de70-47dc-ab6e-ef555da2eb22","MessageType":"Didyouknow","MessageTitle":"Sample Did You Know 2","MessageText":"This is a did you know for a sample entry 2.","MessageDate":"3/13/2014 8:49:31 AM"},{"MessageID":"4bfd8a37-1a85-4040-99e1-ceaf55f7b382","MessageType":"Appupdate","MessageTitle":"A new App Update","MessageText":"New version of ilit available","MessageDate":"3/13/2014 8:51:12 AM"},{"MessageID":"d79c360b-5067-456b-b424-2cd8fb887d6d","MessageType":"Alert","MessageTitle":"A new Alert","MessageText":"A new version of OS is now available, upgrade your device at the earliest","MessageDate":"3/13/2014 8:55:40 AM"},{"MessageID":"b3b06c09-f458-43a3-8150-b303ea2d555b","MessageType":"Notes","MessageTitle":"If your students don't respond ","MessageText":"If your students don't respond to the polls you send this can help","MessageDate":"3/13/2014 9:08:08 AM"}]};
+		} */
+		$(document).ready(function () {
+			
+			// Loader Image
+			var loaderImg = '<div style=" font-size: 13px;"><img src="media/loader.gif" style="margin-bottom: 15px;"><br />LOADING</div>';
+			$('body').css({'background-color': '#FFF'});
+			$('.wrapper').hide();
+			$("#loaderContainer").css({'background-color': '#FFF', 'text-align':'center', 'top' : '45%', 'left': '50%', 'position' : 'absolute'}).html(loaderImg);
+			
+			if(oPlatform.isIOS()) {
+				loadJS('js/NativeBridge.js', GetMessageList);
+			}
+			else {
+				GetMessageList();
+			}
+			setTimeout(scheduleCheck, 2000);
+			
+			/*GetMessageList__TEMP();
+			scheduleCheck ();*/
+
+		});
+		
+		$(window).load(function () {				
+			onPageLoadComplete(GENERAL.c_s_PAGE_TYPE_INSTRUCTOR_MESSAGE);
+		});
+		$(window).resize(function () {
+			InstructorMessageView.resize();
+		});
+
+		window.onorientationchange = function () {
+			InstructorMessageView.resize();
+		};
+	</script>
+</head>
+<body>
+<div id="loaderContainer"></div>
+<div class="wrapper">
+	<div class="backgound_images bg12"></div>
+	<div class="main_wrapper">
+		<section class="container_space dashboard_instructor">
+			<div id="messageContainer" class="messages_area_container"></div>
+			<div class="clear"></div>
+		</section>
+		<div class="clear"></div>
+	</div>
+	<div class="clear"></div>
+</div>
+<!-- DIALOG BOX --->
+<div id="dialog-message" title="Alert!" class="Ilit_alert_box"></div>
+</body>
+
+<script type="text/template" id="messageTemplate">
+	<div id="messageTabs" class="messageTabs">
+		<ul>
+			<li><a href="#<%= MESSAGE_INSTRUCTOR.c_s_ALERT_MESSAGE_CONTAINER_ID%>"><%= MESSAGE_INSTRUCTOR.c_s_ALERT_TAB_TXT %> <span class="notify"><span>0</span></span></a></li>
+			<li><a href="#<%= MESSAGE_INSTRUCTOR.c_s_APP_MESSAGE_CONTAINER_ID%>"><%= MESSAGE_INSTRUCTOR.c_s_APP_UPDATE_TAB_TXT %>  <span class="notify"><span>0</span></span></a></li>
+			<li><a href="#<%= MESSAGE_INSTRUCTOR.c_s_DYK_MESSAGE_CONTAINER_ID%>"><%= MESSAGE_INSTRUCTOR.c_s_DID_YOU_KNOW_TAB_TXT %>  <!--<span class="notify"><span>0</span></span>--></a></li>
+			<li><a href="#<%= MESSAGE_INSTRUCTOR.c_s_NOTES_MESSAGE_CONTAINER_ID%>"><%= MESSAGE_INSTRUCTOR.c_s_NOTES_TAB_TXT %><!-- <span class="notify"><span>0</span></span> --></a></li>
+		</ul>
+		<!-- Container for Alert Type Meesages-->
+		<div id="<%= MESSAGE_INSTRUCTOR.c_s_ALERT_MESSAGE_CONTAINER_ID%>"></div>
+		
+		<!-- Container for App Type Meesages-->
+		<div id="<%= MESSAGE_INSTRUCTOR.c_s_APP_MESSAGE_CONTAINER_ID%>"></div>
+		
+		<!-- Container for Did You Know Type Meesages-->
+		<div id="<%= MESSAGE_INSTRUCTOR.c_s_DYK_MESSAGE_CONTAINER_ID%>"></div>
+		
+		<!-- Container for Notes Type Meesages-->
+		<div id="<%= MESSAGE_INSTRUCTOR.c_s_NOTES_MESSAGE_CONTAINER_ID%>"></div>
+		<div class="clear"></div>
+	</div>
+	<div class="clear"></div>
+</script>
+
+<script type="text/template" id="messageListTemplate">
+	<div class="tabs_inner_container">
+		<div class="mail_container">
+			<ul class="mail_row_list">
+				<% 
+				if(data.length > 0){
+					data = data.sort(function(a,b){
+						return new Date(b.MessageDate) - new Date(a.MessageDate);
+					});
+					$.each(data, function(idx, val) {
+				%>
+				<li class="read active" message-id="<%= val.MessageID %>">
+					<div class="mail_content_inner">
+						<%
+						if (
+							val.MessageType != MESSAGE_INSTRUCTOR.c_s_MESSAGE_DYK_TYPE && 
+							val.MessageType != MESSAGE_INSTRUCTOR.c_s_MESSAGE_NOTES_TYPE
+						) {
+						%>
+						<div class="row_bult left">
+							<div class="bullet_icon"></div>
+						</div>
+						<%
+						}
+						%>
+						<div class="middle">
+							<div class="mail_date"><%= val.MessageDate.split(" ").first() %></div>
+							<div class="mail_title_content">
+								<% if(val.MessageType == MESSAGE_INSTRUCTOR.c_s_MESSAGE_APP_TYPE && !isNaN(parseInt(val.AppVersion))) { %>
+								<div class="mail_virson right"><%= MESSAGE_INSTRUCTOR.c_s_MESSAGE_APP_VER_TXT %> <%= val.AppVersion %></div>
+								<% } %>
+								<div class="middle mail_title"><%= decodeURIComponent(val.MessageTitle) %></div>
+							</div>
+							<div class="mail_deatils">
+								<%= decodeURIComponent(val.MessageText) %>
+								<div class="clear"></div>
+							</div>
+							<div class="clear"></div>
+						</div>
+						<div class="clear"></div>
+					</div>
+					<div class="clear"></div>
+				</li>
+				<% }); }%>
+			</ul>
+			<div class="clear"></div>
+		</div>
+		<div class="clear"></div>
+	</div>
+	<div class="clear"></div>
+</script>
+<script type="text/template" id="messageDetailTemplate">
+	<%
+	$.each(data, function(idx, val){
+	%>
+	<div class="tabs_inner_container msg_detail_inner_container">
+		<div class="content_msg_bx">
+			<div class="date_msg"><%= val.MessageDate.split(" ").first() %></div>
+			<div class="msg_container_row">
+				<div class="right"><button class="btn button7 messageCloseBtn" active-index="<%= activeTabIdx%>">Close</button></div>
+				<div class="middle msg_header"><%= decodeURIComponent(val.MessageTitle) %></div>
+			</div>
+			<div class="clear"></div>
+		</div>
+		<div class="message_content">
+			<% if(val.MessageType == MESSAGE_INSTRUCTOR.c_s_MESSAGE_APP_TYPE && !isNaN(parseInt(val.AppVersion))) { %>
+			<div class="message_view_name"><%= MESSAGE_INSTRUCTOR.c_s_MESSAGE_APP_VER_TXT %> <%= val.AppVersion %></div>
+			<% } %>
+			<div class="msg_cont">
+				<%= decodeURIComponent(val.MessageText) %>
+			</div>
+			<div class="clear"></div>
+		</div>
+		<div class="clear"></div>
+	</div>
+	<%
+	});
+	%>
+	<div class="clear"></div>
+</script>
+</html>

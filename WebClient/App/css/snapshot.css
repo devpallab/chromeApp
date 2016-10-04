@@ -1,0 +1,35 @@
+body{ background-color:#939598;}
+img{ max-width:100%; height:auto;}
+.max-width-1024{ /* max-width:1024px; */ margin:0 auto;}
+.snap-graph-area{ padding:15px;}
+.snap-graph-wrap{padding-left:105px; height:100%; position:relative;}
+.snap-graph-drag{ height:100%; width:82px; position:absolute; left:0; top:0;}
+.snap-graph-dgoption{ width:100%; background-color:#0072bc; border-radius:5px; color:#fff; padding:10px; font-weight:bold; border:1px solid #fff; display:table; height:63px; line-height:16px; cursor:pointer; margin-bottom:6px;z-index: 9999; }
+.snap-graph-dgotext{ text-align:center; display:table-cell;vertical-align:middle;}
+.snap-graph-area .panel{ border:1px solid #fff;}
+.snap-graph-area .panel-heading{background-color:#0072bc; color:#fff; font-size:18px; padding-right:34px; padding-left:34px; position:relative;}
+.refresh-btn{ position:absolute; right:10px; top:50%; margin-top:-13px; width:26px; height:26px; padding:0; text-align:center; border-radius:50%; border:1px solid #fff;}
+.snap-graph-area .panel-body{ padding:2px;}
+
+.snap-block-wrap{ max-height:340px; overflow:auto; padding-left:12px; text-align:center;}
+.snap-block{ width:140px; position:relative; margin-right:2px; margin-bottom:2px; /*float:left;*/ display:inline-block; position:relative;}
+.snap-rating{ font-size:15px; color:#fff; padding:2px 15px; position:absolute; left:0; top:0;background-color:#000000;}
+.snap-block-title{ font-size:12px; color:#fff; font-weight:bold; background-color:#000000; padding:5px 10px; text-align:center; min-height:45px;}
+.snap-button-area{ padding:10px; margin-bottom:15px;} 
+.btn-primary{font-size:12px; color:#fff; font-weight:bold; background-color:#000000; border:1px solid #fff;}
+.sna-mblock{ height:93px; width:100%; border:1px solid #939598; font-size:12px;  text-align:center; padding:10px; text-transform:uppercase; font-weight:bold;}
+.sna-mblock .sna-no-block, .sna-mblock strong{font-size:36px;  display:block;}
+.snap-modal-body, .sna-mblock-img, .sna-mblock-text{ padding:0;}
+.snap-modal-body{ border:0;}
+.sna-mblock{  border:2px solid #939598;}
+
+.snap-modal .modal-header{ position:relative; background-color:#000; padding-left:30px; padding-right:30px; color:#fff; font-size:18px; text-align:center; border:0;     border-radius: 6px 6px 0 0;}
+.snap-close{ position:absolute; width:30px; height:30px; right:15px; background-color:#fff; border-radius:50%; border:1px solid #fff; color:#000; text-align:center; top:50%; margin-top:-15px; }
+.snap-modal .modal-content{ border:1px solid #fff;}
+.table-stuc{position:absolute; background-color:#fff; width:2px; height:96%; left:0; top:2px; bottom:2px;}
+.table-stucr{position:absolute; background-color:#fff; width:2px; height:96%; right:0; top:2px; bottom:2px;}
+.sna-title-bottom{height: 35px;    width: 500px;    vertical-align: bottom;    display: table-cell;}
+.bor-btm{border-bottom:0;}
+.bor-left{border-left:0;}
+.bor-right{border-right:0;}
+.bor-top{border-top:0;}

@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta name="viewport" content="width=device-width; initial-scale=1.0; maximum-scale=1.0;">
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>iLiT</title>
+    <script src="js/jquery-1.10.2.js"></script>
+    <script src="js/modernizr.custom.34982.js"></script>
+	<script type="text/javascript" src="js/util.js"></script>
+    <script src="js/sketcher.js"></script>
+    <script type="text/javascript" src="js/client_native_communication.js"></script>
+    <!--<script src="js/trigonometry.js"></script>-->
+    <script src="js/broadcast.js"></script>
+
+    <script>
+        
+    function loadJS (path, func) {
+        var scriptBooklist;
+        scriptBooklist = document.createElement('script');
+        scriptBooklist.type = "text/javascript";
+        scriptBooklist.src = path;
+        window.document.head.appendChild(scriptBooklist);
+    }
+
+    function addNativeBridge () {
+        if(navigator.userAgent.match(/iPhone|iPad|iPod/i)) {
+        loadJS('js/NativeBridge.js', function()
+            { 
+		     scheduleCheck();
+            });
+        }else{
+		     scheduleCheck();
+		}
+    }
+        //var sketcher = null;
+        var MediaUrl; // image
+        var ScribbleData; // scribble data
+        var ProjectItemType; //Item Type
+
+        var CurrentAction; //Item Type
+        var Status; //Item Type
+
+        var prevMediaUrl = '';
+        var prevMyData;
+        var grade = 'gr8';
+
+        var strStudentInformationDataPrev = '';
+
+        var ScribbleId = '';
+        var arrResultScribble = {
+            "scp": [],
+            "bscp": [],
+            "c": [],
+            "bsz": [],
+            "fcp": [],
+            "bfcp": [],
+            "bp": [],
+            "p": [],
+            "bc": [],
+            "sz": []
+        };
+        var prevScribbleDataLen = "";
+        var scribbleIdArr = {};
+        var ScribbleDataId = '';
+        var ScribbleDataIdArr = {};
+
+        var scribblePrevIdsArr = {};
+        var arrComputePrev = {};
+		var currentVersion = '';
+		var appPlatform = '';
+
+
+        $(document).ready(function(e) {
+            sketcher = new Sketcher("sketch");
+            $('#MainContainer').show();
+            $('#MainContainer').css("background", "url('media/loader.gif')");
+            $('#MainContainer').css("background-repeat", "no-repeat");
+            $('#MainContainer').css("background-position", "center center");			
+    
+            addNativeBridge();
+   	        scheduleCheck();
+            
+			//For Native Call
+
+        });
+
+        function checkStatus() {
+            if (Status == "500") {
+                //console.log("coming");
+                $("#MainContainer").html("");
+                $('#MainContainer').show();
+                //$('#MainContainer').css("background",""); 
+                $('#MainContainer').css("background", "url('media/loader.gif')");
+                //$('#MainContainer').css("background-color","red"); 
+                $('#MainContainer').css("background-repeat", "no-repeat");
+                $('#MainContainer').css("background-position", "center center");
+                prevMediaUrl = '';
+                return false;
+            }
+
+
+        }
+
+        function getData() {
+            mediaUrl = MediaUrl;
+            if (ProjectItemType == 'Image' || ProjectItemType == 'image') {
+                if (mediaUrl != prevMediaUrl) {
+                    imageRender();
+                    prevMediaUrl = mediaUrl;
+                }
+				if(ScribbleData != ''){
+				 
+					if(currentVersion != '')	{
+						ProcessReceivedData(ScribbleData);
+					}else{
+						ProcessReceivedData(ScribbleData);
+					}
+					
+				}else{
+				//imageRender();
+				prevScribbleDataLen = '';
+				ScribbleDataIdArr ={};
+				scribblePrevIdsArr ={};
+				
+				}					
+					
+					
+            }
+
+            if (ProjectItemType == 'Video' || ProjectItemType == 'video') {
+                if (mediaUrl != prevMediaUrl) {
+                    videoRender();
+                    prevMediaUrl = mediaUrl;
+                }
+                ProcessReceivedData(myData);
+            }
+
+            if (ProjectItemType == 'Survey' || ProjectItemType == 'survey') {
+                if (myData != prevMyData) {
+                    surveyRender();
+                    prevMyData = myData;
+                }
+
+            }
+
+            if (ProjectItemType == 'Question' || ProjectItemType == 'question') {
+                surveyRender();
+                prevMyData = myData;
+
+            }
+        }
+
+        function setGrade(param) {
+            grade = param;
+
+            $.unblockUI();
+            recursiveResultCall();
+
+        }
+    </script>
+    <!--[if gte IE 9]>
+  <style type="text/css">
+    .gradient {
+       filter: none !important;
+    }
+  </style>
+<![endif]-->
+</head>
+
+<body>
+
+
+    <div class="wrapper">
+
+
+        <section class="container_content">
+
+            <div id="divShell" style=" height: 100%; overflow: hidden;">
+                <div class="divMainContainer" style="width: 100%; height: 100%; overflow: hidden;background-color: white;">
+                    <div id="divSessionPlayerPreviewWindow" class="SessionPlayerPreviewWindow SessionPlayerPreviewWindowCompact" style="width: 100%; min-height: 768px; height: 768px; overflow: hidden; margin: 0px auto;">
+                        <div style="width: 100%; margin: 0px auto; display: none;height:100%" id="MainContainer">
+                            <canvas height="768" width="1024" id="sketch" style="display: block; margin: 0px auto;"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+
+            </div>
+
+
+
+            <div class="clear"></div>
+            <div id="dataShow" style="padding:10px; font-size:12px; font-style: italic"></div>
+
+        </section>
+
+
+        <div class="clear"></div>
+    </div>
+
+
+</body>
+
+</html>
+
+<script>
+	function scheduleCheck() {
+		if (objBroadcastJsonData != null) {
+			objData = typeof objBroadcastJsonData === "object" ? objBroadcastJsonData : $.parseJSON(objBroadcastJsonData);
+			currentVersion = (typeof objData.currentVersion == 'undefined' )? '' : objData.currentVersion;
+			appPlatform = (typeof objData.appPlatform == 'undefined' )? '' : objData.appPlatform;
+			if(currentVersion != '')	{
+				getStatusAjaxCall(); 
+			}else{
+				getStatusAjaxCall_Old();
+			}
+		}else{
+		setTimeout(scheduleCheck, 400);
+		}
+	}
+
+    function getStatusAjaxCall() {
+
+        if (objBroadcastJsonData != null) {
+            objData = typeof objBroadcastJsonData === "object" ? objBroadcastJsonData : $.parseJSON(objBroadcastJsonData);
+            objData = objBroadcastJsonData;
+            Status = objData.Status;
+            MediaUrl = objData.MediaFullUrl;
+            CurrentAction = objData.Content;
+			currentVersion = objData.currentVersion;
+			appPlatform = objData.appPlatform;
+            checkStatus();
+
+            if (objData.Content != null) {
+                var actiondata = typeof objData.Content.CurrentActionData === "object" ? objData.Content.CurrentActionData : $.parseJSON(objData.Content.CurrentActionData);
+
+                MediaActionType = actiondata.MediaActionType;
+                ScribbleDataId = actiondata.ScribbleData;
+                //QuestionInformation = trimQuotes(decodeURIComponent(actiondata.QuestionInformation));
+                //QuestionInformation = actiondata.QuestionInformation;
+
+                ProjectItemType = actiondata.MediaType;
+
+
+
+                ActionType = actiondata.ActionType;
+                MediaFullURL = actiondata.MediaFullURL;
+                QuestionID = actiondata.MediaID;
+                StudentInformation = actiondata.StudentInformation;
+
+				
+                var strStudentInformationData = JSON.stringify(StudentInformation);
+                if (strStudentInformationData != strStudentInformationDataPrev) {
+                    surveyResultUpdate = false;
+                }
+                if (ProjectItemType == 'Image') {
+                    if (actiondata.ScribbleData != '')
+                        ScribbleDataIdArr = actiondata.ScribbleData.split(",");
+                    else {
+                        ScribbleData = '';
+                        getData();
+                    }
+                    arrResultScribble = {
+                        "scp": [],
+                        "bscp": [],
+                        "c": [],
+                        "bsz": [],
+                        "fcp": [],
+                        "bfcp": [],
+                        "bp": [],
+                        "p": [],
+                        "bc": [],
+                        "sz": []
+                    };
+
+
+                    var arrScribbleR1 = $(scribblePrevIdsArr).not(ScribbleDataIdArr).get();
+                    var arrScribbleR2 = $(ScribbleDataIdArr).not(scribblePrevIdsArr).get();
+                    $.merge(arrScribbleR1, arrScribbleR2);
+                    ScribbleDataId = arrScribbleR1.toString();
+
+
+                    if ((scribblePrevIdsArr.length != ScribbleDataIdArr.length)   || (scribblePrevIdsArr.toString() != ScribbleDataIdArr.toString())) {
+						
+                        scribblePrevIdsArr = ScribbleDataIdArr;
+                        prevScribbleDataLen = scribblePrevIdsArr.length;
+                        
+						getScribbleDataById();
+                        //setTimeout(function(){getData();},1000);
+
+                    }else{
+							for (var i = 0; i < arrComputePrev.length; i++) {
+								if (actiondata.ScribbleData.split(',').indexOf(arrComputePrev[i].ScribbleID) !== -1){
+								var objScribbleData = typeof arrComputePrev[i].ScribbleData === "object" ? arrComputePrev[i].ScribbleData : $.parseJSON(arrComputePrev[i].ScribbleData);
+
+								
+								var arrCompute = JSON.parse(objScribbleData.d);
+								var arrKeys = Object.keys(arrCompute);
+
+								for (var j = 0; j < arrKeys.length; j++) {
+									if (typeof arrCompute[arrKeys[j]] == "object") {
+										arrResultScribble[arrKeys[j]] = arrResultScribble[arrKeys[j]].concat(arrCompute[arrKeys[j]]);
+									}
+								}
+								}
+
+							}
+							ScribbleData = JSON.stringify(arrResultScribble);
+							getData();						
+					
+					}
+					
+                } else {
+                    setTimeout(function() {
+                        getData();
+                    }, 500);
+                }
+            }
+
+
+
+
+        }
+
+        setTimeout(getStatusAjaxCall, 200);
+    }
+	
+	
+	function getStatusAjaxCall_Old( ) {
+	
+		if(objBroadcastJsonData != null) {
+		objData	=	typeof objBroadcastJsonData === "object" ? objBroadcastJsonData : $.parseJSON(objBroadcastJsonData);
+		objData= objBroadcastJsonData;
+		Status = objData.Status;
+		MediaUrl = objData.MediaFullUrl;
+		CurrentAction = objData.Content;
+		checkStatus();
+		 if(objData.Content != null){
+			
+		   var actiondata  =  typeof objData.Content.CurrentActionData === "object" ? objData.Content.CurrentActionData : $.parseJSON(objData.Content.CurrentActionData);
+		   
+		    if (actiondata.ScribbleData != ''){
+		   actiondata.ScribbleData  =  typeof actiondata.ScribbleData === "object" ?actiondata.ScribbleData : $.parseJSON(actiondata.ScribbleData);
+		   
+			for (var i = 0; i < actiondata.ScribbleData.length; i++) {
+
+				var arrCompute = JSON.parse(actiondata.ScribbleData[i].d);
+
+				var arrKeys = Object.keys(arrCompute);
+
+				for (var j = 0; j < arrKeys.length; j++) {
+					if (typeof arrCompute[arrKeys[j]] == "object") {
+						arrResultScribble[arrKeys[j]] = arrResultScribble[arrKeys[j]].concat(arrCompute[arrKeys[j]]);
+					}
+				}
+
+			}
+			ScribbleData = JSON.stringify(arrResultScribble);	
+			arrResultScribble = {
+				"scp": [],
+				"bscp": [],
+				"c": [],
+				"bsz": [],
+				"fcp": [],
+				"bfcp": [],
+				"bp": [],
+				"p": [],
+				"bc": [],
+				"sz": []
+			};
+			}else {
+				ScribbleData = '';
+			}
+		  
+		   ProjectItemType = actiondata.MediaType; //actiondata.itemType
+		   setTimeout(scheduleCheck, 400);
+		   getData();  
+		 
+		}
+	
+	}
+	
+	
+	}
+
+    var arrComputePrevUpdate = [];
+
+    function getScribbleDataById() {
+		
+        ///To modify callback from native
+        GetScribbleData(ScribbleDataId);        
+		setTimeout(getScribbleResponse, 400);        
+
+    }
+	
+	function getScribbleResponse() {
+
+		if (objScribbleDetails != null) {
+			objScribbleDetails = typeof objScribbleDetails === "object" ? objScribbleDetails : $.parseJSON(objScribbleDetails);			
+			if (objScribbleDetails.Content != null && objScribbleDetails.Content.length > 0) {
+				if (Object.keys(arrComputePrev).length == 0) {
+					arrComputePrev = objScribbleDetails.Content;
+				} else {
+					var arrComputePrevUpdate = [];					
+					for (var ii = 0; ii < arrComputePrev.length; ii++) {
+						if (ScribbleDataIdArr.indexOf(arrComputePrev[ii].ScribbleID) != -1) {
+							arrComputePrevUpdate.push(arrComputePrev[ii]);
+						}
+					}					
+					arrComputePrev = [];
+					arrComputePrev = arrComputePrevUpdate;
+					//console.log(arrComputePrevUpdate, arrComputePrevUpdate.length);
+					//console.log(objScribbleDetails.Content);
+					arrComputePrev = $.merge(arrComputePrev, objScribbleDetails.Content);
+				}
+
+				for (var i = 0; i < arrComputePrev.length; i++) {
+					var objScribbleData = typeof arrComputePrev[i].ScribbleData === "object" ? arrComputePrev[i].ScribbleData : $.parseJSON(arrComputePrev[i].ScribbleData);
+
+
+					var arrCompute = JSON.parse(objScribbleData.d);
+
+					var arrKeys = Object.keys(arrCompute);
+
+					for (var j = 0; j < arrKeys.length; j++) {
+						if (typeof arrCompute[arrKeys[j]] == "object") {
+							arrResultScribble[arrKeys[j]] = arrResultScribble[arrKeys[j]].concat(arrCompute[arrKeys[j]]);
+						}
+					}
+
+				}
+				ScribbleData = JSON.stringify(arrResultScribble);			
+				getData();
+
+			}
+			//console.log(arrResultScribble);
+			objScribbleDetails = null;
+		} else {
+			//GetScribbleData(ScribbleDataId); 
+			setTimeout(getScribbleResponse, 400);
+		}
+	}
+</script>
