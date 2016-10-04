@@ -589,7 +589,7 @@ function bindIframeEvent() {
 }
 
 function bindFooterButton()
-{
+{ alert(1);
 	var bIsILIT20 = isiLit20();
 	$('.footer_in button.footerTab').unbind('click').bind('click', function(e) {
 		e.preventDefault();
